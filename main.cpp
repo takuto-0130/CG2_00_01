@@ -6,54 +6,13 @@
 #include <dxgi1_6.h>
 #include <cassert>
 #include <dxgidebug.h>
+#include <dxcapi.h>
 
-#pragma comment(lib, "dxguid.lib")
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
-
-void Log(const std::string& message) {
-	OutputDebugStringA(message.c_str());
-}
-
-std::wstring ConvertString(const std::string& str) {
-	if (str.empty()) {
-		return std::wstring();
-	}
-
-	auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
-	if (sizeNeeded == 0) {
-		return std::wstring();
-	}
-	std::wstring result(sizeNeeded, 0);
-	MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
-	return result;
-}
-
-std::string ConvertString(const std::wstring& str) {
-	if (str.empty()) {
-		return std::string();
-	}
-
-	auto sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), NULL, 0, NULL, NULL);
-	if (sizeNeeded == 0) {
-		return std::string();
-	}
-	std::string result(sizeNeeded, 0);
-	WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
-	return result;
-}
-
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-
-	switch (msg) {
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	}
-
-	return DefWindowProc(hwnd, msg, wparam, lparam);
-}
+#pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "dxcompiler.lib")
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
 
@@ -255,6 +214,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	device->CreateRenderTargetView(swapChainResources[1], &rtvDesc, rtvHandles[1]);
 
 
+
+
 	//初期値でFenceを作る
 	ID3D12Fence* fence = nullptr;
 	uint32_t fenceValue = 0;
@@ -266,9 +227,100 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	assert(fenceEvent != nullptr);
 
 
+	//dxcCompilerを初期化
+	IDxcUtils* dxcUtils = nullptr;
+	IDxcCompiler3* dxcCompiler = nullptr;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+
+	//現時点でincludeはしないが、includeに対応するための設定を行っておく
+	IDxcIncludeHandler* includeHandler = nullptr;
+	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+	assert(SUCCEEDED(hr));
+
+
+
 	MSG msg{};
 	//メインループ
 	while (msg.message != WM_QUIT) {
+
+
+		//RootSignatureを生成する
+		D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+		descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+		//シリアライズしてバイナリにする
+		ID3DBlob* signatureBlod = nullptr;
+		ID3DBlob* errorBlod = nullptr;
+		hr = D3D12SerializeRootSignature(&descriptionRootSignature,
+			D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlod, &errorBlod);
+		if (FAILED(hr)) {
+			Log(reinterpret_cast<char*>(errorBlod->GetBufferPointer()));
+			assert(false);
+		}
+		//バイナリを元に生成
+		ID3D12RootSignature* rootSignature = nullptr;
+		hr = device->CreateRootSignature(0, signatureBlod->GetBufferPointer(),
+			signatureBlod->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+		assert(SUCCEEDED(hr));
+
+		//InputLayout
+		D3D12_INPUT_ELEMENT_DESC inputElementDescs[1] = {};
+		inputElementDescs[0].SemanticName = "POSITION";
+		inputElementDescs[0].SemanticIndex = 0;
+		inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+		D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
+		inputLayoutDesc.pInputElementDescs = inputElementDescs;
+		inputLayoutDesc.NumElements = _countof(inputElementDescs);
+
+		//BlendState
+		D3D12_BLEND_DESC blendDesc{};
+		//すべての色要素を書き込む
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+		//RasterizerState
+		D3D12_RASTERIZER_DESC rasterizerDesc{};
+		//裏面を表示しない
+		rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+		rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+
+		//shaderCompile
+		IDxcBlob* vertexShaderBlod = CompilerShader(L"Object3d.VS.hlsl",
+			L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+		assert(vertexShaderBlod != nullptr);
+
+		IDxcBlob* pixelShaderBlod = CompilerShader(L"Object3d.PS.hlsl",
+			L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+		assert(pixelShaderBlod != nullptr);
+
+		//PSO作成
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStareDesc{};
+		graphicsPipelineStareDesc.pRootSignature = rootSignature;
+		graphicsPipelineStareDesc.InputLayout = inputLayoutDesc;
+		graphicsPipelineStareDesc.VS = { vertexShaderBlod->GetBufferPointer(),
+		vertexShaderBlod->GetBufferSize() };
+		graphicsPipelineStareDesc.PS = { pixelShaderBlod->GetBufferPointer(),
+		pixelShaderBlod->GetBufferSize() };
+		graphicsPipelineStareDesc.BlendState = blendDesc;
+		graphicsPipelineStareDesc.RasterizerState = rasterizerDesc;
+		//書き込むRTVの情報
+		graphicsPipelineStareDesc.NumRenderTargets = 1;
+		graphicsPipelineStareDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		//形状
+		graphicsPipelineStareDesc.PrimitiveTopologyType =
+			D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		//どのように画面に打ち込むかの設定
+		graphicsPipelineStareDesc.SampleDesc.Count = 1;
+		graphicsPipelineStareDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+		//実際に生成
+		ID3D12PipelineState* graphicsPipelineState = nullptr;
+		hr = device->CreateGraphicsPipelineState(&graphicsPipelineStareDesc,
+			IID_PPV_ARGS(&graphicsPipelineState));
+		assert(SUCCEEDED(hr));
+
+
 
 		//書き込むバックバッファのインデックス
 		UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -364,4 +416,114 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	}
 	return 0;
+}
+
+////////
+//関数//
+////////
+
+void Log(const std::string& message) {
+	OutputDebugStringA(message.c_str());
+}
+
+std::wstring ConvertString(const std::string& str) {
+	if (str.empty()) {
+		return std::wstring();
+	}
+
+	auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
+	if (sizeNeeded == 0) {
+		return std::wstring();
+	}
+	std::wstring result(sizeNeeded, 0);
+	MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
+	return result;
+}
+
+std::string ConvertString(const std::wstring& str) {
+	if (str.empty()) {
+		return std::string();
+	}
+
+	auto sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), NULL, 0, NULL, NULL);
+	if (sizeNeeded == 0) {
+		return std::string();
+	}
+	std::string result(sizeNeeded, 0);
+	WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
+	return result;
+}
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+
+	switch (msg) {
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	}
+
+	return DefWindowProc(hwnd, msg, wparam, lparam);
+}
+
+IDxcBlob* CompilerShader(
+	//CompilerするShaderファイルへのパス
+	const std::wstring& filePath,
+	//Compilerに使用するProfile
+	const wchar_t* profile,
+	//初期化で生成したものを3つ
+	IDxcUtils* dxcUtils,
+	IDxcCompiler3* dxcCompiler,
+	IDxcIncludeHandler* includeHandler) 
+{
+	//これからシェーダーをコンパイルする旨をログに出す
+	Log(ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
+	//hlslファイルを読む
+	IDxcBlobEncoding* shaderSource = nullptr;
+	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+	//読めなかったら止める
+	assert(SUCCEEDED(hr));
+	//読み込んだファイルの内容を設定する
+	DxcBuffer shaderSourceBuffer;
+	shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
+	shaderSourceBuffer.Size = shaderSource->GetBufferSize();
+	shaderSourceBuffer.Encoding = DXC_CP_UTF8; //utf8の文字コードであることを通知
+
+	LPCWSTR arguments[] = {
+		filePath.c_str(),
+		L"-E",L"main",
+		L"-T", profile,
+		L"-Zi",L"-Qembed_debug",
+		L"-Od",
+		L"-Zpr",
+	};
+	//実際にshaderをコンパイルする
+	IDxcResult* shaderResult = nullptr;
+	hr = dxcCompiler->Compile(
+		&shaderSourceBuffer,
+		arguments,
+		_countof(arguments),
+		includeHandler,
+		IID_PPV_ARGS(&shaderResult)
+	);
+	//dxcが起動できないなどの致命的な状況
+	assert(SUCCEEDED(hr));
+	//警告・エラーでログに出して止める
+	IDxcBlobUtf8* shaderError = nullptr;
+	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
+	if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
+		Log(shaderError->GetStringPointer());
+		assert(false);
+	}
+
+	//コンパイラ結果から実行用のバイナリ部分を取得
+	IDxcBlob* shaderBlob = nullptr;
+	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+	assert(SUCCEEDED(hr));
+	//成功したログを出す
+	Log(ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
+	//もう使わないリソースを開放
+	shaderSource->Release();
+	shaderResult->Release();
+	//実行用バイナリを返却
+	return shaderBlob;
 }
