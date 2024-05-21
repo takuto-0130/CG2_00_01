@@ -25,6 +25,115 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 //////////
 // 関数 //
 //////////
+#include <xaudio2.h>
+#include <x3daudio.h>
+#include <fstream>
+#include <wrl.h>
+
+#pragma comment(lib,"xaudio2.lib")
+
+struct ChunkHeader {
+	char id[4];
+	int32_t size;
+};
+
+struct RiffHeader {
+	ChunkHeader chunk;
+	char type[4];
+};
+
+struct FormatChunk {
+	ChunkHeader chunk;
+	WAVEFORMATEX fmt;
+};
+
+struct SoundData {
+	WAVEFORMATEX wfex;
+	BYTE* pBuffer;
+	unsigned int bufferSize;
+};
+
+SoundData SoundLoadWave(const char* filename) {
+
+	std::ifstream file;
+	file.open(filename, std::ios_base::binary);
+	assert(file.is_open());
+
+	RiffHeader riff;
+	file.read((char*)&riff.chunk.id, sizeof(riff));
+	if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
+		assert(0);
+	}
+	if (strncmp(riff.type, "WAVE", 4) != 0) {
+		assert(0);
+	}
+
+	FormatChunk format = {};
+	file.read((char*)&format, sizeof(ChunkHeader));
+	if (strncmp(format.chunk.id, "fmt", 4) == 0) {//資料では!=0
+		assert(0);
+	}
+	assert(format.chunk.size <= sizeof(format.fmt));
+	file.read((char*)&format.fmt, format.chunk.size);
+
+	ChunkHeader data;
+	file.read((char*)&data, sizeof(data));
+	if (strncmp(data.id, "JUNK", 4) == 0) {
+		file.seekg(data.size, std::ios_base::cur);
+		file.read((char*)&data, sizeof(data));
+	}
+	if (strncmp(data.id, "data", 4) != 0) {
+		assert(0);
+	}
+
+	char* pBuffer = new char[data.size];
+	file.read(pBuffer, data.size);
+	file.close();
+
+	SoundData soundData = {};
+
+	soundData.wfex = format.fmt;
+	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
+	soundData.bufferSize = data.size;
+
+	return soundData;
+}
+
+
+void SoundUnload(SoundData* soundData) {
+	delete[] soundData->pBuffer;
+
+	soundData->pBuffer = 0;
+	soundData->bufferSize = 0;
+	soundData->wfex = {};
+}
+
+
+void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, const X3DAUDIO_DSP_SETTINGS& DSPSettings, const XAUDIO2_VOICE_DETAILS& deviceDetails, IXAudio2MasteringVoice* masterVoice/*, IXAudio2SubmixVoice* submixVoice*/) {
+	HRESULT hr;
+
+	IXAudio2SourceVoice* pSourceVoice = nullptr;
+	hr = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+	assert(SUCCEEDED(hr));
+
+	IXAudio2Voice* pMasterVoice = masterVoice;
+	pSourceVoice->SetOutputMatrix(pMasterVoice, 1, deviceDetails.InputChannels, DSPSettings.pMatrixCoefficients);
+	pSourceVoice->SetFrequencyRatio(DSPSettings.DopplerFactor);
+
+	/*IXAudio2Voice* pSubmixVoice = masterVoice;
+	pSourceVoice->SetOutputMatrix(pSubmixVoice, 1, 1, &DSPSettings.ReverbLevel);*/
+
+	XAUDIO2_FILTER_PARAMETERS FilterParameters = { LowPassFilter, 2.0f * sinf(X3DAUDIO_PI / 6.0f * DSPSettings.LPFDirectCoefficient), 1.0f };
+	pSourceVoice->SetFilterParameters(&FilterParameters);
+
+	XAUDIO2_BUFFER buf{};
+	buf.pAudioData = soundData.pBuffer;
+	buf.AudioBytes = soundData.bufferSize;
+	buf.Flags = XAUDIO2_END_OF_STREAM;
+
+	hr = pSourceVoice->SubmitSourceBuffer(&buf);
+	hr = pSourceVoice->Start();
+}
 
 void Log(const std::string& message) {
 	OutputDebugStringA(message.c_str());
@@ -595,6 +704,18 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			break;
 		}
 	}
+	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
+	IXAudio2MasteringVoice* masterVoice;
+	HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+	assert(SUCCEEDED(result));
+	result = xAudio2->CreateMasteringVoice(&masterVoice);
+	assert(SUCCEEDED(result));
+	///X3DAudio
+	//出力形式のチャネル マスクを取得
+	DWORD dwChannelMask;
+	masterVoice->GetChannelMask(&dwChannelMask);
+	X3DAUDIO_HANDLE X3DInstance;
+	X3DAudioInitialize(dwChannelMask, 3.435f, X3DInstance);
 
 	assert(device != nullptr);
 	Log("Complete create D3D12Device!!!\n");
@@ -1049,6 +1170,78 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 
 
+
+	XAUDIO2_VOICE_DETAILS deviceDetails = {};
+	masterVoice->GetVoiceDetails(&deviceDetails);
+
+	//リスナーとエミッターを初期化
+	X3DAUDIO_LISTENER Listener = {};
+
+	X3DAUDIO_EMITTER Emitter = {};
+	Emitter.ChannelCount = 1; //エミッターの数 (必ず1以上)
+	Emitter.CurveDistanceScaler = Emitter.DopplerScaler = 1.0f;
+	//エミッターの数が1を超える場合は↓も設定
+	Emitter.ChannelRadius = 100.0f;
+	Emitter.pChannelAzimuths = new FLOAT32[deviceDetails.InputChannels];
+	Emitter.InnerRadius = 0.3f;
+
+	X3DAUDIO_VECTOR EmitterOrientFront = { 0,0,-1 };
+	X3DAUDIO_VECTOR EmitterOrientTop = Emitter.OrientTop;
+	X3DAUDIO_VECTOR EmitterPosition = Emitter.Position;
+	X3DAUDIO_VECTOR EmitterVelocity = Emitter.Velocity;
+	X3DAUDIO_VECTOR ListenerOrientFront = { 0,0,1 };
+	X3DAUDIO_VECTOR ListenerOrientTop = Listener.OrientTop;
+	X3DAUDIO_VECTOR ListenerPosition = Listener.Position;
+	X3DAUDIO_VECTOR ListenerVelocity = Listener.Velocity;
+
+	X3DAUDIO_DISTANCE_CURVE_POINT volumePoints[10] = {};
+	X3DAUDIO_DISTANCE_CURVE volumeCurve = {};
+
+	volumePoints[0].Distance = 0.0f;
+	volumePoints[0].DSPSetting = 1.0f;
+	volumePoints[1].Distance = 0.2f;
+	volumePoints[1].DSPSetting = 1.0f;
+	volumePoints[2].Distance = 0.3f;
+	volumePoints[2].DSPSetting = 0.5f;
+	volumePoints[3].Distance = 0.4f;
+	volumePoints[3].DSPSetting = 0.35f;
+	volumePoints[4].Distance = 0.5f;
+	volumePoints[4].DSPSetting = 0.23f;
+	volumePoints[5].Distance = 0.6f;
+	volumePoints[5].DSPSetting = 0.16f;
+	volumePoints[6].Distance = 0.7f;
+	volumePoints[6].DSPSetting = 0.1f;
+	volumePoints[7].Distance = 0.8f;
+	volumePoints[7].DSPSetting = 0.06f;
+	volumePoints[8].Distance = 0.9f;
+	volumePoints[8].DSPSetting = 0.04f;
+	volumePoints[9].Distance = 1.0f;
+	volumePoints[9].DSPSetting = 0.0f;
+	volumeCurve.PointCount = 10;
+	volumeCurve.pPoints = volumePoints;
+
+	Emitter.pVolumeCurve = &volumeCurve;
+
+	X3DAUDIO_CONE m_emitterCone;
+
+	m_emitterCone.InnerAngle = X3DAUDIO_PI / 2;
+	m_emitterCone.OuterAngle = X3DAUDIO_PI;
+	m_emitterCone.InnerVolume = 1.0f;
+	m_emitterCone.OuterVolume = 0.0f;
+	Emitter.pCone = &m_emitterCone;
+
+	X3DAUDIO_DSP_SETTINGS DSPSettings = {};
+	FLOAT32* matrix = new FLOAT32[deviceDetails.InputChannels];
+	DSPSettings.SrcChannelCount = Emitter.ChannelCount;
+	DSPSettings.DstChannelCount = deviceDetails.InputChannels;
+	DSPSettings.pMatrixCoefficients = matrix;
+
+	SoundData soundData1 = SoundLoadWave("Resources/fanfare.wav");
+	int frameCount = 0;
+
+
+	//SoundPlayWave(xAudio2.Get(), soundData1, DSPSettings, deviceDetails, masterVoice);
+
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
@@ -1077,7 +1270,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			ImGui::DragFloat3("color", &materialData->x, 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat2("SpriteScale", &transformSprite.scale.x, 0.05f, 0.1f, 10.0f);
 			ImGui::DragFloat3("SpriteRotate", &transformSprite.rotate.x, 0.1f);
-			ImGui::DragFloat2("SpritePos", &transformSprite.translate.x, 1.0f);
+			ImGui::DragFloat3("SpritePos", &transformSprite.translate.x, 1.0f);
 			ImGui::End();
 
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
@@ -1085,6 +1278,31 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
 			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
+
+
+
+			frameCount++;
+			EmitterPosition = { transformSprite.translate.x,transformSprite.translate.y,transformSprite.translate.z };
+			ListenerPosition = { 0,0,0 };
+			if (frameCount % 3 == 0) {
+				Emitter.OrientFront = EmitterOrientFront;
+				Emitter.OrientTop = EmitterOrientTop;
+				Emitter.Position = EmitterPosition;
+				Emitter.Velocity = EmitterVelocity;
+				Listener.OrientFront = ListenerOrientFront;
+				Listener.OrientTop = ListenerOrientTop;
+				Listener.Position = ListenerPosition;
+				Listener.Velocity = ListenerVelocity;
+
+				X3DAudioCalculate(X3DInstance, &Listener, &Emitter,
+					X3DAUDIO_CALCULATE_MATRIX | X3DAUDIO_CALCULATE_DOPPLER | X3DAUDIO_CALCULATE_LPF_DIRECT | X3DAUDIO_CALCULATE_REVERB,
+					&DSPSettings);
+			}
+
+			if (frameCount % 300 == 0) {
+				SoundPlayWave(xAudio2.Get(), soundData1, DSPSettings, deviceDetails, masterVoice);
+			}
+
 
 			transform.rotate.y += 0.03f;
 
@@ -1191,6 +1409,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	OutputDebugStringA("Hello,DirectX!\n");
 
 	CoUninitialize();
+
+	xAudio2.Reset();
+	SoundUnload(&soundData1);
 
 	CloseHandle(fenceEvent);
 	fence->Release();
