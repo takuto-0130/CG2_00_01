@@ -319,6 +319,17 @@ struct Transform {
 struct VertexData {
 	Vector4 position;
 	Vector2 texCoord;
+	Vector3 normal;
+};
+
+struct Material {
+	Vector4 color;
+	int32_t enableLighting;
+};
+
+struct TransfomationMatrix {
+	Matrix4x4 WVP;
+	//Matrix4x4 World;
 };
 
 Matrix4x4 MakeIdentity4x4() {
@@ -801,7 +812,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 
 	//InputLayout
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;
 	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -813,6 +824,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
+	inputElementDescs[2].SemanticName = "NORMAL";
+	inputElementDescs[2].SemanticIndex = 0;
+	inputElementDescs[2].Format = DXGI_FORMAT_R32G32_FLOAT;
+	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
 	//BlendState
 	D3D12_BLEND_DESC blendDesc{};
@@ -940,21 +955,27 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			// A
 			vertexData[start].position = { cosf(lat) * cosf(lon), sinf(lat), cosf(lat) * sinf(lon), 1.0f };
 			vertexData[start].texCoord = { u,v };
+			vertexData[start].normal = { vertexData[start].position.x, vertexData[start].position.y, vertexData[start].position.z };
 			// B
 			vertexData[start + 1].position = { cosf(lat + kLatEvery) * cosf(lon), sinf(lat + kLatEvery), cosf(lat + kLatEvery) * sinf(lon), 1.0f };
 			vertexData[start + 1].texCoord = { u,v - kUVEvery };
+			vertexData[start + 1].normal = { vertexData[start + 1].position.x, vertexData[start + 1].position.y, vertexData[start + 1].position.z };
 			// C
 			vertexData[start + 2].position = { cosf(lat) * cosf(lon + kLonEvery), sinf(lat), cosf(lat) * sinf(lon + kLonEvery), 1.0f };
 			vertexData[start + 2].texCoord = { u + kUVEvery,v };
+			vertexData[start + 2].normal = { vertexData[start + 2].position.x, vertexData[start + 2].position.y, vertexData[start + 2].position.z };
 			// B:Copy
 			vertexData[start + 3].position = vertexData[start + 1].position;
 			vertexData[start + 3].texCoord = vertexData[start + 1].texCoord;
+			vertexData[start + 3].normal = vertexData[start + 1].normal;
 			// D
 			vertexData[start + 4].position = { cosf(lat + kLatEvery) * cosf(lon + kLonEvery), sinf(lat + kLatEvery), cosf(lat + kLatEvery) * sinf(lon + kLonEvery), 1.0f };
 			vertexData[start + 4].texCoord = { u + kUVEvery,v - kUVEvery };
+			vertexData[start + 4].normal = { vertexData[start + 4].position.x, vertexData[start + 4].position.y, vertexData[start + 4].position.z };
 			// C:Copy
 			vertexData[start + 5].position = vertexData[start + 2].position;
 			vertexData[start + 5].texCoord = vertexData[start + 2].texCoord;
+			vertexData[start + 5].normal = vertexData[start + 2].normal;
 
 		}
 	}
@@ -974,18 +995,24 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	vertexDataSprite[0].position = { 0.0f,360.0f,0.0f,1.0f };
 	vertexDataSprite[0].texCoord = { 0.0f,1.0f };
+	vertexDataSprite[0].normal = { 0.0f,0.0f,-1.0f };
 	vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };
 	vertexDataSprite[1].texCoord = { 0.0f,0.0f };
+	vertexDataSprite[1].normal = { 0.0f,0.0f,-1.0f };
 	vertexDataSprite[2].position = { 640.0f,360.0f,0.0f,1.0f };
 	vertexDataSprite[2].texCoord = { 1.0f,1.0f };
+	vertexDataSprite[2].normal = { 0.0f,0.0f,-1.0f };
 
 
 	vertexDataSprite[3].position = { 0.0f,0.0f,0.0f,1.0f };
 	vertexDataSprite[3].texCoord = { 0.0f,0.0f };
+	vertexDataSprite[3].normal = { 0.0f,0.0f,-1.0f };
 	vertexDataSprite[4].position = { 640.0f,0.0f,0.0f,1.0f };
 	vertexDataSprite[4].texCoord = { 1.0f,0.0f };
+	vertexDataSprite[4].normal = { 0.0f,0.0f,-1.0f };
 	vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };
 	vertexDataSprite[5].texCoord = { 1.0f,1.0f };
+	vertexDataSprite[5].normal = { 0.0f,0.0f,-1.0f };
 
 	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
 
@@ -1001,6 +1028,19 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHieght), 0.0f, 100.0f);
 	Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
 	*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
+
+
+	//Sprite用のマテリアルリソースを作る。今回はcolor1つ分のサイズを用意する
+	ID3D12Resource* materialResourceSprite = CreateBufferResource(device, sizeof(Material));
+	//マテリアルにデータを書き込む
+	Material* materialDataSprite = nullptr;
+	//書き込むためのアドレスを取得
+	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
+	//色
+	*materialDataSprite = {
+		Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+		false
+	};
 
 
 
@@ -1214,6 +1254,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
 
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 
 			commandList->DrawInstanced(6, 1, 0, 0);
