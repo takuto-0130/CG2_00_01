@@ -1046,14 +1046,16 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 
 	//マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
+	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Material));
 	//マテリアルにデータを書き込む
-	Vector4* materialData = nullptr;
+	Material* materialData = nullptr;
 	//書き込むためのアドレスを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	//色
-	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-
+	*materialData = {
+		Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+		false
+	};
 	//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
 	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
 	//データを書き込む
@@ -1183,7 +1185,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			ImGui::NewFrame();
 
 			ImGui::Begin("Window");
-			ImGui::DragFloat3("color", &materialData->x, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat3("color", &materialData->color.x, 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat2("SpriteScale", &transformSprite.scale.x, 0.05f, 0.1f, 10.0f);
 			ImGui::DragFloat3("SpriteRotate", &transformSprite.rotate.x, 0.1f);
 			ImGui::DragFloat2("SpritePos", &transformSprite.translate.x, 1.0f);
