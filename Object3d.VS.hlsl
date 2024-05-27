@@ -3,6 +3,7 @@
 struct TransfomationMatrix
 {
     float4x4 WVP;
+    float4x4 World;
 };
 ConstantBuffer<TransfomationMatrix> gTransfomationMatrix : register(b0);
 

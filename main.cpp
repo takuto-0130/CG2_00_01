@@ -329,7 +329,7 @@ struct Material {
 
 struct TransfomationMatrix {
 	Matrix4x4 WVP;
-	//Matrix4x4 World;
+	Matrix4x4 World;
 };
 
 Matrix4x4 MakeIdentity4x4() {
@@ -1014,20 +1014,23 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	vertexDataSprite[5].texCoord = { 1.0f,1.0f };
 	vertexDataSprite[5].normal = { 0.0f,0.0f,-1.0f };
 
-	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
+	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransfomationMatrix));
 
-	Matrix4x4* transformationMatrixDataSprite = nullptr;
+	TransfomationMatrix* transformationMatrixDataSprite = nullptr;
 
 	transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
 
-	*transformationMatrixDataSprite = MakeIdentity4x4();
 	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 	Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 	Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
 	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHieght), 0.0f, 100.0f);
 	Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-	*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
+	*transformationMatrixDataSprite =
+	{
+		worldViewProjectionMatrixSprite,
+		MakeIdentity4x4()
+	};
 
 
 	//Sprite用のマテリアルリソースを作る。今回はcolor1つ分のサイズを用意する
@@ -1064,6 +1067,26 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
 	//
 	*wvpData = MakeIdentity4x4();
+
+
+
+	ID3D12Resource* transformationMatrixResource = CreateBufferResource(device, sizeof(TransfomationMatrix));
+
+	TransfomationMatrix* transformationMatrixData = nullptr;
+
+	transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
+
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+
+	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	Matrix4x4 viewMatrix = MakeIdentity4x4();
+	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHieght), 0.0f, 100.0f);
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+	*transformationMatrixData =
+	{
+		worldViewProjectionMatrix,
+		MakeIdentity4x4()
+	};
 	
 
 
@@ -1088,7 +1111,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	scissorRect.bottom = kClientHieght;
 
 	//transform変数を作る
-	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
 
 	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
@@ -1196,7 +1218,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 			worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
+			*transformationMatrixDataSprite =
+			{
+				worldViewProjectionMatrixSprite,
+				MakeIdentity4x4()
+			};
 
 			transform.rotate.y += 0.005f;
 
@@ -1207,6 +1233,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 			
 			*wvpData = worldViewProjectionMatrix;
+
+			*transformationMatrixData =
+			{
+				worldViewProjectionMatrix,
+				MakeIdentity4x4()
+			};
 
 			ImGui::Render();
 
@@ -1249,7 +1281,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 			commandList->DrawInstanced(6 * kSubdivision * kSubdivision, 1, 0, 0);
 
@@ -1312,8 +1344,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	textureResource2->Release();
 	wvpResource->Release();
 	materialResource->Release();
+	materialResourceSprite->Release();
 	vertexResource->Release();
 	vertexResourceSprite->Release();
+	transformationMatrixResource->Release();
 	transformationMatrixResourceSprite->Release();
 	depthStencilResource->Release();
 
