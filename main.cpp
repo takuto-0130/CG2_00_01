@@ -1019,6 +1019,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 			ImGui::Begin("Window");
 			ImGui::DragFloat3("color", &materialData->x, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat3("translate", &transform.translate.x, 0.01f,-10.0f, 10.0f);
 			ImGui::End();
 
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
@@ -1138,6 +1139,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	rootSignature->Release();
 	pixelShaderBlob->Release();
 	vertexShaderBlob->Release();
+	dsvDescriptorHeap->Release();
 	srvDescripterHeap->Release();
 	rtvDescriptorHeap->Release();
 	swapChainResources[0]->Release();
