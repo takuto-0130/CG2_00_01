@@ -860,14 +860,14 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 
 	//実際に頂点リソースを作る
-	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 3);
 
 	//頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	//リソースの先頭アドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	//使用するリソースサイズは頂点3つ分のサイズ
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * 3;
 	//1頂点当たりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
@@ -885,15 +885,15 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
 	vertexData[2].texCoord = { 1.0f,1.0f };
 
-	//左下2
-	vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
-	vertexData[3].texCoord = { 0.0f,1.0f };
-	//上2
-	vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-	vertexData[4].texCoord = { 0.5f,0.0f };
-	//右下2
-	vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
-	vertexData[5].texCoord = { 1.0f,1.0f };
+	////左下2
+	//vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
+	//vertexData[3].texCoord = { 0.0f,1.0f };
+	////上2
+	//vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+	//vertexData[4].texCoord = { 0.5f,0.0f };
+	////右下2
+	//vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
+	//vertexData[5].texCoord = { 1.0f,1.0f };
 
 
 
@@ -914,6 +914,15 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
 	//
 	*wvpData = MakeIdentity4x4();
+
+	//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
+	ID3D12Resource* wvpResource2 = CreateBufferResource(device, sizeof(Matrix4x4));
+	//データを書き込む
+	Matrix4x4* wvpData2 = nullptr;
+	//書き込むためのアドレスを取得
+	wvpResource2->Map(0, nullptr, reinterpret_cast<void**>(&wvpData2));
+	//
+	*wvpData2 = MakeIdentity4x4();
 	
 
 
@@ -939,6 +948,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	//transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	Transform transform2{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
 
 	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
@@ -1019,13 +1029,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 			ImGui::Begin("Window");
 			ImGui::DragFloat3("color", &materialData->x, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat3("translate", &transform.translate.x, 0.01f,-10.0f, 10.0f);
+			ImGui::DragFloat3("translate1", &transform.translate.x, 0.01f,-10.0f, 10.0f);
+			ImGui::DragFloat3("translate2", &transform2.translate.x, 0.01f, -10.0f, 10.0f);
 			ImGui::End();
 
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-
-			transform.rotate.y += 0.03f;
 
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
@@ -1034,6 +1043,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 			
 			*wvpData = worldViewProjectionMatrix;
+
+			Matrix4x4 worldMatrix2 = MakeAffineMatrix(transform2.scale, transform2.rotate, transform2.translate);
+			Matrix4x4 worldViewProjectionMatrix2 = Multiply(worldMatrix2, Multiply(viewMatrix, projectionMatrix));
+
+			*wvpData2 = worldViewProjectionMatrix2;
 
 			ImGui::Render();
 
@@ -1078,7 +1092,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-			commandList->DrawInstanced(6, 1, 0, 0);
+			commandList->DrawInstanced(3, 1, 0, 0);
+
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResource2->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->DrawInstanced(3, 1, 0, 0);
 
 
 			//ImGuiコマンドを積む
@@ -1129,8 +1148,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	fence->Release();
 	textureResource->Release();
 	wvpResource->Release();
+	wvpResource2->Release();
 	materialResource->Release();
 	vertexResource->Release();
+	depthStencilResource->Release();
 	graphicsPipelineState->Release();
 	signatureBlob->Release();
 	if (errorBlob) {
