@@ -19,5 +19,6 @@ VertexShaderOutput main(VertexShaderInput input)
     VertexShaderOutput output;
     output.position = mul(input.position, gTransfomationMatrix.WVP);
     output.texCoord = input.texCoord;
+    output.normal = normalize(mul(input.normal, (float3x3) gTransfomationMatrix.World));
     return output;
 }
