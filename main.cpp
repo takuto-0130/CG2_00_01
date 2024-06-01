@@ -16,10 +16,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <cmath>
-
-#ifdef _DEBUG
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-#endif // _DEBUG
 
 
 
@@ -65,11 +62,10 @@ std::string ConvertString(const std::wstring& str) {
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-#ifdef _DEBUG
+
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
 	}
-#endif // _DEBUG
 
 	switch (msg) {
 	case WM_DESTROY:
@@ -1290,7 +1286,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	static int triangle1TexNum = 0;
 	static int triangle2TexNum = 0;
 
-#ifdef _DEBUG
+
+	bool isParticle = false;
+
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -1300,8 +1298,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 		swapChainDesc.BufferCount, rtvDesc.Format, srvDescripterHeap,
 		srvDescripterHeap->GetCPUDescriptorHandleForHeapStart(),
 		srvDescripterHeap->GetGPUDescriptorHandleForHeapStart());
-
-#endif // _DEBUG
 	
 	MSG msg{};
 	//メインループ
@@ -1313,8 +1309,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			DispatchMessage(&msg);
 		}
 		else { //ゲーム処理
-
-#ifdef _DEBUG
 
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
@@ -1359,9 +1353,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 				}
 				ImGui::TreePop();
 			}
+			ImGui::Separator();
+			ImGui::Checkbox("IsParticle", &isParticle);
 			ImGui::End();
-
-#endif // _DEBUG
 			directionalLightData->direction = Normalize(directionalLightData->direction);
 
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
@@ -1375,29 +1369,43 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			};
 
 
-			worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-			viewMatrix = Inverse(cameraMatrix);
-			projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHieght), 0.1f, 100.0f);
-			worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+			if (!(isParticle))
+			{
+				worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+				viewMatrix = Inverse(cameraMatrix);
+				projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHieght), 0.1f, 100.0f);
+				worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 
-			transformationMatrixData->WVP = worldViewProjectionMatrix;
-			transformationMatrixData->World = worldMatrix;
+				transformationMatrixData->WVP = worldViewProjectionMatrix;
+				transformationMatrixData->World = worldMatrix;
 
 
 
-			worldMatrix2 = MakeAffineMatrix(transform2.scale, transform2.rotate, transform2.translate);
-			projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHieght), 0.1f, 100.0f);
-			worldViewProjectionMatrix2 = Multiply(worldMatrix2, Multiply(viewMatrix, projectionMatrix));
+				worldMatrix2 = MakeAffineMatrix(transform2.scale, transform2.rotate, transform2.translate);
+				projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHieght), 0.1f, 100.0f);
+				worldViewProjectionMatrix2 = Multiply(worldMatrix2, Multiply(viewMatrix, projectionMatrix));
 
-			transformationMatrixData2->WVP = worldViewProjectionMatrix2;
-			transformationMatrixData2->World = worldMatrix2;
+				transformationMatrixData2->WVP = worldViewProjectionMatrix2;
+				transformationMatrixData2->World = worldMatrix2;
+			}
+			else {
+				for (int i = 0; i < particleNumMax; i++)
+				{
+					transformParticle[i] = { {1.0f,1.0f,1.0f},{0.0f,0.1f,0.0f},{0.0f,0.0f,0.0f} };
+					worldMatrixParticle[i] = MakeAffineMatrix(transformParticle[i].scale, transformParticle[i].rotate, transformParticle[i].translate);
+					wvpMatrixParticle[i] = Multiply(worldMatrixParticle[i], Multiply(viewMatrix, projectionMatrix));
 
-#ifdef _DEBUG
+					transformationMatrixData[i] =
+					{
+						wvpMatrixParticle[i],
+						worldMatrixParticle[i]
+					};
+				}
+			}
+			
 
 			ImGui::Render();
-
-#endif // _DEBUG
 
 			/// 描画処理
 
@@ -1440,14 +1448,25 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[triangle1TexNum]);
-			commandList->DrawInstanced(3, 1, 0, 0);
-			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource2->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[triangle2TexNum]);
-			commandList->DrawInstanced(3, 1, 0, 0);
+			if (!(isParticle))
+			{
+				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[triangle1TexNum]);
+				commandList->DrawInstanced(3, 1, 0, 0);
+				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource2->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[triangle2TexNum]);
+				commandList->DrawInstanced(3, 1, 0, 0);
+			}
+			else {
+				for (int i = 0; i < particleNumMax; i++) {
+					commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+					commandList->SetGraphicsRootConstantBufferView(1, tMResourceParticle[i]->GetGPUVirtualAddress());
+					commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[2]);
+					commandList->DrawInstanced(3, 1, 0, 0);
+				}
+			}
 
 			//commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
 
@@ -1459,11 +1478,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 
 			//ImGuiコマンドを積む
-#ifdef _DEBUG
-
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
-
-#endif // _DEBUG
 
 
 			//画面に描く処理はすべて終わり、画面に映すので、状態を遷移
@@ -1498,13 +1513,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			assert(SUCCEEDED(hr));
 		}
 	}
-#ifdef _DEBUG
-
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
-
-#endif // _DEBUG
 
 	OutputDebugStringA("Hello,DirectX!\n");
 
