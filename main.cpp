@@ -1323,13 +1323,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 				{
 					ImGui::ColorEdit3("color", &materialData->color.x);
 					ImGui::Separator();
-					if (ImGui::TreeNode("Triangle1"))
+					if (ImGui::TreeNode("Triangle1Tex"))
 					{
 						ImGui::ListBox("Triangle1\nTexture\nSelect", &triangle1TexNum, listbox_items, IM_ARRAYSIZE(listbox_items), 3);
 						ImGui::TreePop();
 					}
 					ImGui::Separator();
-					if (ImGui::TreeNode("Triangle2"))
+					if (ImGui::TreeNode("Triangle2Tex"))
 					{
 						ImGui::ListBox("Triangle2\nTexture\nSelect", &triangle2TexNum, listbox_items, IM_ARRAYSIZE(listbox_items), 3);
 						ImGui::TreePop();
