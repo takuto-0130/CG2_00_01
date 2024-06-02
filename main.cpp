@@ -16,6 +16,9 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <cmath>
+#include <stdlib.h>
+#include <time.h>
+#include <algorithm>
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
@@ -534,6 +537,23 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 	result.m[3][3] = 1.0f;
 	return result;
 }
+Vector3 Add(const Vector3& v1, const Vector3& v2) {
+	return{ v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
+}
+
+Vector3 operator+(const Vector3& v1, const Vector3& v2) {
+	return Add(v1, v2);
+}
+
+Vector3 operator*(const Vector3& v, const float& s) {
+	Vector3 result;
+	result.x = v.x * s;
+	result.y = v.y * s;
+	result.z = v.z * s;
+	return result;
+}
+
+
 
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
@@ -857,7 +877,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	//RasterizerState
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
 	//裏面を表示しない
-	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	//rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	//裏面を表示
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 
@@ -944,64 +966,17 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	//左下
 	vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
 	vertexData[0].texCoord = { 0.0f,1.0f };
-	vertexData[0].normal = { 0.0f,0.0f,-1.0f };
+	vertexData[0].normal = { vertexData[0].position.x,vertexData[0].position.y,vertexData[0].position.z };
 	//上
 	vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
 	vertexData[1].texCoord = { 0.5f,0.0f };
-	vertexData[1].normal = { 0.0f,0.0f,-1.0f };
+	vertexData[1].normal = { vertexData[1].position.x,vertexData[1].position.y,vertexData[1].position.z };
 	//右下
 	vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
 	vertexData[2].texCoord = { 1.0f,1.0f };
-	vertexData[2].normal = { 0.0f,0.0f,-1.0f };
+	vertexData[2].normal = { vertexData[2].position.x,vertexData[2].position.y,vertexData[2].position.z };
 
-	////左下2
-	//vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
-	//vertexData[3].texCoord = { 0.0f,1.0f };
-	////上2
-	//vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-	//vertexData[4].texCoord = { 0.5f,0.0f };
-	////右下2
-	//vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
-	//vertexData[5].texCoord = { 1.0f,1.0f };
-
-
-	//const float kLonEvery = float(M_PI) * 2.0f / kSubdivision;
-	//const float kLatEvery = float(M_PI) / kSubdivision;
-	//const float kUVEvery = 1.0f / float(kSubdivision);
-	//for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-	//	float lat = -float(M_PI) / 2.0f + kLatEvery * latIndex;
-	//	for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-	//		uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-	//		float lon = lonIndex * kLonEvery;
-	//		float u = float(lonIndex) / float(kSubdivision);
-	//		float v = 1.0f - float(latIndex) / float(kSubdivision);
-	//		// A
-	//		vertexData[start].position = { cosf(lat) * cosf(lon), sinf(lat), cosf(lat) * sinf(lon), 1.0f };
-	//		vertexData[start].texCoord = { u,v };
-	//		vertexData[start].normal = { vertexData[start].position.x, vertexData[start].position.y, vertexData[start].position.z };
-	//		// B
-	//		vertexData[start + 1].position = { cosf(lat + kLatEvery) * cosf(lon), sinf(lat + kLatEvery), cosf(lat + kLatEvery) * sinf(lon), 1.0f };
-	//		vertexData[start + 1].texCoord = { u,v - kUVEvery };
-	//		vertexData[start + 1].normal = { vertexData[start + 1].position.x, vertexData[start + 1].position.y, vertexData[start + 1].position.z };
-	//		// C
-	//		vertexData[start + 2].position = { cosf(lat) * cosf(lon + kLonEvery), sinf(lat), cosf(lat) * sinf(lon + kLonEvery), 1.0f };
-	//		vertexData[start + 2].texCoord = { u + kUVEvery,v };
-	//		vertexData[start + 2].normal = { vertexData[start + 2].position.x, vertexData[start + 2].position.y, vertexData[start + 2].position.z };
-	//		// B:Copy
-	//		vertexData[start + 3].position = vertexData[start + 1].position;
-	//		vertexData[start + 3].texCoord = vertexData[start + 1].texCoord;
-	//		vertexData[start + 3].normal = { vertexData[start + 3].position.x, vertexData[start + 3].position.y, vertexData[start + 3].position.z };
-	//		// D
-	//		vertexData[start + 4].position = { cosf(lat + kLatEvery) * cosf(lon + kLonEvery), sinf(lat + kLatEvery), cosf(lat + kLatEvery) * sinf(lon + kLonEvery), 1.0f };
-	//		vertexData[start + 4].texCoord = { u + kUVEvery,v - kUVEvery };
-	//		vertexData[start + 4].normal = { vertexData[start + 4].position.x, vertexData[start + 4].position.y, vertexData[start + 4].position.z };
-	//		// C:Copy
-	//		vertexData[start + 5].position = vertexData[start + 2].position;
-	//		vertexData[start + 5].texCoord = vertexData[start + 2].texCoord;
-	//		vertexData[start + 5].normal = { vertexData[start + 5].position.x, vertexData[start + 5].position.y, vertexData[start + 5].position.z };
-
-	//	}
-	//}
+	
 
 
 
@@ -1080,14 +1055,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	//色
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData->enableLighting = false;
-	////WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	//ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
-	////データを書き込む
-	//Matrix4x4* wvpData = nullptr;
-	////書き込むためのアドレスを取得
-	//wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-	////
-	//*wvpData = MakeIdentity4x4();
 
 
 
@@ -1127,30 +1094,60 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	};
 
 
-	const int particleNumMax = 200;
+
+	//====================
 	//パーティクル用データ
-	ID3D12Resource* tMResourceParticle[particleNumMax];
-	TransfomationMatrix* tMDataParticle[particleNumMax];
-	Transform transformParticle[particleNumMax];
-	Matrix4x4 worldMatrixParticle[particleNumMax];
-	Matrix4x4 wvpMatrixParticle[particleNumMax];
-	for(int i = 0; i < particleNumMax; i++)
+	//====================
+
+	const int kParticleNumMax = 200;
+	bool isParticleAlive[kParticleNumMax];
+	const int kMaxLifeTime = kParticleNumMax;
+	int lifeTime[kParticleNumMax];
+	Vector4 particleColor[kParticleNumMax];
+	Vector3 moveVector[kParticleNumMax];
+	Vector3 moveRotate[kParticleNumMax];
+	Vector3 moveScale[kParticleNumMax];
+
+	ID3D12Resource* materialResourceParticle[kParticleNumMax];
+	Material* materialDataParticle[kParticleNumMax];
+	
+
+	ID3D12Resource* tMResourceParticle[kParticleNumMax];
+	TransfomationMatrix* tMDataParticle[kParticleNumMax];
+	Transform transformParticle[kParticleNumMax];
+	Matrix4x4 worldMatrixParticle[kParticleNumMax];
+	Matrix4x4 wvpMatrixParticle[kParticleNumMax];
+	for(int i = 0; i < kParticleNumMax; i++)
 	{
+		materialResourceParticle[i] = CreateBufferResource(device, sizeof(Material));
+		materialDataParticle[i] = nullptr;
+		materialResourceParticle[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialDataParticle[i]));
+		//色
+		materialDataParticle[i]->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+		materialDataParticle[i]->enableLighting = false;
+
+
 		tMResourceParticle[i] = CreateBufferResource(device, sizeof(TransfomationMatrix));
 		tMDataParticle[i] = nullptr;
 		tMResourceParticle[i]->Map(0, nullptr, reinterpret_cast<void**>(&tMDataParticle[i]));
-		transformParticle[i] = { {1.0f,1.0f,1.0f},{0.0f,0.1f,0.0f},{0.0f,0.0f,0.0f} };
+		transformParticle[i] = { {0.1f,0.1f,0.1f},{0.0f,0.1f,0.0f},{0.0f,0.0f,0.0f} };
 		worldMatrixParticle[i] = MakeAffineMatrix(transformParticle[i].scale, transformParticle[i].rotate, transformParticle[i].translate);
 		wvpMatrixParticle[i] = Multiply(worldMatrixParticle[i], Multiply(viewMatrix, projectionMatrix));
 
 		transformationMatrixData[i] =
 		{
 			wvpMatrixParticle[i],
-			MakeIdentity4x4()
+			worldMatrixParticle[i]
 		};
+		isParticleAlive[i] = false;
+		particleColor[i] = { 1.0f,1.0f,1.0f,1.0f };
+		moveVector[i] = { 0.01f,0.01f,0.0f };
+		moveRotate[i] = { 0.01f,0.01f,0.0f };
+		moveScale[i] = { 0.0f,0.0f,0.0f };
+		lifeTime[i] = 0;
 	}
-
-
+	isParticleAlive[0] = true;
+	const Vector3 kEmitPos = { 0.0f,0.0f,0.0f };
 
 
 
@@ -1290,6 +1287,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	bool isParticle = false;
 
 
+	unsigned int currentTime = (unsigned int)time(nullptr);
+	srand(currentTime);
+
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
@@ -1315,46 +1315,48 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			ImGui::NewFrame();
 
 			ImGui::Begin("Window");
-			
-			if (ImGui::TreeNode("Texture&Color"))
-			{
-				ImGui::ColorEdit3("color", &materialData->color.x);
-				ImGui::Separator();
-				if (ImGui::TreeNode("Triangle1"))
-				{
-					ImGui::ListBox("Triangle1\nTexture\nSelect", &triangle1TexNum, listbox_items, IM_ARRAYSIZE(listbox_items), 3);
-					ImGui::TreePop();
-				}
-				ImGui::Separator();
-				if (ImGui::TreeNode("Triangle2"))
-				{
-					ImGui::ListBox("Triangle2\nTexture\nSelect", &triangle2TexNum, listbox_items, IM_ARRAYSIZE(listbox_items), 3);
-					ImGui::TreePop();
-				}
-				ImGui::TreePop();
-			}
-			ImGui::Separator();
-			if (ImGui::TreeNode("transform"))
-			{
-				if (ImGui::TreeNode("Triangle1"))
-				{
-					ImGui::DragFloat3("Scale", &transform.scale.x, 0.01f, 0.01f, 10.0f);
-					ImGui::DragFloat3("Rotate", &transform.rotate.x, 0.01f);
-					ImGui::DragFloat3("Translate", &transform.translate.x, 0.01f);
-					ImGui::TreePop();
-				}
-				ImGui::Separator();
-				if (ImGui::TreeNode("Triangle2"))
-				{
-					ImGui::DragFloat3("Scale", &transform2.scale.x, 0.01f, 0.01f, 10.0f);
-					ImGui::DragFloat3("Rotate", &transform2.rotate.x, 0.01f);
-					ImGui::DragFloat3("Translate", &transform2.translate.x, 0.01f);
-					ImGui::TreePop();
-				}
-				ImGui::TreePop();
-			}
-			ImGui::Separator();
 			ImGui::Checkbox("IsParticle", &isParticle);
+			if(!isParticle)
+			{
+				ImGui::Separator();
+				if (ImGui::TreeNode("Texture&Color"))
+				{
+					ImGui::ColorEdit3("color", &materialData->color.x);
+					ImGui::Separator();
+					if (ImGui::TreeNode("Triangle1"))
+					{
+						ImGui::ListBox("Triangle1\nTexture\nSelect", &triangle1TexNum, listbox_items, IM_ARRAYSIZE(listbox_items), 3);
+						ImGui::TreePop();
+					}
+					ImGui::Separator();
+					if (ImGui::TreeNode("Triangle2"))
+					{
+						ImGui::ListBox("Triangle2\nTexture\nSelect", &triangle2TexNum, listbox_items, IM_ARRAYSIZE(listbox_items), 3);
+						ImGui::TreePop();
+					}
+					ImGui::TreePop();
+				}
+				ImGui::Separator();
+				if (ImGui::TreeNode("transform"))
+				{
+					if (ImGui::TreeNode("Triangle1"))
+					{
+						ImGui::DragFloat3("Scale", &transform.scale.x, 0.01f, 0.01f, 10.0f);
+						ImGui::DragFloat3("Rotate", &transform.rotate.x, 0.01f);
+						ImGui::DragFloat3("Translate", &transform.translate.x, 0.01f);
+						ImGui::TreePop();
+					}
+					ImGui::Separator();
+					if (ImGui::TreeNode("Triangle2"))
+					{
+						ImGui::DragFloat3("Scale", &transform2.scale.x, 0.01f, 0.01f, 10.0f);
+						ImGui::DragFloat3("Rotate", &transform2.rotate.x, 0.01f);
+						ImGui::DragFloat3("Translate", &transform2.translate.x, 0.01f);
+						ImGui::TreePop();
+					}
+					ImGui::TreePop();
+				}
+			}
 			ImGui::End();
 			directionalLightData->direction = Normalize(directionalLightData->direction);
 
@@ -1388,19 +1390,72 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 				transformationMatrixData2->WVP = worldViewProjectionMatrix2;
 				transformationMatrixData2->World = worldMatrix2;
+				for (int i = 0; i < kParticleNumMax; i++)
+				{
+					isParticleAlive[i] = false;
+					transformParticle[i].translate = { 0,0,0 };
+					transformParticle[i].rotate = { 0,0,0 };
+					transformParticle[i].scale = { 0.15f, 0.15f, 0.15f };
+				}
 			}
 			else {
-				for (int i = 0; i < particleNumMax; i++)
+				for (int i = 0; i < kParticleNumMax; i++)
 				{
-					transformParticle[i] = { {1.0f,1.0f,1.0f},{0.0f,0.1f,0.0f},{0.0f,0.0f,0.0f} };
-					worldMatrixParticle[i] = MakeAffineMatrix(transformParticle[i].scale, transformParticle[i].rotate, transformParticle[i].translate);
-					wvpMatrixParticle[i] = Multiply(worldMatrixParticle[i], Multiply(viewMatrix, projectionMatrix));
-
-					transformationMatrixData[i] =
+					if (!isParticleAlive[i])
 					{
-						wvpMatrixParticle[i],
-						worldMatrixParticle[i]
-					};
+						isParticleAlive[i] = true;
+						transformParticle[i].translate = { 0,0,0 };
+						transformParticle[i].rotate = { 0,0,0 };
+						transformParticle[i].scale = { 0.15f, 0.15f, 0.15f };
+						lifeTime[i] = kMaxLifeTime;
+						
+
+						int X = rand() % 199 - 100;
+						int	Y = rand() % 199 - 100;
+						int Z = rand() % 199 - 100;
+						Vector3 nor = Normalize({ float(X),float(Y),float(Z)*2.0f });
+						moveVector[i] = nor * 0.01f;
+
+
+						float scale = float(Z) / -250000.0f;
+						moveScale[i] = { scale,scale,0.0f };
+
+
+						int R = 45;
+						int	G = 20;
+						float B = float(Z + 100) / 2.0f;
+						particleColor[i] = { float(R) / 100.0f,float(G) / 100.0f,B / 100.0f,1.0f };
+
+
+						X = rand() % 100;
+						Y = rand() % 100;
+						Z = rand() % 100;
+						nor = Normalize({ float(X),float(Y),float(Z) });
+						moveRotate[i] = nor * 0.01f;
+						break;
+					}
+				}
+				for (int i = 0; i < kParticleNumMax; i++)
+				{
+					if (isParticleAlive[i])
+					{
+						transformParticle[i].scale = { transformParticle[i].scale + moveScale[i] };
+						transformParticle[i].scale.x = (std::max)(transformParticle[i].scale.x, 0.01f);
+						transformParticle[i].scale.y = (std::max)(transformParticle[i].scale.y, 0.01f);
+						transformParticle[i] = { transformParticle[i].scale,transformParticle[i].rotate + moveRotate[i],transformParticle[i].translate + moveVector[i] };
+						worldMatrixParticle[i] = MakeAffineMatrix(transformParticle[i].scale, transformParticle[i].rotate, transformParticle[i].translate);
+						wvpMatrixParticle[i] = Multiply(worldMatrixParticle[i], Multiply(viewMatrix, projectionMatrix));
+
+						tMDataParticle[i]->WVP = wvpMatrixParticle[i];
+						tMDataParticle[i]->World = worldMatrixParticle[i];
+
+
+						lifeTime[i]--;
+						if (lifeTime[i] <= 0) {
+							lifeTime[i] = 0;
+							isParticleAlive[i] = false;
+						}
+					}
 				}
 			}
 			
@@ -1460,11 +1515,15 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 				commandList->DrawInstanced(3, 1, 0, 0);
 			}
 			else {
-				for (int i = 0; i < particleNumMax; i++) {
-					commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-					commandList->SetGraphicsRootConstantBufferView(1, tMResourceParticle[i]->GetGPUVirtualAddress());
-					commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[2]);
-					commandList->DrawInstanced(3, 1, 0, 0);
+				for (int i = 0; i < kParticleNumMax; i++) {
+					if(isParticleAlive[i] == true)
+					{
+						materialDataParticle[i]->color = particleColor[i];
+						commandList->SetGraphicsRootConstantBufferView(0, materialResourceParticle[i]->GetGPUVirtualAddress());
+						commandList->SetGraphicsRootConstantBufferView(1, tMResourceParticle[i]->GetGPUVirtualAddress());
+						commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[2]);
+						commandList->DrawInstanced(3, 1, 0, 0);
+					}
 				}
 			}
 
@@ -1526,15 +1585,15 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	for (int i = 0; i < 3; i++) {
 		textureResource[i]->Release();
 	}
-	//wvpResource->Release();
 	materialResource->Release();
 	materialResourceSprite->Release();
 	vertexResource->Release();
 	vertexResourceSprite->Release();
 	transformationMatrixResource->Release();
 	transformationMatrixResource2->Release();
-	for (int i = 0; i < particleNumMax; i++) {
+	for (int i = 0; i < kParticleNumMax; i++) {
 		tMResourceParticle[i]->Release();
+		materialResourceParticle[i]->Release();
 	}
 	transformationMatrixResourceSprite->Release();
 	directionalLightResource->Release();
