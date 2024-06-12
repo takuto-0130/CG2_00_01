@@ -1520,15 +1520,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
-	OutputDebugStringA("Hello,DirectX!\n");
-
 	CoUninitialize();
 
 	CloseHandle(fenceEvent);
 	CloseWindow(hwnd);
-
-
-
 
 	return 0;
 }
