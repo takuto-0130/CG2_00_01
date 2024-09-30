@@ -24,7 +24,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #define DIRECTINPUT_VERSION		0x0800
 #include <dinput.h>
 
-
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
