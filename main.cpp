@@ -32,6 +32,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 
 #pragma comment(lib,"xaudio2.lib")
 
+#pragma region //サウンド
+
 struct ChunkHeader {
 	char id[4];
 	int32_t size;
@@ -132,10 +134,12 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, float volume =
 	hr = pSourceVoice->Start();
 }
 
+#pragma endregion
+
 //////////
 // 関数 //
 //////////
-
+#pragma region // 関数
 void Log(const std::string& message) {
 	OutputDebugStringA(message.c_str());
 }
@@ -405,6 +409,7 @@ struct D3DResourceLeakChecker {
 		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
 	}
 };
+#pragma endregion
 
 struct Vector2 {
 	float x;
