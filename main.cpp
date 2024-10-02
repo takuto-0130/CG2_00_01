@@ -903,10 +903,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	assert(pixelShaderBlob != nullptr);
 
 
-
-	//DepthStencilTextureをウィンドウのサイズで作成
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, WindowsApp::kClientWidth, WindowsApp::kClientHieght);
-	//DSV用のヒープでディスクリプタの数は1。DSVはシェーダーで触らないので、ShaderVisibleはfalse
+//DSV用のヒープでディスクリプタの数は1。DSVはシェーダーで触らないので、ShaderVisibleはfalse
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap = CreateDeacriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 	//DSVの設定
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};

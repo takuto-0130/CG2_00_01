@@ -8,10 +8,15 @@ using namespace Microsoft::WRL;
 using namespace Logger;
 using namespace StringUtility;
 
-void DirectXBasis::Initialize()
+void DirectXBasis::Initialize(WindowsApp* windowsApp)
 {
+	assert(windowsApp); // NULL検出
+	windowsApp_ = windowsApp;
+
 	deviceInitialize();
 	commandInitialize();
+	swapChainCreate();
+	DepthBufferCreate();
 }
 
 void DirectXBasis::deviceInitialize()
@@ -105,7 +110,7 @@ void DirectXBasis::deviceInitialize()
 
 void DirectXBasis::commandInitialize()
 {
-	HRESULT hr;
+	HRESULT hr = S_FALSE;
 
 	// コマンドアロケータ生成
 	hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator_));
@@ -123,11 +128,10 @@ void DirectXBasis::commandInitialize()
 	assert(SUCCEEDED(hr));
 }
 
-void DirectXBasis::swapChainInitialize()
+void DirectXBasis::swapChainCreate()
 {
-	HRESULT hr;
+	HRESULT hr = S_FALSE;
 	//スワップチェーン
-	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	swapChainDesc.Width = WindowsApp::kClientWidth;
 	swapChainDesc.Height = WindowsApp::kClientHieght;
@@ -137,7 +141,53 @@ void DirectXBasis::swapChainInitialize()
 	swapChainDesc.BufferCount = 2;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
-	hr = dxgiFactory_->CreateSwapChainForHwnd(commandQueue_.Get(), windowsApp->GetHwnd(), &swapChainDesc, nullptr,
+	hr = dxgiFactory_->CreateSwapChainForHwnd(commandQueue_.Get(), windowsApp_->GetHwnd(), &swapChainDesc, nullptr,
 		nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
 	assert(SUCCEEDED(hr));
+}
+
+void DirectXBasis::DepthBufferCreate()
+{
+	HRESULT hr = S_FALSE;
+
+	// 利用するHeapの設定
+	D3D12_HEAP_PROPERTIES heapProperties = D3D12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT); // VRAM上に作る
+
+	//生成するResourceの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Width = backBufferWidth_;
+	resourceDesc.Height = backBufferHeight_;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//DepthStencilとして利用可能なフォーマット
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;//DepthStencilとして使う通知
+
+	//深度のクリア設定
+	D3D12_CLEAR_VALUE depthClearValue = D3D12_CLEAR_VALUE(DXGI_FORMAT_D24_UNORM_S8_UINT, 1.0f, 0);//フォーマットResourceと合わせる, 1.0f(最大値)でクリア
+
+	// リソースの生成
+	hr = device_->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,//深度情報を書き込む状態にしておく
+		&depthClearValue,
+		IID_PPV_ARGS(&depthBuffer_));
+	assert(SUCCEEDED(hr));
+
+	// 深度ビュー用デスクリプタヒープ作成
+	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
+	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	descriptorHeapDesc.NumDescriptors = 1;
+	hr = device_->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&dsvDescriptorHeap_));
+	assert(SUCCEEDED(hr));
+
+	//DSVの設定
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//format 基本的にはResourceに合わせる
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;//2DTexture
+	//DSVHEAPの先頭にDSVを作る
+	device_->CreateDepthStencilView(depthBuffer_.Get(), &dsvDesc, dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart());
 }
