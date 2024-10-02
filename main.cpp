@@ -1712,11 +1712,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
-	delete windowsApp;
+	delete input;
 	CoUninitialize();
 
 	CloseHandle(fenceEvent);
 	CloseWindow(windowsApp->GetHwnd());
+	delete windowsApp;
 
 	return 0;
 }
