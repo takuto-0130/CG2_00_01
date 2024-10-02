@@ -23,6 +23,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #include <algorithm>
 #define DIRECTINPUT_VERSION		0x0800
 #include <dinput.h>
+#include "WindowsApp.h"
 
 
 #pragma comment(lib, "dinput8.lib")
@@ -414,6 +415,7 @@ struct D3DResourceLeakChecker {
 };
 #pragma endregion
 
+#pragma region // 構造体
 struct Vector2 {
 	float x;
 	float y;
@@ -484,6 +486,7 @@ struct ModelData {
 	std::vector<VertexData> vertices;
 	MateerialData material;
 };
+#pragma endregion
 
 MateerialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 	MateerialData materialData;
@@ -569,6 +572,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 	return modelData;
 }
 
+#pragma region //Matrix4x4
 Matrix4x4 MakeIdentity4x4() {
 	Matrix4x4 result{};
 	result.m[0][0] = 1;
@@ -755,49 +759,15 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 	result.m[3][3] = 1.0f;
 	return result;
 }
-
+#pragma endregion
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
 
-	CoInitializeEx(0, COINIT_MULTITHREADED);
+	WindowsApp* windowsApp = nullptr;
 
-	//
-	WNDCLASS wc{};
-	wc.lpfnWndProc = WindowProc;
-
-	wc.lpszClassName = L"CG2WindowClass";
-
-	wc.hInstance = GetModuleHandle(nullptr);
-
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-
-	RegisterClass(&wc);
-	//
-
-	//
-	const int32_t kClientWidth = 1280;
-	const int32_t kClientHieght = 720;
-
-	RECT wrc = { 0, 0, kClientWidth, kClientHieght };
-
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
-	//
-
-
-
-	//
-	HWND hwnd = CreateWindow(
-		wc.lpszClassName,
-		L"CG2",
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		wrc.right - wrc.left,
-		wrc.bottom - wrc.top,
-		nullptr,
-		nullptr,
-		wc.hInstance,
-		nullptr);
+	windowsApp = new WindowsApp();
+	windowsApp->Initialize();
+	
 
 #ifdef _DEBUG
 
@@ -810,8 +780,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 #endif // DEBUG
 
-
-	ShowWindow(hwnd, SW_SHOW);
 	//
 
 	D3DResourceLeakChecker leakCheck;
@@ -865,7 +833,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	// DirectInputを初期化
 	IDirectInput8* directInput = nullptr;
-	hr = DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
+	hr = DirectInput8Create(windowsApp->GetHInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8,
 		(void**)&directInput, nullptr);
 	assert(SUCCEEDED(hr));
 	// キーボードの初期化
@@ -876,7 +844,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	hr = keyboard->SetDataFormat(&c_dfDIKeyboard);
 	assert(SUCCEEDED(hr));
 	hr = keyboard->SetCooperativeLevel(
-		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+		windowsApp->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 	assert(SUCCEEDED(hr));
 
 	Log("Complete create D3D12Device!!!\n");
@@ -933,15 +901,15 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	//スワップチェーン
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-	swapChainDesc.Width = kClientWidth;
-	swapChainDesc.Height = kClientHieght;
+	swapChainDesc.Width = WindowsApp::kClientWidth;
+	swapChainDesc.Height = WindowsApp::kClientHieght;
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.BufferCount = 2;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
-	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), hwnd, &swapChainDesc, nullptr,
+	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), windowsApp->GetHwnd(), &swapChainDesc, nullptr,
 		nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
 	assert(SUCCEEDED(hr));
 
@@ -1120,7 +1088,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 
 	//DepthStencilTextureをウィンドウのサイズで作成
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHieght);
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, WindowsApp::kClientWidth, WindowsApp::kClientHieght);
 	//DSV用のヒープでディスクリプタの数は1。DSVはシェーダーで触らないので、ShaderVisibleはfalse
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap = CreateDeacriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 	//DSVの設定
@@ -1340,7 +1308,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 	Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHieght), 0.0f, 100.0f);
+	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsApp::kClientWidth), float(WindowsApp::kClientHieght), 0.0f, 100.0f);
 	Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
 	*transformationMatrixDataSprite =
 	{
@@ -1397,7 +1365,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
-	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHieght), 0.0f, 100.0f);
+	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsApp::kClientWidth), float(WindowsApp::kClientHieght), 0.0f, 100.0f);
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 	*transformationMatrixData =
 	{
@@ -1415,7 +1383,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	Matrix4x4 worldMatrix2 = MakeAffineMatrix(transform2.scale, transform2.rotate, transform2.translate);
 	Matrix4x4 viewMatrix2 = MakeIdentity4x4();
-	Matrix4x4 projectionMatrix2 = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHieght), 0.0f, 100.0f);
+	Matrix4x4 projectionMatrix2 = MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsApp::kClientWidth), float(WindowsApp::kClientHieght), 0.0f, 100.0f);
 	Matrix4x4 worldViewProjectionMatrix2 = Multiply(worldMatrix2, Multiply(viewMatrix2, projectionMatrix2));
 
 	transformationMatrixResource2->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData2));
@@ -1435,7 +1403,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	Matrix4x4 worldMatrix3 = MakeAffineMatrix(transform3.scale, transform3.rotate, transform3.translate);
 	Matrix4x4 viewMatrix3 = MakeIdentity4x4();
-	Matrix4x4 projectionMatrix3 = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHieght), 0.0f, 100.0f);
+	Matrix4x4 projectionMatrix3 = MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsApp::kClientWidth), float(WindowsApp::kClientHieght), 0.0f, 100.0f);
 	Matrix4x4 worldViewProjectionMatrix3 = Multiply(worldMatrix3, Multiply(viewMatrix3, projectionMatrix3));
 
 	transformationMatrixResource3->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData3));
@@ -1465,8 +1433,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	//ビューポート
 	D3D12_VIEWPORT viewport{};
 	//クライアント領域のサイズと一緒にして画面全体に表示
-	viewport.Width = kClientWidth;
-	viewport.Height = kClientHieght;
+	viewport.Width = WindowsApp::kClientWidth;
+	viewport.Height = WindowsApp::kClientHieght;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;
@@ -1476,9 +1444,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	D3D12_RECT scissorRect{};
 	//基本的にビューポートと同じ矩形が構成されるようにする
 	scissorRect.left = 0;
-	scissorRect.right = kClientWidth;
+	scissorRect.right = WindowsApp::kClientWidth;
 	scissorRect.top = 0;
-	scissorRect.bottom = kClientHieght;
+	scissorRect.bottom = WindowsApp::kClientHieght;
 
 	//transform変数を作る
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
@@ -1555,7 +1523,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplWin32_Init(windowsApp->GetHwnd());
 	ImGui_ImplDX12_Init(device.Get(),
 		swapChainDesc.BufferCount, rtvDesc.Format, srvDescripterHeap.Get(),
 		srvDescripterHeap->GetCPUDescriptorHandleForHeapStart(),
@@ -1626,21 +1594,21 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			viewMatrix = Inverse(cameraMatrix);
-			projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHieght), 0.1f, 100.0f);
+			projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(WindowsApp::kClientWidth) / float(WindowsApp::kClientHieght), 0.1f, 100.0f);
 			worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 			transformationMatrixData->WVP = worldViewProjectionMatrix;
 			transformationMatrixData->World = worldMatrix;
 
 			worldMatrix2 = MakeAffineMatrix(transform2.scale, transform2.rotate, transform2.translate);
 			viewMatrix2 = Inverse(cameraMatrix);
-			projectionMatrix2 = MakePrespectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHieght), 0.1f, 100.0f);
+			projectionMatrix2 = MakePrespectiveFovMatrix(0.45f, float(WindowsApp::kClientWidth) / float(WindowsApp::kClientHieght), 0.1f, 100.0f);
 			worldViewProjectionMatrix2 = Multiply(worldMatrix2, Multiply(viewMatrix2, projectionMatrix2));
 			transformationMatrixData2->WVP = worldViewProjectionMatrix2;
 			transformationMatrixData2->World = worldMatrix2;
 
 			worldMatrix3 = MakeAffineMatrix(transform3.scale, transform3.rotate, transform3.translate);
 			viewMatrix3 = Inverse(cameraMatrix);
-			projectionMatrix3 = MakePrespectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHieght), 0.1f, 100.0f);
+			projectionMatrix3 = MakePrespectiveFovMatrix(0.45f, float(WindowsApp::kClientWidth) / float(WindowsApp::kClientHieght), 0.1f, 100.0f);
 			worldViewProjectionMatrix3 = Multiply(worldMatrix3, Multiply(viewMatrix3, projectionMatrix3));
 			transformationMatrixData3->WVP = worldViewProjectionMatrix3;
 			transformationMatrixData3->World = worldMatrix3;
@@ -1761,11 +1729,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
-
+	delete windowsApp;
 	CoUninitialize();
 
 	CloseHandle(fenceEvent);
-	CloseWindow(hwnd);
+	CloseWindow(windowsApp->GetHwnd());
 
 	return 0;
 }
