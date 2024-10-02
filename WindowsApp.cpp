@@ -10,11 +10,13 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 LRESULT WindowsApp::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) 
+	{
 		return true;
 	}
 
-	switch (msg) {
+	switch (msg) 
+	{
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
@@ -61,8 +63,20 @@ void WindowsApp::Initialize()
 	ShowWindow(hwnd, SW_SHOW);
 }
 
-void WindowsApp::Update()
+bool WindowsApp::ProcessMessage()
 {
+	MSG msg{};
+
+	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	if (msg.message == WM_QUIT) {
+		return true;
+	}
+	return false;
 }
 
 void WindowsApp::Finalize()

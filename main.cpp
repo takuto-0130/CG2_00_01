@@ -16,7 +16,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <cmath>
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #include <fstream>
 #include <sstream>
 #include <wrl.h>
@@ -173,21 +172,6 @@ std::string ConvertString(const std::wstring& str) {
 	std::string result(sizeNeeded, 0);
 	WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
 	return result;
-}
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
-		return true;
-	}
-
-	switch (msg) {
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	}
-
-	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
 Microsoft::WRL::ComPtr<IDxcBlob> CompilerShader(
@@ -1515,14 +1499,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 		srvDescripterHeap->GetCPUDescriptorHandleForHeapStart(),
 		srvDescripterHeap->GetGPUDescriptorHandleForHeapStart());
 
-	MSG msg{};
 	//メインループ
-	while (msg.message != WM_QUIT) {
-
-
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+	while (true) 
+	{
+		// Windowsメッセージ処理
+		if (windowsApp->ProcessMessage()) {
+			// ゲームループを抜ける
+			break;
 		}
 		else { //ゲーム処理
 			input->Update();

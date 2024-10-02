@@ -10,8 +10,8 @@ public:// 動的メンバ関数
 	// 初期化
 	void Initialize();
 
-	// 更新
-	void Update();
+	// メッセージ処理
+	bool ProcessMessage();
 
 	// ウィンドウハンドルのgetter
 	HWND GetHwnd() const { return hwnd; }
