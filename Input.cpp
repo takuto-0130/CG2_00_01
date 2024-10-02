@@ -1,5 +1,5 @@
 #include "Input.h"
-#include <assert.h>
+#include <cassert>
 
 void Input::Initialize(WindowsApp* windowsApp)
 {
