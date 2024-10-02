@@ -21,9 +21,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #include <sstream>
 #include <wrl.h>
 #include <algorithm>
-#define DIRECTINPUT_VERSION		0x0800
-#include <dinput.h>
 #include "WindowsApp.h"
+#include "Input.h"
 
 
 #pragma comment(lib, "dinput8.lib")
@@ -764,6 +763,7 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
 
 	WindowsApp* windowsApp = nullptr;
+	Input* input = nullptr;
 
 	windowsApp = new WindowsApp();
 	windowsApp->Initialize();
@@ -831,21 +831,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	assert(device != nullptr);
 
-	// DirectInputを初期化
-	IDirectInput8* directInput = nullptr;
-	hr = DirectInput8Create(windowsApp->GetHInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8,
-		(void**)&directInput, nullptr);
-	assert(SUCCEEDED(hr));
-	// キーボードの初期化
-	IDirectInputDevice8* keyboard = nullptr;
-	hr = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-	assert(SUCCEEDED(hr));
-	// 入力データ形式のセット
-	hr = keyboard->SetDataFormat(&c_dfDIKeyboard);
-	assert(SUCCEEDED(hr));
-	hr = keyboard->SetCooperativeLevel(
-		windowsApp->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
-	assert(SUCCEEDED(hr));
+	input->Initialize(windowsApp->GetHInstance(), windowsApp->GetHwnd());
 
 	Log("Complete create D3D12Device!!!\n");
 
@@ -1539,11 +1525,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			DispatchMessage(&msg);
 		}
 		else { //ゲーム処理
-			keyboard->Acquire();
-			BYTE key[256] = {};
-			keyboard->GetDeviceState(sizeof(key), key);
-
-			if (key[DIK_0]) {
+			input->Update();
+			if (input->PushKey(DIK_0)) {
 				OutputDebugStringA("Hit 0\n");
 			}
 			ImGui_ImplDX12_NewFrame();
