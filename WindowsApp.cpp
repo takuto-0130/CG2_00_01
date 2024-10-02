@@ -64,3 +64,9 @@ void WindowsApp::Initialize()
 void WindowsApp::Update()
 {
 }
+
+void WindowsApp::Finalize()
+{
+	CloseWindow(hwnd);
+	CoUninitialize();
+}

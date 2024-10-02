@@ -19,6 +19,9 @@ public:// 動的メンバ関数
 	// ウィンドウクラスのgetter
 	HINSTANCE GetHInstance() const { return wc.hInstance; }
 
+	// 終了処理
+	void Finalize();
+
 public:// 定数
 	// クライアント領域 縦横幅
 	static const int32_t kClientWidth = 1280;

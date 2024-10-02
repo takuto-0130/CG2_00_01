@@ -831,7 +831,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	assert(device != nullptr);
 
-	input->Initialize(windowsApp->GetHInstance(), windowsApp->GetHwnd());
+	input->Initialize(windowsApp);
 
 	Log("Complete create D3D12Device!!!\n");
 
@@ -1712,12 +1712,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
-	delete input;
-	CoUninitialize();
-
-	CloseHandle(fenceEvent);
-	CloseWindow(windowsApp->GetHwnd());
 	delete windowsApp;
+	delete input;
+	CloseHandle(fenceEvent);
+	windowsApp->Finalize();
 
 	return 0;
 }
