@@ -11,6 +11,8 @@ public: // メンバ関数
 	// 初期化
 	void Initialize(WindowsApp* windowsApp);
 
+
+private: // メンバ関数
 	// デバイスの初期化
 	void deviceInitialize();
 
@@ -22,6 +24,8 @@ public: // メンバ関数
 
 	// 深度バッファの生成
 	void DepthBufferCreate();
+
+	// 各種ディスクリプターヒープの生成
 
 private: // メンバ変数
 	WindowsApp* windowsApp_ = nullptr;
