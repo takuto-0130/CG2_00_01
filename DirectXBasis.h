@@ -26,6 +26,9 @@ private: // メンバ関数
 	void DepthBufferCreate();
 
 	// 各種ディスクリプターヒープの生成
+	void VariousDescriptorHeapCreate();
+
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDeacriptorHeap(const D3D12_DESCRIPTOR_HEAP_TYPE& heapType, const UINT& numDescriptors, const bool& shaderVisible);
 
 private: // メンバ変数
 	WindowsApp* windowsApp_ = nullptr;
@@ -43,5 +46,9 @@ private: // メンバ変数
 
 	int32_t backBufferWidth_ = 0;
 	int32_t backBufferHeight_ = 0;
+
+	uint32_t descriptorSizeSRV_ = 0;
+	uint32_t descriptorSizeRTV_ = 0;
+	uint32_t descriptorSizeDSV_ = 0;
 };
 
