@@ -7,6 +7,8 @@
 #include "StringUtility.h"
 #include <array>
 #include <dxcapi.h>
+#include "externals/DirectXTex/DirectXTex.h"
+#include "externals/DirectXTex/d3dx12.h"
 
 class DirectXBasis
 {
@@ -24,11 +26,50 @@ public: // メンバ関数
 	/// </summary>
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGpuDescriptorHandle(const uint32_t& index);
 
+	// シェーダーのコンパイル
+	Microsoft::WRL::ComPtr<IDxcBlob> CompilerShader(const std::wstring& filePath, const wchar_t* profile);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const size_t& sizeInBytes);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+
+	[[nodiscard]]
+	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages);
+
+	DirectX::ScratchImage LoadTexture(const std::string& filePath);
+
 	// 描画前処理
 	void DrawBegin();
 
 	// 描画後処理
 	void DrawEnd();
+
+	void CommandListAndFence();
+
+
+	/// <summary>
+	/// デバイスの取得
+	/// </summary>
+	/// <returns>デバイス</returns>
+	ID3D12Device* GetDevice() const { return device_.Get(); }
+
+	/// <summary>
+	/// 描画コマンドリストの取得
+	/// </summary>
+	/// <returns>描画コマンドリスト</returns>
+	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
+
+	/// <summary>
+	/// 描画コマンドキューの取得
+	/// </summary>
+	/// <returns>描画コマンドキュー</returns>
+	ID3D12CommandQueue* GetCommandQueue() const { return commandQueue_.Get(); }
+
+	/// <summary>
+	/// 描画コマンドアロケータの取得
+	/// </summary>
+	/// <returns>描画コマンドアロケータ</returns>
+	ID3D12CommandAllocator* GetCommandAllocator() const { return commandAllocator_.Get(); }
 
 private: // メンバ関数
 	// デバイスの初期化
@@ -82,6 +123,7 @@ private: // メンバ関数
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap, const uint32_t& descriptorSize, const uint32_t& index);
 
 
+
 private: // メンバ変数
 	WindowsApp* windowsApp_ = nullptr;
 
@@ -106,20 +148,16 @@ private: // メンバ変数
 
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence_;
 	uint32_t fenceValue_ = 0;
-	HANDLE fenceEvent_;
+	HANDLE fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils_;
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler_;
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler_;
 
-
 	D3D12_RESOURCE_BARRIER barrier_{};
 
 	D3D12_VIEWPORT viewportRect_{};
 	D3D12_RECT scissorRect_{};
-
-	int32_t backBufferWidth_ = 0;
-	int32_t backBufferHeight_ = 0;
 
 	uint32_t descriptorSizeSRV_ = 0;
 	uint32_t descriptorSizeRTV_ = 0;
