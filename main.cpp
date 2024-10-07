@@ -695,6 +695,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	windowsApp = new WindowsApp();
 	windowsApp->Initialize();
+
+	directXBasis = new DirectXBasis;
+	directXBasis->Initialize(windowsApp);
 	
 
 
@@ -1317,6 +1320,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 			///// 描画処理
 
+			directXBasis->DrawBegin();
+
 			//commandList->SetGraphicsRootSignature(rootSignature.Get());
 			//commandList->SetPipelineState(graphicsPipelineState.Get());
 
@@ -1355,37 +1360,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			////ImGuiコマンドを積む
 			//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
 
-
-			////画面に描く処理はすべて終わり、画面に映すので、状態を遷移
-			////今回はRenderTargetからPresentにする
-			//barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			//barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-			////TransitionBarrierを張る
-			//commandList->ResourceBarrier(1, &barrier);
-
-			//hr = commandList->Close();
-			//assert(SUCCEEDED(hr));
-
-			////コマンドリストの実行
-			//ID3D12CommandList* commandLists[] = { commandList.Get()};
-			//commandQueue->ExecuteCommandLists(1, commandLists);
-			//swapChain->Present(1, 0);
-
-			////Fenceの値を更新
-			//fenceValue++;
-			////GPUがここまでたどり着いたときに、Fenceの値を指定した値に代入するようにSignalを送る
-			//commandQueue->Signal(fence.Get(), fenceValue);
-			////Fenceの値が指定したSignal値にたどり着いているか確認する
-			////GetCompletedValueの初期値はFence作成時に渡した初期値
-			//if (fence->GetCompletedValue() < fenceValue) {
-			//	fence->SetEventOnCompletion(fenceValue, fenceEvent);
-			//	WaitForSingleObject(fenceEvent, INFINITE);
-			//}
-
-			//hr = commandAllocator->Reset();
-			//assert(SUCCEEDED(hr));
-			//hr = commandList->Reset(commandAllocator.Get(), nullptr);
-			//assert(SUCCEEDED(hr));
+			directXBasis->DrawEnd();
+			
 		}
 	}
 	xAudio2.Reset();

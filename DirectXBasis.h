@@ -24,6 +24,12 @@ public: // メンバ関数
 	/// </summary>
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGpuDescriptorHandle(const uint32_t& index);
 
+	// 描画前処理
+	void DrawBegin();
+
+	// 描画後処理
+	void DrawEnd();
+
 private: // メンバ関数
 	// デバイスの初期化
 	void InitDevice();
@@ -61,12 +67,6 @@ private: // メンバ関数
 	// ImGuiの初期化
 	void InitImGui();
 
-	// 描画前処理
-	void DrawBegin();
-
-	// 描画後処理
-	void DrawEnd();
-
 
 	// デスクリプターヒープを生成する
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDeacriptorHeap(const D3D12_DESCRIPTOR_HEAP_TYPE& heapType, const UINT& numDescriptors, const bool& shaderVisible);
@@ -102,13 +102,18 @@ private: // メンバ変数
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
 	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources_;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[2];
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle_;
 
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence_;
 	uint32_t fenceValue_ = 0;
+	HANDLE fenceEvent_;
 
 	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils_;
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler_;
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler_;
+
+
+	D3D12_RESOURCE_BARRIER barrier_{};
 
 	D3D12_VIEWPORT viewportRect_{};
 	D3D12_RECT scissorRect_{};

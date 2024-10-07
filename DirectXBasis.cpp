@@ -10,6 +10,7 @@
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "dxcompiler.lib")
 
+
 using namespace Microsoft::WRL;
 using namespace Logger;
 using namespace StringUtility;
@@ -41,6 +42,75 @@ D3D12_CPU_DESCRIPTOR_HANDLE DirectXBasis::GetSRVCpuDescriptorHandle(const uint32
 D3D12_GPU_DESCRIPTOR_HANDLE DirectXBasis::GetSRVGpuDescriptorHandle(const uint32_t& index)
 {
 	return  GetGpuDescriptorHandle(srvDescripterHeap_, descriptorSizeSRV_, index);
+}
+
+void DirectXBasis::DrawBegin()
+{
+	//書き込むバックバッファのインデックス
+	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
+
+	//TransitionBarrierの設定
+	//今回のバリアはTransition
+	barrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier_.Transition.pResource = swapChainResources_[backBufferIndex].Get();
+	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	commandList_->ResourceBarrier(1, &barrier_);
+
+	
+	//描画先のRTVとDSVを設定
+	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, &dsvHandle_);
+
+	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };//RGBA
+	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
+
+	//描画用のDiscriptorHeapの設定
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescripterHeap_.Get() };
+	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
+
+
+	commandList_->RSSetViewports(1, &viewportRect_);
+	commandList_->RSSetScissorRects(1, &scissorRect_);
+}
+
+void DirectXBasis::DrawEnd()
+{
+	HRESULT hr = S_FALSE;
+
+	//書き込むバックバッファのインデックス
+	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
+
+	//画面に描く処理はすべて終わり、画面に映すので、状態を遷移
+			//今回はRenderTargetからPresentにする
+	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	//TransitionBarrierを張る
+	commandList_->ResourceBarrier(1, &barrier_);
+
+	hr = commandList_->Close();
+	assert(SUCCEEDED(hr));
+
+	//コマンドリストの実行
+	ID3D12CommandList* commandLists[] = { commandList_.Get() };
+	commandQueue_->ExecuteCommandLists(1, commandLists);
+	swapChain_->Present(1, 0);
+
+	//Fenceの値を更新
+	fenceValue_++;
+	//GPUがここまでたどり着いたときに、Fenceの値を指定した値に代入するようにSignalを送る
+	commandQueue_->Signal(fence_.Get(), fenceValue_);
+	//Fenceの値が指定したSignal値にたどり着いているか確認する
+	//GetCompletedValueの初期値はFence作成時に渡した初期値
+	if (fence_->GetCompletedValue() < fenceValue_) {
+		fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
+		WaitForSingleObject(fenceEvent_, INFINITE);
+	}
+
+	hr = commandAllocator_->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList_->Reset(commandAllocator_.Get(), nullptr);
+	assert(SUCCEEDED(hr));
 }
 
 void DirectXBasis::InitDevice()
@@ -246,6 +316,7 @@ void DirectXBasis::InitDSV()
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//format 基本的にはResourceに合わせる
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;//2DTexture
+	dsvHandle_ = GetCpuDescriptorHandle(dsvDescriptorHeap_, descriptorSizeDSV_, 0);
 	//DSVHEAPの先頭にDSVを作る
 	device_->CreateDepthStencilView(depthBuffer_.Get(), &dsvDesc, dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart());
 }
@@ -302,46 +373,6 @@ void DirectXBasis::InitImGui()
 		swapChainDesc_.BufferCount, rtvDesc_.Format, srvDescripterHeap_.Get(),
 		srvDescripterHeap_->GetCPUDescriptorHandleForHeapStart(),
 		srvDescripterHeap_->GetGPUDescriptorHandleForHeapStart());
-}
-
-void DirectXBasis::DrawBegin()
-{
-	//書き込むバックバッファのインデックス
-	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
-
-	//TransitionBarrierの設定
-	D3D12_RESOURCE_BARRIER barrier{};
-	//今回のバリアはTransition
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	//フラグをNONEにしておく
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	//バリアを張る対象のリソース。現在のバックバッファに対して行う
-	barrier.Transition.pResource = swapChainResources_[backBufferIndex].Get();
-	//遷移前(現在)のResourceState
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	//遷移後のResourceState
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	//TransitionBarrierを張る
-	commandList_->ResourceBarrier(1, &barrier);
-
-	//描画先のRTVとDSVを設定
-	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, &GetCpuDescriptorHandle(dsvDescriptorHeap_, );
-
-	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };//RGBA
-	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
-
-	//描画用のDiscriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescripterHeap_.Get()};
-	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
-
-
-	//三角形の描画コマンド
-	commandList_->RSSetViewports(1, &viewportRect_);
-	commandList_->RSSetScissorRects(1, &scissorRect_);
-}
-
-void DirectXBasis::DrawEnd()
-{
 }
 
 
