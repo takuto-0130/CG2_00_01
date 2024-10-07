@@ -165,7 +165,7 @@ void DirectXBasis::CreateSwapChain()
 	swapChainDesc_.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
 	hr = dxgiFactory_->CreateSwapChainForHwnd(commandQueue_.Get(), windowsApp_->GetHwnd(), &swapChainDesc_, nullptr,
-		nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
+		nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain_.GetAddressOf()));
 	assert(SUCCEEDED(hr));
 }
 
@@ -231,7 +231,7 @@ void DirectXBasis::InitRTV()
 	for (uint32_t i = 0; i < 2; ++i)
 	{
 		//SwapChainからResourceを引っ張ってくる
-		hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&swapChainResources_[i]));
+		hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(&swapChainResources_[i]));
 		assert(SUCCEEDED(hr));
 		// RTVハンドルを取得
 		rtvHandles_[i] = GetCpuDescriptorHandle(rtvDescriptorHeap_, descriptorSizeRTV_, i);
@@ -302,6 +302,46 @@ void DirectXBasis::InitImGui()
 		swapChainDesc_.BufferCount, rtvDesc_.Format, srvDescripterHeap_.Get(),
 		srvDescripterHeap_->GetCPUDescriptorHandleForHeapStart(),
 		srvDescripterHeap_->GetGPUDescriptorHandleForHeapStart());
+}
+
+void DirectXBasis::DrawBegin()
+{
+	//書き込むバックバッファのインデックス
+	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
+
+	//TransitionBarrierの設定
+	D3D12_RESOURCE_BARRIER barrier{};
+	//今回のバリアはTransition
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	//フラグをNONEにしておく
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	//バリアを張る対象のリソース。現在のバックバッファに対して行う
+	barrier.Transition.pResource = swapChainResources_[backBufferIndex].Get();
+	//遷移前(現在)のResourceState
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	//遷移後のResourceState
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	//TransitionBarrierを張る
+	commandList_->ResourceBarrier(1, &barrier);
+
+	//描画先のRTVとDSVを設定
+	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, &GetCpuDescriptorHandle(dsvDescriptorHeap_, );
+
+	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };//RGBA
+	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
+
+	//描画用のDiscriptorHeapの設定
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescripterHeap_.Get()};
+	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
+
+
+	//三角形の描画コマンド
+	commandList_->RSSetViewports(1, &viewportRect_);
+	commandList_->RSSetScissorRects(1, &scissorRect_);
+}
+
+void DirectXBasis::DrawEnd()
+{
 }
 
 

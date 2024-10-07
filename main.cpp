@@ -702,13 +702,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	input->Initialize(windowsApp);
 
 
-
-
-
-
-
-	
-
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 	IXAudio2MasteringVoice* masterVoice;
 	HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
@@ -726,10 +719,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	//FenceのSignalを待つためのイベントを作成する
 	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	assert(fenceEvent != nullptr);
-
-
-
-
 
 
 
@@ -1328,38 +1317,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 			///// 描画処理
 
-			////書き込むバックバッファのインデックス
-			//UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
-
-			////TransitionBarrierの設定
-			//D3D12_RESOURCE_BARRIER barrier{};
-			////今回のバリアはTransition
-			//barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-			////フラグをNONEにしておく
-			//barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-			////バリアを張る対象のリソース。現在のバックバッファに対して行う
-			//barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
-			////遷移前(現在)のResourceState
-			//barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-			////遷移後のResourceState
-			//barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			////TransitionBarrierを張る
-			//commandList->ResourceBarrier(1, &barrier);
-
-			////描画先のRTVとDSVを設定
-			//commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
-
-			//float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };//RGBA
-			//commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
-
-			////描画用のDiscriptorHeapの設定
-			//ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescripterHeap.Get()};
-			//commandList->SetDescriptorHeaps(1, descriptorHeaps);
-
-
-			////三角形の描画コマンド
-			//commandList->RSSetViewports(1, &viewport);
-			//commandList->RSSetScissorRects(1, &scissorRect);
 			//commandList->SetGraphicsRootSignature(rootSignature.Get());
 			//commandList->SetPipelineState(graphicsPipelineState.Get());
 
