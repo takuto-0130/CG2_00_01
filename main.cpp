@@ -1043,7 +1043,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	bool useMonsterBall = true;
 
 	Microsoft::WRL::ComPtr<ID3D12Device> device = directXBasis->GetDevice();
-	
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList = directXBasis->GetCommandList();
 
 	//メインループ
 	while (true) 
@@ -1135,43 +1135,44 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 			directXBasis->DrawBegin();
 
-			directXBasis->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-			directXBasis->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+			//三角形の描画コマンド
+			commandList->SetGraphicsRootSignature(rootSignature.Get());
+			commandList->SetPipelineState(graphicsPipelineState.Get());
 
-			directXBasis->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 
-			directXBasis->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			directXBasis->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
-			directXBasis->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			directXBasis->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource2->GetGPUVirtualAddress());
-			directXBasis->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-			directXBasis->GetCommandList()->DrawInstanced(6 * kSubdivision * kSubdivision, 1, 0, 0);
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource2->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->DrawInstanced(6 * kSubdivision * kSubdivision, 1, 0, 0);
 
-			directXBasis->GetCommandList()->IASetVertexBuffers(0, 1, &modelVertexBufferView);
-			directXBasis->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			directXBasis->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
-			directXBasis->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU2);
-			directXBasis->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
-			
-			directXBasis->GetCommandList()->IASetVertexBuffers(0, 1, &modelVertexBufferView2);
-			directXBasis->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			directXBasis->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource3->GetGPUVirtualAddress());
-			directXBasis->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-			directXBasis->GetCommandList()->DrawInstanced(UINT(modelData2.vertices.size()), 1, 0, 0);
-			
-			
-			directXBasis->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-			directXBasis->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
-			directXBasis->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-			directXBasis->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
-			directXBasis->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-			
-			directXBasis->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			commandList->IASetVertexBuffers(0, 1, &modelVertexBufferView);
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU2);
+			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+
+			commandList->IASetVertexBuffers(0, 1, &modelVertexBufferView2);
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource3->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->DrawInstanced(UINT(modelData2.vertices.size()), 1, 0, 0);
+
+
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+			commandList->IASetIndexBuffer(&indexBufferViewSprite);
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+
+			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 
 			//ImGuiコマンドを積む
-			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), directXBasis->GetCommandList());
+			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
 
 			directXBasis->DrawEnd();
 			
