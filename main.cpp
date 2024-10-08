@@ -245,9 +245,6 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompilerShader(
 	assert(SUCCEEDED(hr));
 	//成功したログを出す
 	Log(ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
-	//もう使わないリソースを開放
-	shaderSource->Release();
-	shaderResult->Release();
 	//実行用バイナリを返却
 	return shaderBlob;
 }
@@ -904,8 +901,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 		filter.DenyList.pSeverityList = severities;
 		//指定したメッセージを抑制する
 		infoQueue->PushStorageFilter(&filter);
-		//解放
-		infoQueue->Release();
 	}
 
 #endif // _DEBUG
@@ -1515,9 +1510,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	assert(SUCCEEDED(hr));
 	hr = commandList->Reset(commandAllocator.Get(), nullptr);
 	assert(SUCCEEDED(hr));
-
-	intermediateResource->Release();
-	intermediateResource2->Release();
 
 
 
