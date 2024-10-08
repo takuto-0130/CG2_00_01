@@ -1011,9 +1011,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource2 = directXBasis->UploadTextureData(textureResource2, mipImages2);
 
 
-	//directXBasis->CommandListAndFence();
-
-
 
 
 	//metaDataを元にSRVの設定
