@@ -22,6 +22,7 @@
 #include <algorithm>
 #include "Input.h"
 #include "DirectXBasis.h"
+#include "D3DResourceLeakChecker.h"
 
 
 #pragma comment(lib, "dinput8.lib")
@@ -176,17 +177,6 @@
 //	assert(SUCCEEDED(hr));
 //	return resource;
 //}
-//
-struct D3DResourceLeakChecker {
-	~D3DResourceLeakChecker()
-	{
-		Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-		if(SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug))))
-		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-	}
-};
 #pragma endregion
 
 #pragma region // 構造体
@@ -537,7 +527,7 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
 
-	D3DResourceLeakChecker leakCheck;
+	D3DResourceLeakChecker* leakCheck;
 	WindowsApp* windowsApp = nullptr;
 	DirectXBasis* directXBasis = nullptr;
 	Input* input = nullptr;
@@ -1021,7 +1011,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource2 = directXBasis->UploadTextureData(textureResource2, mipImages2);
 
 
-	directXBasis->CommandListAndFence();
+	//directXBasis->CommandListAndFence();
 
 
 

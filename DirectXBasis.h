@@ -3,10 +3,11 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
-#include "Logger.h"
-#include "StringUtility.h"
 #include <array>
 #include <dxcapi.h>
+#include <chrono>
+#include "Logger.h"
+#include "StringUtility.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
 
@@ -108,6 +109,14 @@ private: // メンバ関数
 	// ImGuiの初期化
 	void InitImGui();
 
+	// fps固定の初期化
+	void InitFixFPS();
+
+	// fps固定の更新
+	void UpdateFixFPS();
+
+	// 記録時間 (fps固定用)
+	std::chrono::steady_clock::time_point reference_;
 
 	// デスクリプターヒープを生成する
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDeacriptorHeap(const D3D12_DESCRIPTOR_HEAP_TYPE& heapType, const UINT& numDescriptors, const bool& shaderVisible);
@@ -148,7 +157,6 @@ private: // メンバ変数
 
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence_;
 	uint32_t fenceValue_ = 0;
-	HANDLE fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils_;
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler_;

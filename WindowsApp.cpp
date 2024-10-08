@@ -4,7 +4,7 @@
 #include "externals/imgui/imgui_impl_win32.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-
+#pragma comment(lib, "winmm.lib")
 
 
 LRESULT WindowsApp::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -42,11 +42,7 @@ void WindowsApp::Initialize()
 	RECT wrc = { 0, 0, kClientWidth, kClientHieght };
 
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
-	//
 
-
-
-	//
 	hwnd = CreateWindow(
 		wc.lpszClassName,
 		L"GE3",
@@ -61,6 +57,9 @@ void WindowsApp::Initialize()
 		nullptr);
 
 	ShowWindow(hwnd, SW_SHOW);
+
+	// システムタイマーの分解能を上げる
+	timeBeginPeriod(1);
 }
 
 bool WindowsApp::ProcessMessage()

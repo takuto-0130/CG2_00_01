@@ -2,6 +2,7 @@
 #include <cassert>
 #include <format>
 #include <vector>
+#include <thread>
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_win32.h"
@@ -20,6 +21,8 @@ void DirectXBasis::Initialize(WindowsApp* windowsApp)
 {
 	assert(windowsApp); // NULL検出
 	windowsApp_ = windowsApp;
+
+	InitFixFPS();
 
 	InitDevice();
 	InitCommand();
@@ -244,21 +247,21 @@ void DirectXBasis::CommandListAndFence()
 	hr = commandList_->Close();
 	assert(SUCCEEDED(hr));
 
-	//コマンドリストの実行
+	// コマンドリストの実行
 	ID3D12CommandList* commandLists[] = { commandList_.Get() };
 	commandQueue_->ExecuteCommandLists(1, commandLists);
 	swapChain_->Present(1, 0);
 
-	//Fenceの値を更新
-	fenceValue_++;
-	//GPUがここまでたどり着いたときに、Fenceの値を指定した値に代入するようにSignalを送る
-	commandQueue_->Signal(fence_.Get(), fenceValue_);
-	//Fenceの値が指定したSignal値にたどり着いているか確認する
-	//GetCompletedValueの初期値はFence作成時に渡した初期値
-	if (fence_->GetCompletedValue() < fenceValue_) {
-		fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
-		WaitForSingleObject(fenceEvent_, INFINITE);
+	// コマンドの実行完了を待つ
+	commandQueue_->Signal(fence_.Get(), ++fenceValue_);
+	if (fence_->GetCompletedValue() != fenceValue_) {
+		HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+		fence_->SetEventOnCompletion(fenceValue_, fenceEvent);
+		WaitForSingleObject(fenceEvent, INFINITE);
+		CloseHandle(fenceEvent);
 	}
+
+	UpdateFixFPS();
 
 	hr = commandAllocator_->Reset();
 	assert(SUCCEEDED(hr));
@@ -525,6 +528,36 @@ void DirectXBasis::InitImGui()
 		swapChainDesc_.BufferCount, rtvDesc_.Format, srvDescripterHeap_.Get(),
 		srvDescripterHeap_->GetCPUDescriptorHandleForHeapStart(),
 		srvDescripterHeap_->GetGPUDescriptorHandleForHeapStart());
+}
+
+void DirectXBasis::InitFixFPS()
+{
+	// 現在時間を記録する
+	reference_ = std::chrono::steady_clock::now();
+}
+
+void DirectXBasis::UpdateFixFPS()
+{
+	// 1/60秒ぴったりの時間
+	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
+	// 1/60秒よりわずかに短い時間
+	const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
+
+	// 現在時間を取得
+	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+	// 前回記録からの経過時間を取得する
+	std::chrono::microseconds elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - reference_);
+
+	// 1/60秒 (よりわずかに短い時間) 経っていない場合
+	if (elapsed < kMinCheckTime) {
+		// 1/60秒経過するまで微小なスリープを繰り返す
+		while (std::chrono::steady_clock::now() - reference_ < kMinTime) {
+			// 1マイクロ秒スリープ
+			std::this_thread::sleep_for(std::chrono::microseconds(1));
+		}
+	}
+	// 現在の時間を記録する
+	reference_ = std::chrono::steady_clock::now();
 }
 
 
