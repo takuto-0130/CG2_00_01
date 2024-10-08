@@ -1042,7 +1042,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	bool useMonsterBall = true;
 
-
+	Microsoft::WRL::ComPtr<ID3D12Device> device = directXBasis->GetDevice();
 	
 
 	//メインループ
