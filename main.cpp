@@ -109,7 +109,7 @@ void SoundUnload(SoundData* soundData) {
 }
 
 
-void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, float volume = 1.0f) {
+void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, bool isLoop = false, float volume = 1.0f) {
 	HRESULT hr;
 
 	IXAudio2SourceVoice* pSourceVoice = nullptr;
@@ -122,14 +122,14 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, float volume =
 	buf.PlayBegin = 0;
 	buf.PlayLength = soundData.playSoundLength;
 
-	{
+	if(isLoop){
 		buf.LoopBegin = 0;
 		buf.LoopLength = soundData.playSoundLength;
 		buf.LoopCount = XAUDIO2_LOOP_INFINITE;
 	}
 
 	hr = pSourceVoice->SubmitSourceBuffer(&buf);
-	std::clamp(volume, 0.0f, 1.0f);
+	volume = std::clamp(volume, 0.0f, 1.0f);
 	hr = pSourceVoice->SetVolume(volume);
 	hr = pSourceVoice->Start();
 }
