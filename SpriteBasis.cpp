@@ -5,6 +5,15 @@ using namespace Logger;
 void SpriteBasis::Initialize(DirectXBasis* directXBasis)
 {
 	directXBasis_ = directXBasis;
+	CreateRootSignature();
+	CreateGraphicsPipeline();
+}
+
+void SpriteBasis::BasisDrawSetting()
+{
+	directXBasis_->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
+	directXBasis_->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
+	directXBasis_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void SpriteBasis::CreateRootSignature()
@@ -144,9 +153,8 @@ void SpriteBasis::CreateGraphicsPipeline()
 	graphicsPipelineStateDesc.SampleDesc.Count = 1;
 	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 	//実際に生成
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 	HRESULT hr = S_FALSE;
 	hr = directXBasis_->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&graphicsPipelineState));
+		IID_PPV_ARGS(&graphicsPipelineState_));
 	assert(SUCCEEDED(hr));
 }

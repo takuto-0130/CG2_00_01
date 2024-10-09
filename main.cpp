@@ -1,7 +1,4 @@
 #include "WindowsApp.h"
-#include <cstdint>
-#include <string>
-#include <format>
 //#include <d3d12.h>
 //#include <dxgi1_6.h>
 #include <cassert>
@@ -12,10 +9,8 @@
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
-#include <vector>
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <wrl.h>
@@ -25,11 +20,9 @@
 #include "D3DResourceLeakChecker.h"
 #include "SpriteBasis.h"
 #include "Sprite.h"
+#include "struct.h"
+#include "Matrix4x4Func.h"
 
-
-#pragma comment(lib, "dinput8.lib")
-//#pragma comment(lib, "d3d12.lib")
-//#pragma comment(lib, "dxgi.lib")
 
 #include <xaudio2.h>
 
@@ -37,105 +30,109 @@
 
 #pragma region //サウンド
 
-//struct ChunkHeader {
-//	char id[4];
-//	int32_t size;
-//};
-//
-//struct RiffHeader {
-//	ChunkHeader chunk;
-//	char type[4];
-//};
-//
-//struct FormatChunk {
-//	ChunkHeader chunk;
-//	WAVEFORMATEX fmt;
-//};
-//
-//struct SoundData {
-//	WAVEFORMATEX wfex;
-//	BYTE* pBuffer;
-//	unsigned int bufferSize;
-//	int playSoundLength;
-//};
-//
-//SoundData SoundLoadWave(const char* filename) {
-//
-//	std::ifstream file;
-//	file.open(filename, std::ios_base::binary);
-//	assert(file.is_open());
-//
-//	RiffHeader riff;
-//	file.read((char*)&riff.chunk.id, sizeof(riff));
-//	if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
-//		assert(0);
-//	}
-//	if (strncmp(riff.type, "WAVE", 4) != 0) {
-//		assert(0);
-//	}
-//
-//	FormatChunk format = {};
-//	file.read((char*)&format, sizeof(ChunkHeader));
-//	if (strncmp(format.chunk.id, "fmt ", 4) != 0) {//資料では!=0
-//		assert(0);
-//	}
-//	assert(format.chunk.size <= sizeof(format.fmt));
-//	file.read((char*)&format.fmt, format.chunk.size);
-//
-//	ChunkHeader data;
-//	file.read((char*)&data, sizeof(data));
-//	if (strncmp(data.id, "JUNK", 4) == 0) {
-//		file.seekg(data.size, std::ios_base::cur);
-//		file.read((char*)&data, sizeof(data));
-//	}
-//	if (strncmp(data.id, "data", 4) != 0) {
-//		assert(0);
-//	}
-//
-//	char* pBuffer = new char[data.size];
-//	file.read(pBuffer, data.size);
-//	file.close();
-//
-//	SoundData soundData = {};
-//
-//	soundData.wfex = format.fmt;
-//	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
-//	soundData.bufferSize = data.size;
-//	soundData.playSoundLength = data.size / format.fmt.nBlockAlign;
-//
-//	return soundData;
-//}
-//
-//
-//void SoundUnload(SoundData* soundData) {
-//	delete[] soundData->pBuffer;
-//
-//	soundData->pBuffer = 0;
-//	soundData->bufferSize = 0;
-//	soundData->wfex = {};
-//}
-//
-//
-//void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, float volume = 1.0f) {
-//	HRESULT hr;
-//
-//	IXAudio2SourceVoice* pSourceVoice = nullptr;
-//	hr = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
-//	assert(SUCCEEDED(hr));
-//
-//	XAUDIO2_BUFFER buf{};
-//	buf.pAudioData = soundData.pBuffer;
-//	buf.AudioBytes = soundData.bufferSize;
-//	buf.PlayBegin = 0;
-//	buf.PlayLength = soundData.playSoundLength;
-//	buf.LoopBegin = 0;
-//	buf.LoopLength = soundData.playSoundLength;
-//	buf.LoopCount = XAUDIO2_LOOP_INFINITE;
-//	hr = pSourceVoice->SubmitSourceBuffer(&buf);
-//	std::clamp(volume, 0.0f, 1.0f);
-//	hr = pSourceVoice->SetVolume(volume);
-//	hr = pSourceVoice->Start();
-//}
+struct ChunkHeader {
+	char id[4];
+	int32_t size;
+};
+
+struct RiffHeader {
+	ChunkHeader chunk;
+	char type[4];
+};
+
+struct FormatChunk {
+	ChunkHeader chunk;
+	WAVEFORMATEX fmt;
+};
+
+struct SoundData {
+	WAVEFORMATEX wfex;
+	BYTE* pBuffer;
+	unsigned int bufferSize;
+	int playSoundLength;
+};
+
+SoundData SoundLoadWave(const char* filename) {
+
+	std::ifstream file;
+	file.open(filename, std::ios_base::binary);
+	assert(file.is_open());
+
+	RiffHeader riff;
+	file.read((char*)&riff.chunk.id, sizeof(riff));
+	if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
+		assert(0);
+	}
+	if (strncmp(riff.type, "WAVE", 4) != 0) {
+		assert(0);
+	}
+
+	FormatChunk format = {};
+	file.read((char*)&format, sizeof(ChunkHeader));
+	if (strncmp(format.chunk.id, "fmt ", 4) != 0) {//資料では!=0
+		assert(0);
+	}
+	assert(format.chunk.size <= sizeof(format.fmt));
+	file.read((char*)&format.fmt, format.chunk.size);
+
+	ChunkHeader data;
+	file.read((char*)&data, sizeof(data));
+	if (strncmp(data.id, "JUNK", 4) == 0) {
+		file.seekg(data.size, std::ios_base::cur);
+		file.read((char*)&data, sizeof(data));
+	}
+	if (strncmp(data.id, "data", 4) != 0) {
+		assert(0);
+	}
+
+	char* pBuffer = new char[data.size];
+	file.read(pBuffer, data.size);
+	file.close();
+
+	SoundData soundData = {};
+
+	soundData.wfex = format.fmt;
+	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
+	soundData.bufferSize = data.size;
+	soundData.playSoundLength = data.size / format.fmt.nBlockAlign;
+
+	return soundData;
+}
+
+
+void SoundUnload(SoundData* soundData) {
+	delete[] soundData->pBuffer;
+
+	soundData->pBuffer = 0;
+	soundData->bufferSize = 0;
+	soundData->wfex = {};
+}
+
+
+void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, float volume = 1.0f) {
+	HRESULT hr;
+
+	IXAudio2SourceVoice* pSourceVoice = nullptr;
+	hr = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+	assert(SUCCEEDED(hr));
+
+	XAUDIO2_BUFFER buf{};
+	buf.pAudioData = soundData.pBuffer;
+	buf.AudioBytes = soundData.bufferSize;
+	buf.PlayBegin = 0;
+	buf.PlayLength = soundData.playSoundLength;
+
+	{
+		buf.LoopBegin = 0;
+		buf.LoopLength = soundData.playSoundLength;
+		buf.LoopCount = XAUDIO2_LOOP_INFINITE;
+	}
+
+	hr = pSourceVoice->SubmitSourceBuffer(&buf);
+	std::clamp(volume, 0.0f, 1.0f);
+	hr = pSourceVoice->SetVolume(volume);
+	hr = pSourceVoice->Start();
+}
 
 #pragma endregion
 
@@ -182,23 +179,6 @@
 #pragma endregion
 
 #pragma region // 構造体
-struct Vector2 {
-	float x;
-	float y;
-};
-
-struct Vector3 {
-	float x;
-	float y;
-	float z;
-};
-
-struct Vector4 {
-	float x;
-	float y;
-	float z;
-	float w;
-};
 
 float Length(const Vector3& v) {
 	return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
@@ -209,49 +189,6 @@ Vector3 Normalize(const Vector3& v) {
 	Vector3 result{ v.x / len, v.y / len, v.z / len };
 	return result;
 }
-
-struct Matrix4x4 {
-	float m[4][4];
-};
-
-struct Transform {
-	Vector3 scale;
-	Vector3 rotate;
-	Vector3 translate;
-};
-
-struct VertexData {
-	Vector4 position;
-	Vector2 texCoord;
-	Vector3 normal;
-};
-
-struct Material {
-	Vector4 color;
-	int32_t enableLighting;
-	float padding[3];
-	Matrix4x4 uvTransform;
-};
-
-struct TransfomationMatrix {
-	Matrix4x4 WVP;
-	Matrix4x4 World;
-};
-
-struct DirectionalLight {
-	Vector4 color;
-	Vector3 direction;
-	float intensity;
-};
-
-struct MateerialData {
-	std::string textureFilePath;
-};
-
-struct ModelData {
-	std::vector<VertexData> vertices;
-	MateerialData material;
-};
 #pragma endregion
 
 MateerialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
@@ -338,195 +275,6 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 	return modelData;
 }
 
-#pragma region //Matrix4x4
-Matrix4x4 MakeIdentity4x4() {
-	Matrix4x4 result{};
-	result.m[0][0] = 1;
-	result.m[1][1] = 1;
-	result.m[2][2] = 1;
-	result.m[3][3] = 1;
-	return result;
-}
-
-Matrix4x4 MakeRotateXMatrix(float radian) {
-	Matrix4x4 result{};
-	result.m[0][0] = 1.0f;
-	result.m[3][3] = 1.0f;
-	result.m[1][1] = std::cos(radian);
-	result.m[1][2] = std::sin(radian);
-	result.m[2][1] = -std::sin(radian);
-	result.m[2][2] = std::cos(radian);
-	return result;
-}
-
-Matrix4x4 MakeRotateYMatrix(float radian) {
-	Matrix4x4 result{};
-	result.m[1][1] = 1.0f;
-	result.m[3][3] = 1.0f;
-	result.m[0][0] = std::cos(radian);
-	result.m[0][2] = -std::sin(radian);
-	result.m[2][0] = std::sin(radian);
-	result.m[2][2] = std::cos(radian);
-	return result;
-}
-
-Matrix4x4 MakeRotateZMatrix(float radian) {
-	Matrix4x4 result{};
-	result.m[2][2] = 1.0f;
-	result.m[3][3] = 1.0f;
-	result.m[0][0] = std::cos(radian);
-	result.m[0][1] = std::sin(radian);
-	result.m[1][0] = -std::sin(radian);
-	result.m[1][1] = std::cos(radian);
-	return result;
-}
-
-Matrix4x4 Multiply(const Matrix4x4& matrix1, const Matrix4x4& matrix2) {
-	Matrix4x4 result{};
-	float buf;
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			buf = 0;
-			for (int k = 0; k < 4; k++) {
-				buf = buf + matrix1.m[i][k] * matrix2.m[k][j];
-				result.m[i][j] = buf;
-			}
-		}
-	}
-	return result;
-}
-
-Matrix4x4 MakeAffineMatrix(Vector3& scale, Vector3& rotate, Vector3& translate) {
-	Matrix4x4 result{};
-	Matrix4x4 rotareXMatrix = MakeRotateXMatrix(rotate.x);
-	Matrix4x4 rotareYMatrix = MakeRotateYMatrix(rotate.y);
-	Matrix4x4 rotareZMatrix = MakeRotateZMatrix(rotate.z);
-	result = Multiply(rotareXMatrix, Multiply(rotareYMatrix, rotareZMatrix));
-
-	result.m[0][0] *= scale.x;
-	result.m[0][1] *= scale.x;
-	result.m[0][2] *= scale.x;
-
-	result.m[1][0] *= scale.y;
-	result.m[1][1] *= scale.y;
-	result.m[1][2] *= scale.y;
-
-	result.m[2][0] *= scale.z;
-	result.m[2][1] *= scale.z;
-	result.m[2][2] *= scale.z;
-
-	result.m[3][0] = translate.x;
-	result.m[3][1] = translate.y;
-	result.m[3][2] = translate.z;
-
-	return result;
-}
-
-Matrix4x4 Inverse(const Matrix4x4& m) {
-	Matrix4x4 result{};
-	float denominator =
-		m.m[0][0] * m.m[1][1] * m.m[2][2] * m.m[3][3] + m.m[0][0] * m.m[1][2] * m.m[2][3] * m.m[3][1] + m.m[0][0] * m.m[1][3] * m.m[2][1] * m.m[3][2]
-		- m.m[0][0] * m.m[1][3] * m.m[2][2] * m.m[3][1] - m.m[0][0] * m.m[1][2] * m.m[2][1] * m.m[3][3] - m.m[0][0] * m.m[1][1] * m.m[2][3] * m.m[3][2]
-		- m.m[0][1] * m.m[1][0] * m.m[2][2] * m.m[3][3] - m.m[0][2] * m.m[1][0] * m.m[2][3] * m.m[3][1] - m.m[0][3] * m.m[1][0] * m.m[2][1] * m.m[3][2]
-		+ m.m[0][3] * m.m[1][0] * m.m[2][2] * m.m[3][1] + m.m[0][2] * m.m[1][0] * m.m[2][1] * m.m[3][3] + m.m[0][1] * m.m[1][0] * m.m[2][3] * m.m[3][2]
-		+ m.m[0][1] * m.m[1][2] * m.m[2][0] * m.m[3][3] + m.m[0][2] * m.m[1][3] * m.m[2][0] * m.m[3][1] + m.m[0][3] * m.m[1][1] * m.m[2][0] * m.m[3][2]
-		- m.m[0][3] * m.m[1][2] * m.m[2][0] * m.m[3][1] - m.m[0][2] * m.m[1][1] * m.m[2][0] * m.m[3][3] - m.m[0][1] * m.m[1][3] * m.m[2][0] * m.m[3][2]
-		- m.m[0][1] * m.m[1][2] * m.m[2][3] * m.m[3][0] - m.m[0][2] * m.m[1][3] * m.m[2][1] * m.m[3][0] - m.m[0][3] * m.m[1][1] * m.m[2][2] * m.m[3][0]
-		+ m.m[0][3] * m.m[1][2] * m.m[2][1] * m.m[3][0] + m.m[0][2] * m.m[1][1] * m.m[2][3] * m.m[3][0] + m.m[0][1] * m.m[1][3] * m.m[2][2] * m.m[3][0];
-	//A1
-	result.m[0][0] = 1.0f / denominator
-		* (m.m[1][1] * m.m[2][2] * m.m[3][3] + m.m[1][2] * m.m[2][3] * m.m[3][1] + m.m[1][3] * m.m[2][1] * m.m[3][2]
-			- m.m[1][3] * m.m[2][2] * m.m[3][1] - m.m[1][2] * m.m[2][1] * m.m[3][3] - m.m[1][1] * m.m[2][3] * m.m[3][2]);
-
-	result.m[0][1] = 1.0f / denominator
-		* (-m.m[0][1] * m.m[2][2] * m.m[3][3] - m.m[0][2] * m.m[2][3] * m.m[3][1] - m.m[0][3] * m.m[2][1] * m.m[3][2]
-			+ m.m[0][3] * m.m[2][2] * m.m[3][1] + m.m[0][2] * m.m[2][1] * m.m[3][3] + m.m[0][1] * m.m[2][3] * m.m[3][2]);
-
-	result.m[0][2] = 1.0f / denominator
-		* (m.m[0][1] * m.m[1][2] * m.m[3][3] + m.m[0][2] * m.m[1][3] * m.m[3][1] + m.m[0][3] * m.m[1][1] * m.m[3][2]
-			- m.m[0][3] * m.m[1][2] * m.m[3][1] - m.m[0][2] * m.m[1][1] * m.m[3][3] - m.m[0][1] * m.m[1][3] * m.m[3][2]);
-
-	result.m[0][3] = 1.0f / denominator
-		* (-m.m[0][1] * m.m[1][2] * m.m[2][3] - m.m[0][2] * m.m[1][3] * m.m[2][1] - m.m[0][3] * m.m[1][1] * m.m[2][2]
-			+ m.m[0][3] * m.m[1][2] * m.m[2][1] + m.m[0][2] * m.m[1][1] * m.m[2][3] + m.m[0][1] * m.m[1][3] * m.m[2][2]);
-
-	//A2
-	result.m[1][0] = 1.0f / denominator
-		* (-m.m[1][0] * m.m[2][2] * m.m[3][3] - m.m[1][2] * m.m[2][3] * m.m[3][0] - m.m[1][3] * m.m[2][0] * m.m[3][2]
-			+ m.m[1][3] * m.m[2][2] * m.m[3][0] + m.m[1][2] * m.m[2][0] * m.m[3][3] + m.m[1][0] * m.m[2][3] * m.m[3][2]);
-
-	result.m[1][1] = 1.0f / denominator
-		* (m.m[0][0] * m.m[2][2] * m.m[3][3] + m.m[0][2] * m.m[2][3] * m.m[3][0] + m.m[0][3] * m.m[2][0] * m.m[3][2]
-			- m.m[0][3] * m.m[2][2] * m.m[3][0] - m.m[0][2] * m.m[2][0] * m.m[3][3] - m.m[0][0] * m.m[2][3] * m.m[3][2]);
-
-	result.m[1][2] = 1.0f / denominator
-		* (-m.m[0][0] * m.m[1][2] * m.m[3][3] - m.m[0][2] * m.m[1][3] * m.m[3][0] - m.m[0][3] * m.m[1][0] * m.m[3][2]
-			+ m.m[0][3] * m.m[1][2] * m.m[3][0] + m.m[0][2] * m.m[1][0] * m.m[3][3] + m.m[0][0] * m.m[1][3] * m.m[3][2]);
-
-	result.m[1][3] = 1.0f / denominator
-		* (m.m[0][0] * m.m[1][2] * m.m[2][3] + m.m[0][2] * m.m[1][3] * m.m[2][0] + m.m[0][3] * m.m[1][0] * m.m[2][2]
-			- m.m[0][3] * m.m[1][2] * m.m[2][0] - m.m[0][2] * m.m[1][0] * m.m[2][3] - m.m[0][0] * m.m[1][3] * m.m[2][2]);
-
-	//A3
-	result.m[2][0] = 1.0f / denominator
-		* (m.m[1][0] * m.m[2][1] * m.m[3][3] + m.m[1][1] * m.m[2][3] * m.m[3][0] + m.m[1][3] * m.m[2][0] * m.m[3][1]
-			- m.m[1][3] * m.m[2][1] * m.m[3][0] - m.m[1][1] * m.m[2][0] * m.m[3][3] - m.m[1][0] * m.m[2][3] * m.m[3][1]);
-
-	result.m[2][1] = 1.0f / denominator
-		* (-m.m[0][0] * m.m[2][1] * m.m[3][3] - m.m[0][1] * m.m[2][3] * m.m[3][0] - m.m[0][3] * m.m[2][0] * m.m[3][1]
-			+ m.m[0][3] * m.m[2][1] * m.m[3][0] + m.m[0][1] * m.m[2][0] * m.m[3][3] + m.m[0][0] * m.m[2][3] * m.m[3][1]);
-
-	result.m[2][2] = 1.0f / denominator
-		* (m.m[0][0] * m.m[1][1] * m.m[3][3] + m.m[0][1] * m.m[1][3] * m.m[3][0] + m.m[0][3] * m.m[1][0] * m.m[3][1]
-			- m.m[0][3] * m.m[1][1] * m.m[3][0] - m.m[0][1] * m.m[1][0] * m.m[3][3] - m.m[0][0] * m.m[1][3] * m.m[3][1]);
-
-	result.m[2][3] = 1.0f / denominator
-		* (-m.m[0][0] * m.m[1][1] * m.m[2][3] - m.m[0][1] * m.m[1][3] * m.m[2][0] - m.m[0][3] * m.m[1][0] * m.m[2][1]
-			+ m.m[0][3] * m.m[1][1] * m.m[2][0] + m.m[0][1] * m.m[1][0] * m.m[2][3] + m.m[0][0] * m.m[1][3] * m.m[2][1]);
-
-	//A4
-	result.m[3][0] = 1.0f / denominator
-		* (-m.m[1][0] * m.m[2][1] * m.m[3][2] - m.m[1][1] * m.m[2][2] * m.m[3][0] - m.m[1][2] * m.m[2][0] * m.m[3][1]
-			+ m.m[1][2] * m.m[2][1] * m.m[3][0] + m.m[1][1] * m.m[2][0] * m.m[3][2] + m.m[1][0] * m.m[2][2] * m.m[3][1]);
-
-	result.m[3][1] = 1.0f / denominator
-		* (m.m[0][0] * m.m[2][1] * m.m[3][2] + m.m[0][1] * m.m[2][2] * m.m[3][0] + m.m[0][2] * m.m[2][0] * m.m[3][1]
-			- m.m[0][2] * m.m[2][1] * m.m[3][0] - m.m[0][1] * m.m[2][0] * m.m[3][2] - m.m[0][0] * m.m[2][2] * m.m[3][1]);
-
-	result.m[3][2] = 1.0f / denominator
-		* (-m.m[0][0] * m.m[1][1] * m.m[3][2] - m.m[0][1] * m.m[1][2] * m.m[3][0] - m.m[0][2] * m.m[1][0] * m.m[3][1]
-			+ m.m[0][2] * m.m[1][1] * m.m[3][0] + m.m[0][1] * m.m[1][0] * m.m[3][2] + m.m[0][0] * m.m[1][2] * m.m[3][1]);
-
-	result.m[3][3] = 1.0f / denominator
-		* (m.m[0][0] * m.m[1][1] * m.m[2][2] + m.m[0][1] * m.m[1][2] * m.m[2][0] + m.m[0][2] * m.m[1][0] * m.m[2][1]
-			- m.m[0][2] * m.m[1][1] * m.m[2][0] - m.m[0][1] * m.m[1][0] * m.m[2][2] - m.m[0][0] * m.m[1][2] * m.m[2][1]);
-
-	return result;
-}
-
-Matrix4x4 MakePrespectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
-	Matrix4x4 result{};
-	result.m[0][0] = 1.0f / aspectRatio * (1.0f / std::tan(fovY / 2.0f));
-	result.m[1][1] = 1.0f / std::tan(fovY / 2.0f);
-	result.m[2][2] = farClip / (farClip - nearClip);
-	result.m[2][3] = 1.0f;
-	result.m[3][2] = (-nearClip * farClip) / (farClip - nearClip);
-	return result;
-}
-
-Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
-	Matrix4x4 result{};
-	result.m[0][0] = 2.0f / (right - left);
-	result.m[1][1] = 2.0f / (top - bottom);
-	result.m[2][2] = 1.0f / (farClip - nearClip);
-	result.m[3][0] = (left + right) / (left - right);
-	result.m[3][1] = (top + bottom) / (bottom - top);
-	result.m[3][2] = nearClip / (nearClip - farClip);
-	result.m[3][3] = 1.0f;
-	return result;
-}
-#pragma endregion
-
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
 
 	D3DResourceLeakChecker* leakCheck;
@@ -563,7 +311,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 
 
-	
+	Sprite* sprite = new Sprite();
+	sprite->Initialize();
 
 
 	
@@ -642,7 +391,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	//		vertexData[start + 5].position = vertexData[start + 2].position;
 	//		vertexData[start + 5].texCoord = vertexData[start + 2].texCoord;
 	//		vertexData[start + 5].normal = { vertexData[start + 5].position.x, vertexData[start + 5].position.y, vertexData[start + 5].position.z };
-
 	//	}
 	//}
 
@@ -998,13 +746,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 			directXBasis->DrawBegin();
 
-			//三角形の描画コマンド
-			commandList->SetGraphicsRootSignature(rootSignature.Get());
-			commandList->SetPipelineState(graphicsPipelineState.Get());
+			// 描画コマンド
+			spriteBasis->BasisDrawSetting();
 
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 
-			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
@@ -1046,7 +792,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+	delete sprite;
 	delete input;
+	delete spriteBasis;
 	delete directXBasis;
 	windowsApp->Finalize();
 	delete windowsApp;

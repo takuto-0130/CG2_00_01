@@ -1,4 +1,5 @@
 #pragma once
+#include "SpriteBasis.h"
 
 // スプライト
 class Sprite
