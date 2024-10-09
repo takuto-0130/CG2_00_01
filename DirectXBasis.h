@@ -131,7 +131,9 @@ private: // メンバ関数
 	/// </summary>
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap, const uint32_t& descriptorSize, const uint32_t& index);
 
-
+public: // メンバ変数
+	// 最大SRV数(最大テクスチャ数)
+	static const uint32_t kMaxSRVCount_;
 
 private: // メンバ変数
 	WindowsApp* windowsApp_ = nullptr;

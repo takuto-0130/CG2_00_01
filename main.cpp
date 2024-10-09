@@ -22,6 +22,7 @@
 #include "Sprite.h"
 #include "struct.h"
 #include "Matrix4x4Func.h"
+#include "TextureManager.h"
 
 
 #include <xaudio2.h>
@@ -326,6 +327,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 		spr->SetPosition({ 100.0f * static_cast<float>(itr), 0.0f });
 		itr++;
 	}
+
+	TextureManager::GetInstance()->Initialize();
 
 
 
@@ -715,6 +718,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			
 		}
 	}
+	TextureManager::GetInstance()->Finalize();
 	xAudio2.Reset();
 	//SoundUnload(&soundData1);
 	ImGui_ImplDX12_Shutdown();

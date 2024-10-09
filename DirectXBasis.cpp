@@ -17,6 +17,8 @@ using namespace Microsoft::WRL;
 using namespace Logger;
 using namespace StringUtility;
 
+const uint32_t DirectXBasis::kMaxSRVCount_ = 512;
+
 void DirectXBasis::Initialize(WindowsApp* windowsApp)
 {
 	assert(windowsApp); // NULL検出
@@ -438,7 +440,7 @@ void DirectXBasis::CreateVariousDescriptorHeap()
 	descriptorSizeDSV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	rtvDescriptorHeap_ = CreateDeacriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-	srvDescripterHeap_ = CreateDeacriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	srvDescripterHeap_ = CreateDeacriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount_, true);
 	dsvDescriptorHeap_ = CreateDeacriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 }
 
