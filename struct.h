@@ -32,12 +32,12 @@ struct Transform {
 	Vector3 translate;
 };
 
-//struct VertexData {
-//	Vector4 position;
-//	Vector2 texCoord;
-//	Vector3 normal;
-//};
-//
+struct VertexData {
+	Vector4 position;
+	Vector2 texCoord;
+	Vector3 normal;
+};
+
 //struct Material {
 //	Vector4 color;
 //	int32_t enableLighting;
@@ -60,7 +60,7 @@ struct MateerialData {
 	std::string textureFilePath;
 };
 
-//struct ModelData {
-//	std::vector<VertexData> vertices;
-//	MateerialData material;
-//};
+struct ModelData {
+	std::vector<VertexData> vertices;
+	MateerialData material;
+};
