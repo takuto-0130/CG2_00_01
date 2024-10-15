@@ -483,6 +483,7 @@ struct ModelData {
 
 #pragma endregion
 
+#pragma region // modelLoad
 MateerialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 	MateerialData materialData;
 	std::string line;
@@ -566,6 +567,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 	}
 	return modelData;
 }
+#pragma endregion
 
 #pragma region // Matrix4x4
 Matrix4x4 MakeIdentity4x4() {
