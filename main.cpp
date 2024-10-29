@@ -21,6 +21,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #include <sstream>
 #include <wrl.h>
 #include <algorithm>
+#include <random>
 
 
 #pragma comment(lib, "d3d12.lib")
@@ -138,7 +139,7 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, float volume =
 //////////
 // 関数 //
 //////////
-
+#pragma region // function
 void Log(const std::string& message) {
 	OutputDebugStringA(message.c_str());
 }
@@ -405,6 +406,7 @@ struct D3DResourceLeakChecker {
 		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
 	}
 };
+#pragma endregion
 
 #pragma region // struct
 struct Vector2 {
@@ -443,6 +445,11 @@ struct Transform {
 	Vector3 scale;
 	Vector3 rotate;
 	Vector3 translate;
+};
+
+struct Particle {
+	Transform transform;
+	Vector3 velocity;
 };
 
 struct VertexData {
@@ -1001,7 +1008,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-	//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列。
+	//RootParameter作成。複数設定できるので配列。
 	D3D12_ROOT_PARAMETER rootParameters[4] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -1412,7 +1419,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
 
-	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,3.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
@@ -1591,13 +1598,19 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = GetGpuDescriptorHandle(srvDescripterHeap, descriptorSizeSRV, 3);
 	device->CreateShaderResourceView(instancingResource.Get(), &instancingSrvDesc, instancingSrvHandleCPU);
 
-	Transform transforms[kNumInstance];
-	for (uint32_t index = 0; index < kNumInstance; ++index) {
-		transforms[index].scale = { 1.0f,1.0f,1.0f };
-		transforms[index].rotate = { 0.0f,0.0f,0.0f };
-		transforms[index].translate = { index * 0.1f,index * 0.1f ,index * 0.1f };
-	}
+	Particle particles[kNumInstance];
 
+	std::random_device seedGene;
+	std::mt19937 random(seedGene());
+	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+
+	for (uint32_t index = 0; index < kNumInstance; ++index) {
+		particles[index].transform.scale = { 1.0f,1.0f,1.0f };
+		particles[index].transform.rotate = { 0.0f,0.0f,0.0f };
+		particles[index].transform.translate = { distribution(random),distribution(random) ,0 };
+		particles[index].velocity = { /*distribution(random),distribution(random),*/0 };
+	}
+	const float kDeltaTime = 1.0f / 60.0f;
 
 
 	bool useMonsterBall = true;
@@ -1691,9 +1704,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			transformationMatrixData3->World = worldMatrix3;*/
 
 			for (uint32_t index = 0; index < kNumInstance; ++index) {
-				transforms[index].rotate = transform.rotate;
+				particles[index].transform.rotate = transform.rotate;
+				particles[index].transform.translate.x += particles[index].velocity.x * kDeltaTime;
+				particles[index].transform.translate.y += particles[index].velocity.y * kDeltaTime;
+				particles[index].transform.translate.z += particles[index].velocity.z * kDeltaTime;
 
-				Matrix4x4 worldMatrixP = MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
+				Matrix4x4 worldMatrixP = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
 				Matrix4x4 WVPMatrix = Multiply(worldMatrixP, Multiply(viewMatrix, projectionMatrix));
 				instancingData[index].WVP = WVPMatrix;
 				instancingData[index].World = worldMatrixP;
@@ -1759,9 +1775,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);*/
 
 			commandList->IASetVertexBuffers(0, 1, &modelVertexBufferView);
-			//commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(0, instancingResource->GetGPUVirtualAddress());
-
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			
 			commandList->SetGraphicsRootDescriptorTable(1, instancingSrvHandleGPU);
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU2);
 			commandList->DrawInstanced(UINT(modelData.vertices.size()), kNumInstance, 0, 0);
