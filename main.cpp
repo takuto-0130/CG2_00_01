@@ -1274,7 +1274,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	std::memcpy(modelVertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 
 
-	ModelData modelData2 = LoadObjFile("Resources", "bunny.obj");
+	/*ModelData modelData2 = LoadObjFile("Resources", "bunny.obj");
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> modelVertexResource2 = CreateBufferResource(device, sizeof(VertexData) * modelData2.vertices.size());
 
@@ -1285,7 +1285,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	VertexData* modelVertexData2 = nullptr;
 	modelVertexResource2->Map(0, nullptr, reinterpret_cast<void**>(&modelVertexData2));
-	std::memcpy(modelVertexData2, modelData2.vertices.data(), sizeof(VertexData) * modelData2.vertices.size());
+	std::memcpy(modelVertexData2, modelData2.vertices.data(), sizeof(VertexData) * modelData2.vertices.size());*/
 
 
 
