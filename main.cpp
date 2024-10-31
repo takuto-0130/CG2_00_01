@@ -426,6 +426,14 @@ struct Vector3 {
 	}
 };
 
+const Vector3& operator-(const Vector3& v1, const Vector3& v2) {
+	Vector3 result{};
+	result.x = v1.x - v2.x;
+	result.y = v1.y - v2.y;
+	result.z = v1.z - v2.z;
+	return result;
+}
+
 struct Vector4 {
 	float x;
 	float y;
@@ -465,6 +473,23 @@ struct ParticleForGPU {
 	Matrix4x4 WVP;
 	Matrix4x4 World;
 	Vector4 color;
+};
+
+struct Emitter {
+	Transform transform;
+	uint32_t count;
+	float frequency;
+	float frequencyTime;
+};
+
+struct AABB {
+	Vector3 min;
+	Vector3 max;
+};
+
+struct AccelerationField {
+	Vector3 acceleration;
+	AABB area;
 };
 
 struct VertexData {
@@ -812,13 +837,14 @@ Vector3 operator*(const Vector3& v, float f) {
 
 #pragma endregion
 
-Particle MakeNewParticle(std::mt19937& random) {
+Particle MakeNewParticle(std::mt19937& random, const Vector3& translate) {
 	Particle parti;
 
 	std::uniform_real_distribution<float> distVec(-1.0f, 1.0f);
 	parti.transform.scale = { 1.f,1.f,1.f };
 	parti.transform.rotate = { 0.f,0.f,0.f };
 	parti.transform.translate = { distVec(random),distVec(random),distVec(random) };
+	parti.transform.translate += translate;
 	parti.velocity = { distVec(random),distVec(random),distVec(random) };
 
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
@@ -829,6 +855,23 @@ Particle MakeNewParticle(std::mt19937& random) {
 	parti.currentTime = 0;
 
 	return parti;
+}
+
+std::list<Particle> Emit(const Emitter& emitter, std::mt19937& random) {
+	std::list<Particle> particles;
+	for (uint32_t count = 0; count < emitter.count; ++count) {
+		particles.push_back(MakeNewParticle(random, emitter.transform.translate));
+	}
+	return particles;
+}
+
+bool IsCollision(const AABB& a, const Vector3& point) {
+	Vector3 closestPoint = { std::clamp(point.x,a.min.x,a.max.x), std::clamp(point.y,a.min.y,a.max.y), std::clamp(point.z,a.min.z,a.max.z) };
+	float distance = Length(closestPoint - point);
+	if (distance <= 0) {
+		return true;
+	}
+	return false;
 }
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
@@ -1494,7 +1537,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 		MakeIdentity4x4()
 	};
 	//////
-	const uint32_t kNumMaxInstance = 10; // インスタンス数
+	const uint32_t kNumMaxInstance = 100; // インスタンス数
 	// Instancing用のTransformationMatrixリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = CreateBufferResource(device, sizeof(ParticleForGPU) * kNumMaxInstance);
 
@@ -1657,9 +1700,22 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	std::random_device seedGene;
 	std::mt19937 random(seedGene());
 
+	/*particles.push_back(MakeNewParticle(random));
 	particles.push_back(MakeNewParticle(random));
-	particles.push_back(MakeNewParticle(random));
-	particles.push_back(MakeNewParticle(random));
+	particles.push_back(MakeNewParticle(random));*/
+
+	Emitter emitter{};
+	emitter.transform.scale = { 1,1,1 };
+	emitter.frequency = 0.5f;
+	emitter.frequencyTime = 0.0f;
+	emitter.count = 3;
+
+	AccelerationField accel;
+	accel.acceleration = { 5.0f,0.0f,0.0f };
+	accel.area.min = { -1.0f, -1.0f, -1.0f };
+	accel.area.max = { 1.0f, 1.0f, 1.0f };
+
+	bool isAccel = false;
 
 	/*for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 		particles[index] = MakeNewParticle(random);
@@ -1723,10 +1779,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			ImGui::DragFloat3("teaTranslate", &transform.translate.x, 0.1f);
 			ImGui::Text("\n");
 			ImGui::Checkbox("UseBillBoard", &useBillboard);
+			ImGui::Checkbox("isAccelField", &isAccel);
+			ImGui::DragFloat3("EmitterTranslate", &emitter.transform.translate.x, 0.1f);
 			if (ImGui::Button("Add Particle")) {
+				/*particles.push_back(MakeNewParticle(random));
 				particles.push_back(MakeNewParticle(random));
-				particles.push_back(MakeNewParticle(random));
-				particles.push_back(MakeNewParticle(random));
+				particles.push_back(MakeNewParticle(random));*/
+				particles.splice(particles.end(), Emit(emitter, random));
 			}
 			/*ImGui::DragFloat3("bunnyScale", &transform3.scale.x, 0.1f, 0.1f, 5.0f);
 			ImGui::DragFloat3("bunnyRotare", &transform3.rotate.x, 0.1f);
@@ -1784,32 +1843,26 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			transformationMatrixData3->WVP = worldViewProjectionMatrix3;
 			transformationMatrixData3->World = worldMatrix3;*/
 			uint32_t numInstance = 0;
-			//for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
-			//	if (particles[index].lifeTime <= particles[index].currentTime) { // 生存時間を過ぎたら更新しない
-			//		particles[index] = MakeNewParticle(random);
-			//		continue;
-			//	}
-			//	particles[index].transform.rotate = transform.rotate;
-			//	particles[index].transform.translate += particles[index].velocity * kDeltaTime;
-			//	particles[index].currentTime += kDeltaTime; // 経過時間を足す
-			//	Matrix4x4 worldMatrixP = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
-			//	if (useBillboard){ 
-			//		worldMatrixP = worldMatrixP * billboardMatrix;
-			//	}
-			//	Matrix4x4 WVPMatrix = worldMatrixP * viewMatrix * projectionMatrix;
-			//	instancingData[numInstance].WVP = WVPMatrix;
-			//	instancingData[numInstance].World = worldMatrixP;
-			//	instancingData[numInstance].color = particles[index].color;
-			//	float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
-			//	instancingData[numInstance].color.w = alpha;
-			//	++numInstance; // 生きてるパーティクルをカウント
-			//}
+
+			emitter.frequencyTime += kDeltaTime;
+			if (emitter.frequency <= emitter.frequencyTime) {
+				particles.splice(particles.end(), Emit(emitter, random));
+				emitter.frequencyTime -= emitter.frequency;
+			}
 
 			for (std::list<Particle>::iterator partiIterator = particles.begin(); partiIterator != particles.end();) {
 				if ((*partiIterator).lifeTime <= (*partiIterator).currentTime) {
 					partiIterator = particles.erase(partiIterator);
 					continue;
 				}
+
+				if (isAccel) {
+					if (IsCollision(accel.area, (*partiIterator).transform.translate)) {
+						(*partiIterator).velocity = accel.acceleration;
+					}
+				}
+
+
 				(*partiIterator).transform.rotate = transform.rotate;
 				(*partiIterator).transform.translate += (*partiIterator).velocity * kDeltaTime;
 				(*partiIterator).currentTime += kDeltaTime; // 経過時間を足す
