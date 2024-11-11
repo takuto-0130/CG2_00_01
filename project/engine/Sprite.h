@@ -12,7 +12,7 @@ class Sprite
 {
 public: // メンバ関数
 	// 初期化
-	void Initialize(SpriteBasis* spriteBasis);
+	void Initialize(std::string textureFilePath);
 
 	// 更新
 	void Update();
@@ -25,12 +25,22 @@ public: // メンバ関数
 	float GetRotation() const { return rotation_; }
 	const Vector4& GetColor() { return materialData_->color; }
 	const Vector2& GetSize() { return size_; }
+	const Vector2& GetTextureLeftTop() { return textureLeftTop_; }
+	const Vector2& GetTextureSize() { return textureSize_; }
+	const Vector2& GetAnchorPoint() const { return anchorPoint_; }
+	const bool& GetIsFlipX() const { return isFlipX_; }
+	const bool& GetIsFlipY() const { return isFlipY_; }
 
-	// 座標のsetter
+	// setter
 	void SetPosition(const Vector2& position) { position_ = position; }
 	void SetRotation(const float& rotation) { rotation_ = rotation; }
 	void SetColor(const Vector4& color) { materialData_->color = color; }
 	void SetSize(const Vector2& size) { size_ = size; }
+	void SetTextureLeftTop(Vector2 textureLeftTop) { textureLeftTop_ = textureLeftTop; }
+	void SetTextureSize(Vector2 textureSize) { textureSize_ = textureSize; }
+	void SetAnchorPoint(const Vector2& anchorPoint) { anchorPoint_ = anchorPoint; }
+	void SetIsFlipX(bool isFlipX) { isFlipX_ = isFlipX; }
+	void SetIsFlipY(bool isFlipY) { isFlipY_ = isFlipY; }
 
 private: // メンバ関数
 	// 頂点データ作成
@@ -41,6 +51,10 @@ private: // メンバ関数
 
 	// 座標変換行列リソース作成
 	void CreateTransformationMatrixResource();
+
+
+	void SetSpriteData();
+	void AdjustTextureSize();
 
 private: // メンバ関数
 	SpriteBasis* spriteBasis_;
@@ -62,6 +76,7 @@ private: // メンバ関数
 	struct TransfomationMatrix {
 		Matrix4x4 WVP;
 		Matrix4x4 World;
+		Matrix4x4 WorldInverseTranspose;
 	};
 
 	// バッファリソース
@@ -73,14 +88,31 @@ private: // メンバ関数
 	VertexData* vertexData_ = nullptr;
 	uint32_t* indexData_ = nullptr;
 	Material* materialData_ = nullptr;
-	TransfomationMatrix* transfomationMatrixData_ = nullptr;
+	TransfomationMatrix* transformationMatrixData_ = nullptr;
 	// バッファリソースの使い道を補足するバッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView_;
 
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU_;
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU_;
+
+	// テクスチャ番号
+	uint32_t textureIndex = 0;
+	std::string textureFilePath_;
+
+	// 左右フリップ
+	bool isFlipX_ = false;
+	// 上下フリップ
+	bool isFlipY_ = false;
+
+	Transform transform_{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 	Vector2 position_ = { 0.0f, 0.0f };
 	float rotation_ = 0.0f;
-	Vector2 size_ = { 640.0f,360.0f };
+	Vector2 size_ = { 100.0f,100.0f };
 
+	Vector2 anchorPoint_ = { 0.0f, 0.0f };
+
+	Vector2 textureLeftTop_ = { 0.0f, 0.0f };
+	Vector2 textureSize_ = { 100.0f, 100.0f };
 };
 

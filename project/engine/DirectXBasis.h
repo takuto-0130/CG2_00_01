@@ -29,15 +29,17 @@ public: // メンバ関数
 
 	// シェーダーのコンパイル
 	Microsoft::WRL::ComPtr<IDxcBlob> CompilerShader(const std::wstring& filePath, const wchar_t* profile);
-
+	
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const size_t& sizeInBytes);
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
 
-	[[nodiscard]]
-	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages);
+	void UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages);
 
 	DirectX::ScratchImage LoadTexture(const std::string& filePath);
+
+
+	void ClearDepthStencilView();
 
 	// 描画前処理
 	void DrawBegin();
@@ -118,6 +120,8 @@ private: // メンバ関数
 	// 記録時間 (fps固定用)
 	std::chrono::steady_clock::time_point reference_;
 
+public:
+
 	// デスクリプターヒープを生成する
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDeacriptorHeap(const D3D12_DESCRIPTOR_HEAP_TYPE& heapType, const UINT& numDescriptors, const bool& shaderVisible);
 
@@ -130,6 +134,9 @@ private: // メンバ関数
 	/// 指定番号のGPUデスクリプタハンドルを取得する
 	/// </summary>
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap, const uint32_t& descriptorSize, const uint32_t& index);
+
+	// バックバッファの数を取得
+	size_t GetBackBufferCount() { return backBuffers_.size(); }
 
 public: // メンバ変数
 	// 最大SRV数(最大テクスチャ数)
@@ -153,12 +160,13 @@ private: // メンバ変数
 
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
-	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources_;
+	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> backBuffers_;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[2];
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle_;
 
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence_;
 	uint32_t fenceValue_ = 0;
+	HANDLE fenceEvent_;
 
 	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils_;
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler_;

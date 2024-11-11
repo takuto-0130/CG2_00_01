@@ -2,9 +2,21 @@
 
 using namespace Logger;
 
+std::unique_ptr<SpriteBasis> SpriteBasis::instance = nullptr;
+std::once_flag SpriteBasis::initInstanceFlag;
+
+SpriteBasis* SpriteBasis::GetInstance()
+{
+	std::call_once(initInstanceFlag, []() {
+		instance = std::make_unique<SpriteBasis>();
+		});
+	return instance.get();
+}
+
 void SpriteBasis::Initialize(DirectXBasis* directXBasis)
 {
 	directXBasis_ = directXBasis;
+
 	CreateRootSignature();
 	CreateGraphicsPipeline();
 }
@@ -23,7 +35,7 @@ void SpriteBasis::CreateRootSignature()
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列。
-	D3D12_ROOT_PARAMETER rootParameters[4] = {};
+	D3D12_ROOT_PARAMETER rootParameters[5] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[0].Descriptor.ShaderRegister = 0; //b0の0と一致　b11と紐づけたいなら11となる
@@ -46,6 +58,11 @@ void SpriteBasis::CreateRootSignature()
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[3].Descriptor.ShaderRegister = 1;
 
+	// 平行光源
+	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;						// DescriptorTableで使う
+	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;						// PixelShaderで使う
+	rootParameters[4].Descriptor.ShaderRegister = 2;
+
 	descriptionRootSignature.pParameters = rootParameters;
 	descriptionRootSignature.NumParameters = _countof(rootParameters);
 
@@ -65,8 +82,8 @@ void SpriteBasis::CreateRootSignature()
 	HRESULT hr = S_FALSE;
 
 	//シリアライズしてバイナリにする
-	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	//Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+	//Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
 	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
 		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
 	if (FAILED(hr)) {
@@ -106,8 +123,7 @@ void SpriteBasis::CreateGraphicsPipeline()
 
 	//RasterizerState
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
-	//裏面を表示しない
-	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE; // 裏面を表示する
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 
