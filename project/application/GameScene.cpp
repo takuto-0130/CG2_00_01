@@ -97,6 +97,17 @@ void GameScene::Update() {
 	RailCameraMove();
 	RailCustom();
 
+	if (input_->TriggerKey(DIK_SPACE)) {
+		enemys_.remove_if([](Enemy* enemy) {
+			if (!enemy->IsDead()) {
+				delete enemy;
+				return true;
+			}
+			return false;
+			});
+		ResetRailCamera();
+	}
+
 	PopEnemy();
 
 	skydome_->Update();
