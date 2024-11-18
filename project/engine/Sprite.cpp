@@ -46,6 +46,47 @@ void Sprite::Draw()
 	spriteBasis_->GetDirectXBasis()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 
+void Sprite::DrawRect(const Vector2& lt, const Vector2& rt, const Vector2& lb, const Vector2& rb)
+{
+	// 左下
+	vertexData_[0].position = { lb.x, lb.y, 0.0f, 1.0f };
+	// 左上
+	vertexData_[1].position = { lt.x, lt.y, 0.0f, 1.0f };
+	// 右下
+	vertexData_[2].position = { rb.x, rb.y, 0.0f, 1.0f };
+	// 右上
+	vertexData_[3].position = { rt.x, rt.y, 0.0f, 1.0f }; 
+
+	// 書き込むためのアドレスを取得
+	indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
+	indexData_[0] = 0;
+	indexData_[1] = 1;
+	indexData_[2] = 2;
+	indexData_[3] = 1;
+	indexData_[4] = 3;
+	indexData_[5] = 2;
+
+	transform_.translate = { 0, 0, 0 };
+	transform_.rotate = { 0, 0, 0 };
+	transform_.scale = { 1.0f,  1.0f, 1.0f };
+
+	// Transform情報を作る
+	Matrix4x4 worldMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+	Matrix4x4 viewMatrix = MakeIdentity4x4();
+	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsApp::kClientWidth), float(WindowsApp::kClientHieght), 0.0f, 100.0f);
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+	transformationMatrixData_->World = worldViewProjectionMatrix;
+	transformationMatrixData_->WVP = worldViewProjectionMatrix;
+
+	spriteBasis_->GetDirectXBasis()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource_->GetGPUVirtualAddress());
+	spriteBasis_->GetDirectXBasis()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+	spriteBasis_->GetDirectXBasis()->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
+	spriteBasis_->GetDirectXBasis()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+
+	spriteBasis_->GetDirectXBasis()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath_));
+	spriteBasis_->GetDirectXBasis()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+}
+
 void Sprite::CreateVertexData()
 {
 	// リソースの作成

@@ -51,8 +51,14 @@ void GameScene::Initialize(Camera* camera) {
 	reticle_->Initialize("Resources/reticle.png");
 	reticle_->SetAnchorPoint({ 0.5f,0.5f });
 
-	score_ = std::make_unique<score>();
-	score_->Initialze();
+	for (size_t i = 0; i < 2; ++i) {
+		lasers_[i] = std::make_unique<Sprite>();
+		lasers_[i]->Initialize("Resources/white2x2.png");
+		lasers_[i]->SetColor({ 0.1f,0.5f,0.5f,1.0f });
+	}
+
+	scoreDraw_ = std::make_unique<score>();
+	scoreDraw_->Initialze();
 	
 	//colliderManager_ = new ColliderManager();
 
@@ -97,7 +103,7 @@ void GameScene::Update() {
 	RailCameraMove();
 	RailCustom();
 
-	if (input_->TriggerKey(DIK_SPACE)) {
+	if (input_->TriggerKey(DIK_RETURN)) {
 		enemys_.remove_if([](Enemy* enemy) {
 			if (!enemy->IsDead()) {
 				delete enemy;
@@ -107,6 +113,16 @@ void GameScene::Update() {
 			});
 		ResetRailCamera();
 	}
+	if (input_->PushKey(DIK_SPACE)) {
+		Collision();
+	}
+	enemys_.remove_if([](Enemy* enemy) {
+		if (enemy->IsDead()) {
+			delete enemy;
+			return true;
+		}
+		return false;
+		});
 
 	PopEnemy();
 
@@ -115,12 +131,15 @@ void GameScene::Update() {
 #ifdef _DEBUG
 	ImGui::Begin("a");
 	ImGui::DragFloat2("b", &mouse.x, 0.1f);
+	ImGui::InputInt("score", &score_);
 	ImGui::End();
 #endif // _DEBUG
-
+	for (size_t i = 0; i < 2; ++i) {
+		lasers_[i]->Update();
+	}
 	reticle_->SetPosition(mouse);
 	reticle_->Update();
-	score_->Update();
+	scoreDraw_->Update();
 }
 
 void GameScene::Draw() {
@@ -155,15 +174,23 @@ void GameScene::Draw() {
 	SpriteBasis::GetInstance()->BasisDrawSetting();
 
 	/// ↓前景
+	Vector2 mouse = input_->GetMousePosition();
+	if(input_->PushKey(DIK_SPACE)) {
+		for (size_t i = 0; i < 2; ++i) {
+			lasers_[i]->DrawRect(mouse, mouse,
+				{ 426.7f * float(1 + i) - 20.0f, 720 },
+				{ 426.7f * float(1 + i) + 20.0f, 720 });
+		}
+	}
 	reticle_->Draw();
-	score_->Draw();
+	scoreDraw_->Draw();
 #pragma endregion
 }
 
 void GameScene::PopEnemy()
 {
-	if (cameraEyeT > cameraSegmentCount * 100.0f &&
-		cameraEyeT < cameraSegmentCount * 101.0f) {
+	if (cameraEyeT > cameraSegmentCount * 200.0f &&
+		cameraEyeT < cameraSegmentCount * 201.0f) {
 		Enemy* enemy1 = new Enemy();
 		enemy1->Initialize(enemyModel_.get(), { 10, 16, 22 });
 		enemy1->UpdateTransform();
@@ -185,8 +212,8 @@ void GameScene::PopEnemy()
 		enemys_.push_back(enemy4);
 	}
 
-	if (cameraEyeT > cameraSegmentCount * 250.0f &&
-		cameraEyeT < cameraSegmentCount * 251.0f) {
+	if (cameraEyeT > cameraSegmentCount * 500.0f &&
+		cameraEyeT < cameraSegmentCount * 501.0f) {
 		enemys_.remove_if([](Enemy* enemy) {
 			if (!enemy->IsDead()) {
 				delete enemy;
@@ -215,8 +242,8 @@ void GameScene::PopEnemy()
 		enemys_.push_back(enemy4);
 	}
 
-	if (cameraEyeT > cameraSegmentCount * 400.0f &&
-		cameraEyeT < cameraSegmentCount * 401.0f) {
+	if (cameraEyeT > cameraSegmentCount * 800.0f &&
+		cameraEyeT < cameraSegmentCount * 801.0f) {
 		enemys_.remove_if([](Enemy* enemy) {
 			if (!enemy->IsDead()) {
 				delete enemy;
@@ -245,8 +272,8 @@ void GameScene::PopEnemy()
 		enemys_.push_back(enemy4);
 	}
 
-	if (cameraEyeT > cameraSegmentCount * 550.0f &&
-		cameraEyeT < cameraSegmentCount * 551.0f) {
+	if (cameraEyeT > cameraSegmentCount * 1100.0f &&
+		cameraEyeT < cameraSegmentCount * 1101.0f) {
 		enemys_.remove_if([](Enemy* enemy) {
 			if (!enemy->IsDead()) {
 				delete enemy;
@@ -415,4 +442,30 @@ void GameScene::ResetRailCamera() {
 	float segmentDenominator = kDivisionSpan * controlPoints_.size();
 	cameraEyeT = 0;
 	cameraForwardT = 30.0f / segmentDenominator;
+}
+
+void GameScene::Collision()
+{
+	int i = 0;
+	for (Enemy* enemy : enemys_) {
+		Vector3 pos = enemy->GetWorldPosition();
+		Matrix4x4 matView = MakeViewportMatrix(0, 0, WindowsApp::kClientWidth, WindowsApp::kClientHieght, 0, 1);
+		Matrix4x4 matVPV = railCamera_->GetViewMatrix() * railCamera_->GetProjectionMatrix() * matView;
+		pos = TransformM(pos, matVPV);
+		Vector2 mouse = input_->GetMousePosition();
+#ifdef _DEBUG
+		char a[2];
+		_itoa_s(i, a, 10);
+		ImGui::Begin("enemy");
+		ImGui::InputFloat3(a, &pos.x);
+		ImGui::End();
+#endif // _DEBUG
+
+		if (Length(Vector2{ pos.x, pos.y } - Vector2{ mouse.x, mouse.y }) <= 50.0f && !enemy->IsDead()) {
+			enemy->IsCollision();
+			score_ += increaseScore_;
+			scoreDraw_->SetScore(score_);
+		}
+		i++;
+	}
 }

@@ -24,6 +24,8 @@ public:
 
 	void UpdateTransform() { worldTransform_.TransferMatrix(); }
 
+	void IsCollision() { isDead_ = true; }
+
 private:
 
 	WorldTransform worldTransform_;

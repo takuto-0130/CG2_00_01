@@ -195,21 +195,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
 	SoundPlayWave(xAudio2.Get(), soundData1, 0.3f);*/
 
-	/*TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
-	Sprite* sprite = new Sprite();
-	sprite->Initialize("Resources/uvChecker.png");*/
-
-	/*std::unique_ptr<Model> pot;
-	pot = std::make_unique<Model>();
-	pot->Initialize(modelManager->GetModelLoader(), "Resources", "teapot.obj");
-
-	std::unique_ptr<Object3d> pot3d = std::make_unique<Object3d>();
-	pot3d->Initialize();
-	pot3d->SetModel(pot.get());
-
-	WorldTransform potWT;
-	potWT.Initialize();*/
-
 	//メインループ
 	while (true) 
 	{
@@ -232,10 +217,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			srvManager->BeginDraw();
 			
 			// 描画コマンド
-			/*spriteBasis->BasisDrawSetting();
-			object3dBasis->BasisDrawSetting();*/
-
-
 			gameScene->Draw();
 
 			imgui->Draw();

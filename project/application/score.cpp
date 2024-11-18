@@ -40,6 +40,7 @@ void score::Initialze()
 
 void score::Update()
 {
+	ScoreDisplay();
 	one_->Update();
 	two_->Update();
 	three_->Update();
@@ -54,4 +55,24 @@ void score::Draw()
 	two_->Draw();
 	three_->Draw();
 	four_->Draw();
+}
+
+void score::ScoreDisplay()
+{
+	int32_t byou = score_;
+	scoreDisp_.num[0] = byou / 1000;
+	byou = byou % 1000;
+
+	scoreDisp_.num[1] = byou / 100;
+	byou = byou % 100;
+
+	scoreDisp_.num[2] = byou / 10;
+	byou = byou % 10;
+
+	scoreDisp_.num[3] = byou;
+
+	one_->SetTextureLeftTop({ 64.0f * scoreDisp_.num[0],0 });
+	two_->SetTextureLeftTop({ 64.0f * scoreDisp_.num[1],0 });
+	three_->SetTextureLeftTop({ 64.0f * scoreDisp_.num[2],0 });
+	four_->SetTextureLeftTop({ 64.0f * scoreDisp_.num[3],0 });
 }

@@ -74,6 +74,8 @@ private:
 
 	void ResetRailCamera();
 
+	void Collision();
+
 
 private: // メンバ変数
 	Input* input_ = nullptr;
@@ -81,6 +83,8 @@ private: // メンバ変数
 	std::unique_ptr<Model> model_;
 
 	std::unique_ptr<Sprite> reticle_;
+
+	std::array<std::unique_ptr<Sprite>, 2> lasers_;
 
 	std::list<Rail*> rails_;
 
@@ -94,7 +98,7 @@ private: // メンバ変数
 
 	//ColliderManager* colliderManager_ = nullptr;
 
-	std::unique_ptr<score> score_;
+	std::unique_ptr<score> scoreDraw_;
 	std::unique_ptr<Sprite> one_;
 
 	std::vector<Vector3> controlPoints_;
@@ -102,11 +106,14 @@ private: // メンバ変数
 	size_t oneSegmentCount = 20;
 	size_t segmentCount = oneSegmentCount;
 
-	const float kDivisionSpan = 100.0f;
+	const float kDivisionSpan = 200.0f;
 	float cameraSegmentCount = 1.0f / 600.0f;
 	float cameraEyeT = 0;
 	float cameraForwardT = 30.0f / 600.0f;
 
 	bool isRailCameraMove_ = false;
+
+	int32_t score_ = 0;
+	const int32_t increaseScore_ = 300;
 };
 

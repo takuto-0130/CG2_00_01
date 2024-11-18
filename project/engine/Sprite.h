@@ -20,6 +20,8 @@ public: // メンバ関数
 	// 描画
 	void Draw();
 
+	void DrawRect(const Vector2& lt, const Vector2& rt, const Vector2& lb, const Vector2& rb);
+
 	// getter
 	const Vector2& GetPosition() { return position_; }
 	float GetRotation() const { return rotation_; }
@@ -42,6 +44,9 @@ public: // メンバ関数
 	void SetIsFlipX(bool isFlipX) { isFlipX_ = isFlipX; }
 	void SetIsFlipY(bool isFlipY) { isFlipY_ = isFlipY; }
 
+	void SetVertex(const Vector2& position, int index) { vertexData_[index].position = { position.x, position.y, 0.0f,1.0f }; }
+
+	void SetSpriteData();
 private: // メンバ関数
 	// 頂点データ作成
 	void CreateVertexData();
@@ -53,7 +58,6 @@ private: // メンバ関数
 	void CreateTransformationMatrixResource();
 
 
-	void SetSpriteData();
 	void AdjustTextureSize();
 
 private: // メンバ関数
