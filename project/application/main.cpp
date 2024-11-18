@@ -260,33 +260,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 				OutputDebugStringA("Hit 0\n");
 			}
 
+#ifdef _DEBUG
 			ImGui::Begin("Window");
-
-			/*ImGui::Combo("Lighting", &materialData->enableLighting, "None\0Lambert\0Harf Lambert\0");
-			ImGui::DragFloat3("materialColor", &materialData->color.x, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat3("Lightdirection", &directionalLightData->direction.x, 0.05f, -1.0f, 1.0f);
-			ImGui::DragFloat3("LightColor", &directionalLightData->color.x, 0.05f, 0.0f, 1.0f);
-			ImGui::SliderFloat("LightIntensity", &directionalLightData ->intensity, 0.0f, 1.0f);
-			ImGui::Text("\n");
-			ImGui::DragFloat3("teaScale", &transform.scale.x, 0.1f, 0.1f, 5.0f);
-			ImGui::DragFloat3("teaRotare", &transform.rotate.x, 0.1f);
-			ImGui::DragFloat3("teaTranslate", &transform.translate.x, 0.1f);
-			ImGui::Text("\n");
-			ImGui::DragFloat3("bunnyScale", &transform3.scale.x, 0.1f, 0.1f, 5.0f);
-			ImGui::DragFloat3("bunnyRotare", &transform3.rotate.x, 0.1f);
-			ImGui::DragFloat3("bunnyTranslate", &transform3.translate.x, 0.1f);
-			ImGui::Text("\n");
-			ImGui::DragFloat3("SphereScale", &transform2.scale.x, 0.1f, 0.1f, 5.0f);
-			ImGui::DragFloat3("SphereRotare", &transform2.rotate.x, 0.1f);
-			ImGui::DragFloat3("SphereTranslate", &transform2.translate.x, 0.1f);
-			ImGui::Text("\n");*/
-			/*ImGui::DragFloat2("SpriteScale", &transformSprite.scale.x, 0.1f, 0.1f, 5.0f);
-			ImGui::DragFloat("SpriteRotate", &transformSprite.rotate.z, 0.1f);
-			ImGui::DragFloat2("SpriteTranslate", &transformSprite.translate.x, 1.0f);
-			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f);
-			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f);
-			ImGui::SliderAngle("UVRotare", &uvTransformSprite.rotate.z);*/
 			ImGui::End();
+#endif // _DEBUG
 
 
 			camera->Update();
