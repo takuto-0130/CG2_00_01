@@ -140,6 +140,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\rail.cpp" />
     <ClCompile Include="application\Skydome.cpp" />
     <ClCompile Include="application\score.cpp" />
+    <ClCompile Include="engine\GameCore.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
@@ -192,6 +193,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\rail.h" />
     <ClInclude Include="application\Skydome.h" />
     <ClInclude Include="application\score.h" />
+    <ClInclude Include="engine\GameCore.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

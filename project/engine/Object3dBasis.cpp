@@ -35,7 +35,7 @@ void Object3dBasis::BasisDrawSetting()
 	directXBasis_->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
 	directXBasis_->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
 	directXBasis_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//directXBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	directXBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(4, directionalLightResource->GetGPUVirtualAddress());
 }
 
 void Object3dBasis::CreateRootSignature()

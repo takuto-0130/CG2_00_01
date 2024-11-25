@@ -1,30 +1,4 @@
-#include "WindowsApp.h"
-#include <cassert>
-#include <dxgidebug.h>
-#include <dxcapi.h>
-#include "DirectXTex/DirectXTex.h"
-#include "DirectXTex/d3dx12.h"
-#include <fstream>
-#include <sstream>
-#include <wrl.h>
-#include <algorithm>
-#include "DirectXBasis.h"
-#include "D3DResourceLeakChecker.h"
-#include "SpriteBasis.h"
-#include "TextureManager.h"
-#include "SrvManager.h"
-#include "ModelManager.h"
-#include "Object3dBasis.h"
-#include "WorldTransform.h"
-#include "ImGuiManager.h"
-#include "GameScene.h"
-#ifdef _DEBUG
-#include <imgui.h>
-#endif // _DEBUG
-
-#include <xaudio2.h>
-
-#pragma comment(lib,"xaudio2.lib")
+#include "GameCore.h"
 
 #pragma region //サウンド
 
@@ -135,102 +109,24 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, bool isLoop = 
 #pragma endregion
 
 
-int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
-	D3DResourceLeakChecker* leakCheck;
-	(void)leakCheck;
-#pragma region // 基盤システム初期化
-	WindowsApp* windowsApp = nullptr;
-	DirectXBasis* directXBasis = nullptr;
-	SrvManager* srvManager = nullptr;
-	SpriteBasis* spriteBasis = nullptr;
-	Object3dBasis* object3dBasis = nullptr;
-	ModelManager* modelManager = nullptr;
-	Input* input = nullptr;
-	std::unique_ptr<Camera> camera;
-	ImGuiManager* imgui = nullptr;
-
-	windowsApp = new WindowsApp();
-	windowsApp->Initialize();
-
-	directXBasis = new DirectXBasis;
-	directXBasis->Initialize(windowsApp);
-
-	srvManager = new SrvManager();
-	srvManager->Initialize(directXBasis);
-	
-	spriteBasis = SpriteBasis::GetInstance();
-	spriteBasis->Initialize(directXBasis);
-
-	camera = std::make_unique<Camera>();
-
-	object3dBasis = Object3dBasis::GetInstance();
-	object3dBasis->Initialize(directXBasis);
-	object3dBasis->SetDefaultCamera(camera.get());
-
-	modelManager = ModelManager::GetInstance();
-	modelManager->Initialize(directXBasis, srvManager);
-	
-	input = Input::GetInstance();
-	input->Initialize(windowsApp->GetHwnd());
-
-	imgui = ImGuiManager::GetInstance();
-	imgui->Initialize(windowsApp, directXBasis);
-
-#pragma endregion
-
-	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
-	IXAudio2MasteringVoice* masterVoice;
-	HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-	assert(SUCCEEDED(result));
-	result = xAudio2->CreateMasteringVoice(&masterVoice);
-	assert(SUCCEEDED(result));
-
-	TextureManager::GetInstance()->Initialize(directXBasis, srvManager);
-
-	std::unique_ptr<GameScene> gameScene = std::make_unique<GameScene>();
-	gameScene->Initialize(camera.get());
-
-	/*SoundData soundData1 = SoundLoadWave("Resources/fanfare.wav");
-
-	SoundPlayWave(xAudio2.Get(), soundData1, 0.3f);*/
+	std::unique_ptr<GameCore> game = std::make_unique<GameCore>();
+	game->Initialize();
 
 	//メインループ
 	while (true) 
 	{
-		// Windowsメッセージ処理
-		if (windowsApp->ProcessMessage()) {
-			// ゲームループを抜ける
+		// 毎フレーム更新処理
+		game->Update();
+		// 終了リクエストでループを抜ける
+		if (game->IsEndRequest()) {
 			break;
 		}
-		else { //ゲーム処理
-			imgui->Begin();
-			input->Update();
-			camera->Update();
-
-			gameScene->Update();
-
-			imgui->End();
-			///// 描画処理
-			directXBasis->DrawBegin();
-
-			srvManager->BeginDraw();
-			
-			// 描画コマンド
-			gameScene->Draw();
-
-			imgui->Draw();
-			directXBasis->DrawEnd();
-			
-		}
+		// 描画
+		game->Draw();
 	}
-	xAudio2.Reset();
-	//SoundUnload(&soundData1);
-	imgui->Finalize();
-	delete srvManager;
-	delete directXBasis;
-	windowsApp->Finalize();
-	delete windowsApp;
-
+	// ゲームの終了
+	game->Finalize();
 	return 0;
 }
