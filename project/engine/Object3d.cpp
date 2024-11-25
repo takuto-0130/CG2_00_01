@@ -35,7 +35,7 @@ void Object3d::CreateMaterialResource()
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 	// 白を入れる
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData_->enableLighting = true;
+	materialData_->enableLighting = 0;
 	materialData_->uvTransform = MakeIdentity4x4();
 	materialData_->shininess = 10.0f;
 }
