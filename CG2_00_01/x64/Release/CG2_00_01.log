@@ -1,0 +1,11 @@
+﻿  main.cpp
+  WindowsApp.cpp
+C:\Users\k023g\Desktop\CG2\CG2_00_01\main.cpp(135,7): warning C4834: [[nodiscard]] 属性を持つ関数の戻り値を破棄しています
+  コード生成しています。
+  270 of 3571 functions ( 7.6%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    232 functions had inline decision re-evaluated but remain unchanged
+  コード生成が終了しました。
+  CG2_00_01.vcxproj -> C:\Users\k023g\Desktop\CG2\CG2_00_01\x64\Release\CG2_00_01.exe
+          1 個のファイルをコピーしました。
+          1 個のファイルをコピーしました。
