@@ -110,10 +110,9 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, bool isLoop = 
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
-	TYFrameWork* game = new GameCore();
+	std::unique_ptr<TYFrameWork> game = std::make_unique<GameCore>();
 
 	game->run();
 	
-	delete game;
 	return 0;
 }
