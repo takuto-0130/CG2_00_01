@@ -94,7 +94,7 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, bool isLoop = 
 	buf.PlayBegin = 0;
 	buf.PlayLength = soundData.playSoundLength;
 
-	if(isLoop){
+	if (isLoop) {
 		buf.LoopBegin = 0;
 		buf.LoopLength = soundData.playSoundLength;
 		buf.LoopCount = XAUDIO2_LOOP_INFINITE;
@@ -108,25 +108,12 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData, bool isLoop = 
 
 #pragma endregion
 
-
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
-	std::unique_ptr<GameCore> game = std::make_unique<GameCore>();
-	game->Initialize();
+	TYFrameWork* game = new GameCore();
 
-	//メインループ
-	while (true) 
-	{
-		// 毎フレーム更新処理
-		game->Update();
-		// 終了リクエストでループを抜ける
-		if (game->IsEndRequest()) {
-			break;
-		}
-		// 描画
-		game->Draw();
-	}
-	// ゲームの終了
-	game->Finalize();
+	game->run();
+	
+	delete game;
 	return 0;
 }
