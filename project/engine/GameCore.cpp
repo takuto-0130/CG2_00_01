@@ -5,17 +5,10 @@
 
 void GameCore::Initialize()
 {
-#pragma region // 基盤システム初期化
+	TYFrameWork::Initialize();
 
-
-	windowsApp = std::make_unique<WindowsApp>();
-	windowsApp->Initialize();
-
-	directXBasis = std::make_unique<DirectXBasis>();
-	directXBasis->Initialize(windowsApp.get());
-
-	srvManager = std::make_unique<SrvManager>();
-	srvManager->Initialize(directXBasis.get());
+	imgui = ImGuiManager::GetInstance();
+	imgui->Initialize(windowsApp.get(), directXBasis.get());
 
 	spriteBasis = SpriteBasis::GetInstance();
 	spriteBasis->Initialize(directXBasis.get());
@@ -29,33 +22,14 @@ void GameCore::Initialize()
 	modelManager = ModelManager::GetInstance();
 	modelManager->Initialize(directXBasis.get(), srvManager.get());
 
-	input = Input::GetInstance();
-	input->Initialize(windowsApp->GetHwnd());
-
-	imgui = ImGuiManager::GetInstance();
-	imgui->Initialize(windowsApp.get(), directXBasis.get());
-
-#pragma endregion
-
-	IXAudio2MasteringVoice* masterVoice;
-	HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-	assert(SUCCEEDED(result));
-	result = xAudio2->CreateMasteringVoice(&masterVoice);
-	assert(SUCCEEDED(result));
-
-	TextureManager::GetInstance()->Initialize(directXBasis.get(), srvManager.get());
-
 	gameScene = std::make_unique<GameScene>();
 	gameScene->Initialize(camera.get());
 }
 
 void GameCore::Finalize()
 {
-	xAudio2.Reset();
 	//SoundUnload(&soundData1);
-	imgui->Finalize();
-	input->Finalize();
-	windowsApp->Finalize();
+	TYFrameWork::Finalize();
 }
 
 void GameCore::Update()
@@ -63,12 +37,12 @@ void GameCore::Update()
 	// Windowsメッセージ処理
 	if (windowsApp->ProcessMessage()) {
 		// ゲームループを抜ける
+		endRequest_ = true;
 	}
 	else { //ゲーム処理
+		TYFrameWork::Update();
 		imgui->Begin();
-		input->Update();
 		camera->Update();
-
 		gameScene->Update();
 
 		imgui->End();
