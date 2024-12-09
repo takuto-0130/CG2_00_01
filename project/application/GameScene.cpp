@@ -8,6 +8,7 @@
 #include "Object3dBasis.h"
 #include <fstream>
 #include <istream>
+#include "Audio.h"
 
 #ifdef _DEBUG
 #include "imgui.h"
@@ -16,21 +17,18 @@
 GameScene::GameScene() {}
 
 GameScene::~GameScene() {
+	Audio::GetInstance()->StopStreaming();
 	for (Rail* rail : rails_) {
 		delete rail;
+		rail = nullptr;
 	}
-	enemys_.remove_if([](Enemy* enemy) {
-		if (!enemy->IsDead()) {
-			delete enemy;
-			return true;
-		}
-		return false;
-		});
-	//delete colliderManager_;
+	enemys_.clear();
 }
 
 void GameScene::Initialize(Camera* camera) {
+	Audio::GetInstance()->Initialize();
 	input_ = Input::GetInstance();
+#pragma region // スプライトやオブジェクト関連
 	railCamera_ = camera;
 	TextureManager::GetInstance()->LoadTexture("Resources/number.png");
 	TextureManager::GetInstance()->LoadTexture("Resources/white2x2.png");
@@ -59,8 +57,7 @@ void GameScene::Initialize(Camera* camera) {
 
 	scoreDraw_ = std::make_unique<score>();
 	scoreDraw_->Initialze();
-	
-	//colliderManager_ = new ColliderManager();
+#pragma endregion
 
 #pragma region // レール設定
 	controlPoints_ = {
@@ -95,51 +92,62 @@ void GameScene::Initialize(Camera* camera) {
 	SetSegment();
 	ResetRailCamera();
 #pragma endregion
+	pitch_ = std::make_unique<std::atomic<float>>(1.0f);
+	Audio::GetInstance()->SetPitch(pitch_.get());
+	Audio::GetInstance()->StartStreaming("fanfare.wav", true);
+	/*Audio::GetInstance()->LoadWave("large_wav_file");
+	int num = Audio::GetInstance()->PlayWave("large_wav_file");
+	Audio::GetInstance()->SetBGMVolume(num, 1.0f);*/
 }
 
+#pragma region // 初期化以外
 void GameScene::Update() {
-
-	RailCameraDebug();
-	RailCameraMove();
-	RailCustom();
-
-	if (input_->TriggerKey(DIK_RETURN)) {
-		enemys_.remove_if([](Enemy* enemy) {
-			if (!enemy->IsDead()) {
-				delete enemy;
-				return true;
-			}
-			return false;
-			});
-		ResetRailCamera();
-	}
-	if (input_->PushKey(DIK_SPACE)) {
-		Collision();
-	}
-	enemys_.remove_if([](Enemy* enemy) {
-		if (enemy->IsDead()) {
-			delete enemy;
-			return true;
-		}
-		return false;
-		});
-
-	PopEnemy();
-
-	skydome_->Update();
-	Vector2 mouse = input_->GetMousePosition();
-#ifdef _DEBUG
+//	RailCameraDebug();
+//	RailCameraMove();
+//	RailCustom();
+//
+//	if (input_->TriggerKey(DIK_RETURN)) {
+//		enemys_.remove_if([](Enemy* enemy) {
+//			if (!enemy->IsDead()) {
+//				delete enemy;
+//				return true;
+//			}
+//			return false;
+//			});
+//		ResetRailCamera();
+//	}
+//	if (input_->PushKey(DIK_SPACE)) {
+//		Collision();
+//	}
+//	enemys_.remove_if([](Enemy* enemy) {
+//		if (enemy->IsDead()) {
+//			delete enemy;
+//			return true;
+//		}
+//		return false;
+//		});
+//
+//	PopEnemy();
+//
+//	skydome_->Update();
+//	Vector2 mouse = input_->GetMousePosition();
+//#ifdef _DEBUG
+//	ImGui::Begin("a");
+//	ImGui::DragFloat2("b", &mouse.x, 0.1f);
+//	ImGui::InputInt("score", &score_);
+//	ImGui::End();
+//#endif // _DEBUG
+//	for (size_t i = 0; i < 2; ++i) {
+//		lasers_[i]->Update();
+//	}
+//	reticle_->SetPosition(mouse);
+//	reticle_->Update();
+//	scoreDraw_->Update();
+	pitch = pitch_->load();
 	ImGui::Begin("a");
-	ImGui::DragFloat2("b", &mouse.x, 0.1f);
-	ImGui::InputInt("score", &score_);
+	ImGui::DragFloat("b", &pitch, 0.01f);
 	ImGui::End();
-#endif // _DEBUG
-	for (size_t i = 0; i < 2; ++i) {
-		lasers_[i]->Update();
-	}
-	reticle_->SetPosition(mouse);
-	reticle_->Update();
-	scoreDraw_->Update();
+	pitch_->store(pitch);
 }
 
 void GameScene::Draw() {
@@ -157,14 +165,14 @@ void GameScene::Draw() {
 
 	/// ↓3Dオブジェクト
 
-	skydome_->Draw();
+	/*skydome_->Draw();
 
 	for (Rail* rail : rails_) {
 		rail->Draw();
 	}
 	for (Enemy* enemy : enemys_) {
 		enemy->Draw();
-	}
+	}*/
 
 
 #pragma endregion
@@ -174,7 +182,7 @@ void GameScene::Draw() {
 	SpriteBasis::GetInstance()->BasisDrawSetting();
 
 	/// ↓前景
-	Vector2 mouse = input_->GetMousePosition();
+	/*Vector2 mouse = input_->GetMousePosition();
 	if(input_->PushKey(DIK_SPACE)) {
 		for (size_t i = 0; i < 2; ++i) {
 			lasers_[i]->DrawRect(mouse, mouse,
@@ -183,7 +191,7 @@ void GameScene::Draw() {
 		}
 	}
 	reticle_->Draw();
-	scoreDraw_->Draw();
+	scoreDraw_->Draw();*/
 #pragma endregion
 }
 
@@ -469,3 +477,4 @@ void GameScene::Collision()
 		i++;
 	}
 }
+#pragma endregion

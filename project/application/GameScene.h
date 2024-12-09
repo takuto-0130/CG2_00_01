@@ -11,6 +11,7 @@
 #include "Enemy.h"
 #include "score.h"
 #include <sstream>
+#include "Audio.h"
 
 /// <summary>
 /// ゲームシーン
@@ -78,6 +79,7 @@ private:
 
 
 private: // メンバ変数
+
 	Input* input_ = nullptr;
 
 	std::unique_ptr<Model> model_;
@@ -115,5 +117,8 @@ private: // メンバ変数
 
 	int32_t score_ = 0;
 	const int32_t increaseScore_ = 300;
+
+	std::unique_ptr<std::atomic<float>> pitch_;
+	float pitch = 1.0f;
 };
 
