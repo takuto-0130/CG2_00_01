@@ -28,7 +28,6 @@ void GameCore::Initialize()
 
 void GameCore::Finalize()
 {
-	//SoundUnload(&soundData1);
 	TYFrameWork::Finalize();
 }
 
