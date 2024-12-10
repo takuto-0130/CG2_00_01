@@ -92,9 +92,9 @@ void GameScene::Initialize(Camera* camera) {
 	SetSegment();
 	ResetRailCamera();
 #pragma endregion
-	pitch_ = std::make_unique<std::atomic<float>>(1.0f);
-	Audio::GetInstance()->SetPitch(pitch_.get());
-	Audio::GetInstance()->StartStreaming("fanfare.wav", true);
+	pitch_ = 1.0f;
+	Audio::GetInstance()->SetPitch(pitch_);
+	Audio::GetInstance()->StartStreaming("small_wav_file.wav", true);
 	/*Audio::GetInstance()->LoadWave("large_wav_file");
 	int num = Audio::GetInstance()->PlayWave("large_wav_file");
 	Audio::GetInstance()->SetBGMVolume(num, 1.0f);*/
@@ -143,11 +143,10 @@ void GameScene::Update() {
 //	reticle_->SetPosition(mouse);
 //	reticle_->Update();
 //	scoreDraw_->Update();
-	pitch = pitch_->load();
 	ImGui::Begin("a");
-	ImGui::DragFloat("b", &pitch, 0.01f);
+	ImGui::DragFloat("b", &pitch_, 0.01f);
 	ImGui::End();
-	pitch_->store(pitch);
+	Audio::GetInstance()->SetPitch(pitch_);
 }
 
 void GameScene::Draw() {

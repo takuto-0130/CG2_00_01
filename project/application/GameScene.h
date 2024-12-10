@@ -118,7 +118,6 @@ private: // メンバ変数
 	int32_t score_ = 0;
 	const int32_t increaseScore_ = 300;
 
-	std::unique_ptr<std::atomic<float>> pitch_;
-	float pitch = 1.0f;
+	float pitch_;
 };
 

@@ -13,6 +13,7 @@
 #include <condition_variable>
 #include <Logger.h>
 
+
 // WAVヘッダーの定義
 struct WAVHeader {
 	char riff[4];			// "RIFF"
@@ -103,7 +104,12 @@ public:
         }
     }
 
-	void SetPitch(std::atomic<float>* pitch) { pitch_ = pitch; }
+	void SetPitch(float pitch) {
+		if(streamVoice)
+		{
+			streamVoice->SetFrequencyRatio(pitch);
+		}
+	}
 private:
 	void StreamAudio(const char* filename);
 
@@ -197,8 +203,9 @@ private:
 	std::atomic<bool> isStreaming;
 	std::atomic<bool> isLoopStreaming;
 	std::unique_ptr<std::thread> audioThread;
-
-	std::atomic<float>* pitch_;
+	IXAudio2SourceVoice* streamVoice = nullptr;
+	std::vector<std::vector<BYTE>> audioBuffers;
+	size_t BUFFER_SIZE;
 
 	// サウンド格納ディレクトリ
 	std::string directoryPath_;

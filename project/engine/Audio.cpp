@@ -37,6 +37,10 @@ Audio::~Audio()
 			SourceVoice = nullptr;
 		}
 	}
+	if (streamVoice != nullptr) {
+		streamVoice->DestroyVoice();
+		streamVoice = nullptr;
+	}
 	if (masterVoice != nullptr)
 	{
 		masterVoice->DestroyVoice();
@@ -80,9 +84,8 @@ void Audio::StreamAudio(const char* filename) {
 	// ストリーミング用のバッファを複数作成
 	constexpr int BUFFER_COUNT = 3; // バッファ数
 	size_t BUFFER_SIZE = header.sampleRate * waveFormat.nBlockAlign; // バッファサイズ
-	std::vector<std::vector<BYTE>> audioBuffers(BUFFER_COUNT, std::vector<BYTE>(BUFFER_SIZE));
+	audioBuffers.resize(BUFFER_COUNT, std::vector<BYTE>(BUFFER_SIZE));
 	XAUDIO2_BUFFER xAudioBuffers[BUFFER_COUNT] = {};
-
 	StreamingVoiceCallback callback;
 
 
@@ -104,8 +107,7 @@ void Audio::StreamAudio(const char* filename) {
 
 
 	// ソースボイスを作成し、コールバックを渡す
-	IXAudio2SourceVoice* sourceVoice = nullptr;
-	if (FAILED(xAudio2->CreateSourceVoice(&sourceVoice, &waveFormat, XAUDIO2_VOICE_USEFILTER, XAUDIO2_DEFAULT_FREQ_RATIO, &callback, nullptr, &effectChain))) {
+	if (FAILED(xAudio2->CreateSourceVoice(&streamVoice, &waveFormat, XAUDIO2_VOICE_USEFILTER, XAUDIO2_MAX_FREQ_RATIO, &callback, nullptr, &effectChain))) {
 		Logger::Log("Failed to create source voice.\n");
 		return;
 	}
@@ -123,8 +125,7 @@ void Audio::StreamAudio(const char* filename) {
 	//sourceVoice->SetEffectParameters(0, &reverbParameters, sizeof(reverbParameters));
 
 	// ソースボイスを開始
-	sourceVoice->Start(0);
-	sourceVoice->SetFrequencyRatio(pitch_->load());
+	streamVoice->Start(0);
 	// バッファリング処理
 	int currentBufferIndex = 0;
 
@@ -149,7 +150,6 @@ void Audio::StreamAudio(const char* filename) {
 			}
 		}
 
-		sourceVoice->SetFrequencyRatio(pitch_->load());
 		// 現在のバッファを設定
 		XAUDIO2_BUFFER& xBuffer = xAudioBuffers[currentBufferIndex];
 		xBuffer.AudioBytes = static_cast<UINT32>(currentBuffer.size());
@@ -162,7 +162,7 @@ void Audio::StreamAudio(const char* filename) {
 		}
 
 		// ソースボイスにバッファを送信
-		if (FAILED(sourceVoice->SubmitSourceBuffer(&xBuffer))) {
+		if (FAILED(streamVoice->SubmitSourceBuffer(&xBuffer))) {
 			Logger::Log("Failed to submit buffer.\n");
 			break;
 		}
@@ -178,8 +178,9 @@ void Audio::StreamAudio(const char* filename) {
 
 	// クリーンアップ
 	audioFile.close();
-	sourceVoice->Stop(0);
-	sourceVoice->DestroyVoice();
+	streamVoice->Stop(0);
+	streamVoice->DestroyVoice();
+	streamVoice = nullptr;
 	Logger::Log("Streaming finished.\n");
 }
 
