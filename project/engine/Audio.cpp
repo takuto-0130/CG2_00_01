@@ -2,9 +2,6 @@
 #include <cassert>
 #include <algorithm>
 #include <queue>
-#include "Logger.h"
-#include <xaudio2.h>
-#include <xaudio2fx.h>
 
 // ファイルからデータを読み込む関数
 bool ReadAudioData(std::ifstream& file, std::vector<BYTE>& buffer) {
@@ -89,41 +86,15 @@ void Audio::StreamAudio(const char* filename) {
 	StreamingVoiceCallback callback;
 
 
-
-	// リバーブエフェクトを作成
-	IUnknown* reverbEffect = nullptr;
-	if (FAILED(XAudio2CreateReverb(&reverbEffect))) { // Reverbエフェクトを作成
-		// エラーハンドリング
-	}
-	// エフェクトチェインの設定
-	XAUDIO2_EFFECT_DESCRIPTOR effects[1] = {};
-	effects[0].pEffect = reverbEffect;  // リバーブエフェクトのインターフェース
-	effects[0].InitialState = TRUE;		// 初期状態で有効化
-	effects[0].OutputChannels = 2;      // ステレオ出力
-
-	XAUDIO2_EFFECT_CHAIN effectChain = {};
-	effectChain.EffectCount = 1;
-	effectChain.pEffectDescriptors = effects;
-
-
 	// ソースボイスを作成し、コールバックを渡す
-	if (FAILED(xAudio2->CreateSourceVoice(&streamVoice, &waveFormat, XAUDIO2_VOICE_USEFILTER, XAUDIO2_MAX_FREQ_RATIO, &callback, nullptr, &effectChain))) {
+	if (FAILED(xAudio2->CreateSourceVoice(&streamVoice, &waveFormat, XAUDIO2_VOICE_USEFILTER, XAUDIO2_MAX_FREQ_RATIO, &callback, nullptr))) {
 		Logger::Log("Failed to create source voice.\n");
 		return;
 	}
 
-	// リバーブエフェクトのインターフェースを解放
-	reverbEffect->Release();
-
-	//// リバーブのパラメータを設定
-	//XAUDIO2FX_REVERB_PARAMETERS reverbParameters = {};
-	//reverbParameters.WetDryMix = 50.0f;  // 原音とエフェクトのミックス割合
-	//reverbParameters.ReflectionsDelay = 20;  // 反射音の遅延
-	//reverbParameters.ReverbDelay = 50;  // リバーブ遅延
-	//reverbParameters.RoomSize = 100.0f;  // 部屋のサイズ
-
-	//sourceVoice->SetEffectParameters(0, &reverbParameters, sizeof(reverbParameters));
-
+	InitEffectChain(); 
+	
+	
 	// ソースボイスを開始
 	streamVoice->Start(0);
 	// バッファリング処理
@@ -212,7 +183,7 @@ void Audio::ReStartBGM(int resourceNum)
 
 void Audio::SetBGMVolume(int resourceNum, float volume)
 {
-	pSourceVoices_[resourceNum]->SetVolume(std::clamp(volume, 0.0f, 1.0f));
+	pSourceVoices_[resourceNum]->SetVolume(/*std::clamp(*/volume/*, 0.0f, 1.0f)*/);
 }
 
 void Audio::LoadWave(const char* filename)
