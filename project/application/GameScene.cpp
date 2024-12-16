@@ -6,6 +6,7 @@
 #include "ModelManager.h"
 #include "SpriteBasis.h"
 #include "Object3dBasis.h"
+#include "ParticleClass.h"
 #include <fstream>
 #include <istream>
 #include "Audio.h"
@@ -36,6 +37,7 @@ void GameScene::Initialize(Camera* camera) {
 
 #pragma region // 初期化以外
 void GameScene::Update() {
+	ParticleClass::GetInstance()->Update();
 	ImGui::Begin("a");
 	ImGui::DragFloat("pitch", &pitch_, 0.01f);
 	ImGui::End();
@@ -62,7 +64,7 @@ void GameScene::Draw() {
 #pragma region 前景
 	// 前景スプライト描画前
 	SpriteBasis::GetInstance()->BasisDrawSetting();
-
+	ParticleClass::GetInstance()->Draw();
 	/// ↓前景
 #pragma endregion
 }

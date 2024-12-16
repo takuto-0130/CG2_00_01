@@ -1,4 +1,5 @@
 #include "GameCore.h"
+#include "ParticleClass.h"
 #ifdef _DEBUG
 #include <imgui.h>
 #endif // _DEBUG
@@ -24,6 +25,9 @@ void GameCore::Initialize()
 
 	gameScene = std::make_unique<GameScene>();
 	gameScene->Initialize(camera.get());
+
+	ParticleClass::GetInstance()->Initialize(directXBasis.get(), srvManager.get());
+	ParticleClass::GetInstance()->SetCamera(camera.get());
 }
 
 void GameCore::Finalize()

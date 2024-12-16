@@ -135,11 +135,11 @@ void SpriteBasis::CreateGraphicsPipeline()
 
 
 	//shaderCompile
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = directXBasis_->CompilerShader(L"Object3D.VS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = directXBasis_->CompileShader(L"Object3D.VS.hlsl",
 		L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
 
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = directXBasis_->CompilerShader(L"Object3D.PS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = directXBasis_->CompileShader(L"Object3D.PS.hlsl",
 		L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 
