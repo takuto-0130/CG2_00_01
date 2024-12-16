@@ -107,6 +107,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClCompile Include="application\GameScene.cpp" />
     <ClCompile Include="application\Enemy.cpp" />
+    <ClCompile Include="engine\Audio.cpp" />
     <ClCompile Include="engine\Camera.cpp" />
     <ClCompile Include="engine\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="engine\DirectXBasis.cpp" />
@@ -142,6 +143,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\score.cpp" />
     <ClCompile Include="engine\GameCore.cpp" />
     <ClCompile Include="engine\TYFrameWork.cpp" />
+    <ClCompile Include="engine\ParticleClass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
@@ -172,6 +174,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClInclude Include="application\GameScene.h" />
     <ClInclude Include="application\Enemy.h" />
+    <ClInclude Include="engine\Audio.h" />
     <ClInclude Include="engine\Camera.h" />
     <ClInclude Include="engine\D3DResourceLeakChecker.h" />
     <ClInclude Include="engine\DirectXBasis.h" />
@@ -209,6 +212,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\score.h" />
     <ClInclude Include="engine\GameCore.h" />
     <ClInclude Include="engine\TYFrameWork.h" />
+    <ClInclude Include="engine\ParticleClass.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

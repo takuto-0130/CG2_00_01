@@ -1,4 +1,5 @@
 #include "GameCore.h"
+#include "ParticleClass.h"
 #ifdef _DEBUG
 #include <imgui.h>
 #endif // _DEBUG
@@ -28,7 +29,6 @@ void GameCore::Initialize()
 
 void GameCore::Finalize()
 {
-	//SoundUnload(&soundData1);
 	TYFrameWork::Finalize();
 }
 

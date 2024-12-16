@@ -145,11 +145,11 @@ void Object3dBasis::CreateGraphicsPipeline()
 
 
 	//shaderCompile
-	vertexShaderBlob_ = directXBasis_->CompilerShader(L"Object3D.VS.hlsl",
+	vertexShaderBlob_ = directXBasis_->CompileShader(L"Object3D.VS.hlsl",
 		L"vs_6_0");
 	assert(vertexShaderBlob_ != nullptr);
 
-	pixelShaderBlob_ = directXBasis_->CompilerShader(L"Object3D.PS.hlsl",
+	pixelShaderBlob_ = directXBasis_->CompileShader(L"Object3D.PS.hlsl",
 		L"ps_6_0");
 	assert(pixelShaderBlob_ != nullptr);
 

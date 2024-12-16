@@ -50,7 +50,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXBasis::GetSRVGpuDescriptorHandle(const uint32
 	return  GetGpuDescriptorHandle(srvDescripterHeap_, descriptorSizeSRV_, index);
 }
 
-ComPtr<IDxcBlob> DirectXBasis::CompilerShader(const std::wstring& filePath, const wchar_t* profile)
+ComPtr<IDxcBlob> DirectXBasis::CompileShader(const std::wstring& filePath, const wchar_t* profile)
 {
 	//これからシェーダーをコンパイルする旨をログに出す
 	Log(ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));

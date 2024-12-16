@@ -28,7 +28,7 @@ public: // メンバ関数
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGpuDescriptorHandle(const uint32_t& index);
 
 	// シェーダーのコンパイル
-	Microsoft::WRL::ComPtr<IDxcBlob> CompilerShader(const std::wstring& filePath, const wchar_t* profile);
+	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
 	
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const size_t& sizeInBytes);
 

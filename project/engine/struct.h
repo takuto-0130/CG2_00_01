@@ -70,13 +70,13 @@ struct VertexData {
 	Vector3 normal;
 };
 
-//struct Material {
-//	Vector4 color;
-//	int32_t enableLighting;
-//	float padding[3];
-//	Matrix4x4 uvTransform;
-//};
-//
+struct Material {
+	Vector4 color;
+	int32_t enableLighting;
+	float padding[3];
+	Matrix4x4 uvTransform;
+};
+
 //struct TransfomationMatrix {
 //	Matrix4x4 WVP;
 //	Matrix4x4 World;
@@ -88,11 +88,11 @@ struct DirectionalLight {
 	float intensity;
 };
 
-struct MateerialData {
+struct MaterialData {
 	std::string textureFilePath;
 };
 
 struct ModelData {
 	std::vector<VertexData> vertices;
-	MateerialData material;
+	MaterialData material;
 };
