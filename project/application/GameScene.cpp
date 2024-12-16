@@ -37,9 +37,13 @@ void GameScene::Initialize(Camera* camera) {
 
 #pragma region // 初期化以外
 void GameScene::Update() {
+#ifdef _DEBUG
+
 	ImGui::Begin("a");
 	ImGui::DragFloat("pitch", &pitch_, 0.01f);
 	ImGui::End();
+
+#endif // _DEBUG
 	Audio::GetInstance()->SetPitch(pitch_);
 	Audio::GetInstance()->SetEffect(XAUDIO2FX_I3DL2_PRESET_UNDERWATER);
 }
