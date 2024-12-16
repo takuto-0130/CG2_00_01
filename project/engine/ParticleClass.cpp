@@ -2,6 +2,7 @@
 #include "TextureManager.h"
 #include "operatorOverload.h"
 #include <numbers>
+#include <imgui.h>
 
 ParticleClass::Particle ParticleClass::MakeNewParticle(std::mt19937& random, const Vector3& translate) {
 	Particle parti;
@@ -122,7 +123,10 @@ void ParticleClass::Update()
 		}
 		++partiIterator;
 	}
-
+	int a = numInstance;
+	ImGui::Begin("b");
+	ImGui::DragInt("num", &a);
+	ImGui::End();
 }
 
 void ParticleClass::Draw()
