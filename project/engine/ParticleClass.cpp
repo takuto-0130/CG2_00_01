@@ -123,10 +123,6 @@ void ParticleClass::Update()
 		}
 		++partiIterator;
 	}
-	int a = numInstance;
-	ImGui::Begin("b");
-	ImGui::DragInt("num", &a);
-	ImGui::End();
 }
 
 void ParticleClass::Draw()
