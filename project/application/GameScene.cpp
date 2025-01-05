@@ -25,14 +25,14 @@ void GameScene::Initialize(Camera* camera) {
 	Audio::GetInstance()->Initialize();
 	input_ = Input::GetInstance();
 
-	/*Audio::GetInstance()->SetPitch(pitch_);
-	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);*/
-	Audio::GetInstance()->LoadWave("BGM_2");
+	Audio::GetInstance()->SetPitch(pitch_);
+	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
+	/*Audio::GetInstance()->LoadWave("BGM_2");
 	int num = Audio::GetInstance()->PlayWave("BGM_2");
 	Audio::GetInstance()->SetBGMVolume(num, 1.0f);
 	Audio::GetInstance()->LoadWave("BGM_2");
 	int num2 = Audio::GetInstance()->PlayWave("BGM_2");
-	Audio::GetInstance()->SetBGMVolume(num2, -0.9f);
+	Audio::GetInstance()->SetBGMVolume(num2, -0.9f);*/
 }
 
 #pragma region // 初期化以外
@@ -40,12 +40,16 @@ void GameScene::Update() {
 #ifdef _DEBUG
 
 	ImGui::Begin("a");
-	ImGui::DragFloat("pitch", &pitch_, 0.01f);
+	ImGui::DragFloat("pitch", &pitch_, 0.001f);
 	ImGui::End();
 
 #endif // _DEBUG
+	if (input_->TriggerKey(DIK_SPACE)) {
+		Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
+	}
 	Audio::GetInstance()->SetPitch(pitch_);
-	Audio::GetInstance()->SetEffect(XAUDIO2FX_I3DL2_PRESET_UNDERWATER);
+	Audio::GetInstance()->CheckBuffer();
+	//Audio::GetInstance()->SetEffect(XAUDIO2FX_I3DL2_PRESET_UNDERWATER);
 }
 
 void GameScene::Draw() {

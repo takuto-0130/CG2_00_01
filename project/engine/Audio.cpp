@@ -81,7 +81,7 @@ void Audio::StreamAudio(const char* filename) {
 	// ストリーミング用のバッファを複数作成
 	constexpr int BUFFER_COUNT = 3; // バッファ数
 	size_t BUFFER_SIZE = header.sampleRate * waveFormat.nBlockAlign; // バッファサイズ
-	audioBuffers.resize(BUFFER_COUNT, std::vector<BYTE>(BUFFER_SIZE));
+	audioBuffers.resize(BUFFER_COUNT);
 	XAUDIO2_BUFFER xAudioBuffers[BUFFER_COUNT] = {};
 	StreamingVoiceCallback callback;
 
@@ -101,7 +101,9 @@ void Audio::StreamAudio(const char* filename) {
 	int currentBufferIndex = 0;
 
 	while (isStreaming.load()) {
-		std::vector<BYTE>& currentBuffer = audioBuffers[currentBufferIndex];
+		std::vector<BYTE> currentBuffer = {};
+		BUFFER_SIZE = header.sampleRate * waveFormat.nBlockAlign * pitch_.load(); // バッファサイズ
+		currentBuffer.resize(BUFFER_SIZE);
 		if (!ReadAudioData(audioFile, currentBuffer)) {
 			// EOF
 			if(isLoopStreaming.load()) { 
@@ -122,7 +124,7 @@ void Audio::StreamAudio(const char* filename) {
 		}
 
 		// 現在のバッファを設定
-		XAUDIO2_BUFFER& xBuffer = xAudioBuffers[currentBufferIndex];
+		XAUDIO2_BUFFER xBuffer = {};
 		xBuffer.AudioBytes = static_cast<UINT32>(currentBuffer.size());
 		xBuffer.pAudioData = currentBuffer.data();
 		xBuffer.Flags = 0;
@@ -142,6 +144,8 @@ void Audio::StreamAudio(const char* filename) {
 
 		// 次のバッファを使用
 		currentBufferIndex = (currentBufferIndex + 1) % BUFFER_COUNT;
+
+		streamVoice->SetFrequencyRatio(pitch_.load());
 
 		// コールバックで次のバッファの処理完了を待機
 		callback.WaitForBuffer();
