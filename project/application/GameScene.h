@@ -5,13 +5,11 @@
 #include "Sprite.h"
 #include "Object3d.h"
 #include "WorldTransform.h"
-#include "Skydome.h"
-#include "Camera.h"
-#include "rail.h"
-#include "Enemy.h"
-#include "score.h"
 #include <sstream>
 #include "Audio.h"
+#include "player/Player.h"
+#include "Enemy/EnemyManager.h"
+#include "global/Ground.h"
 
 /// <summary>
 /// ゲームシーン
@@ -44,6 +42,8 @@ public: // メンバ関数
 	/// </summary>
 	void Draw();
 
+	void CheckAllCollisions();
+
 
 private:
 
@@ -53,5 +53,11 @@ private: // メンバ変数
 	Input* input_ = nullptr;
 
 	float pitch_ = 1.0f;
+
+	std::unique_ptr<Player> player_;
+	std::unique_ptr<Ground> ground_;
+	std::unique_ptr<EnemyManager> enemyGroup_;
+	// 衝突マネージャ
+	std::unique_ptr<CollisionManager> collisionManager_;
 };
 

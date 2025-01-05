@@ -106,7 +106,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="application\GameScene.cpp" />
-    <ClCompile Include="application\Enemy.cpp" />
+    <ClCompile Include="application\Enemy\Enemy.cpp" />
+    <ClCompile Include="application\Enemy\EnemyManager.cpp" />
+    <ClCompile Include="application\global\Collider.cpp" />
+    <ClCompile Include="application\global\CollisionManager.cpp" />
+    <ClCompile Include="application\global\ContactRecord.cpp" />
     <ClCompile Include="engine\Audio.cpp" />
     <ClCompile Include="engine\Camera.cpp" />
     <ClCompile Include="engine\D3DResourceLeakChecker.cpp" />
@@ -138,12 +142,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\WorldTransform.cpp" />
     <ClCompile Include="engine\ImGuiManager.cpp" />
     <ClCompile Include="engine\GlobalVariables.cpp" />
-    <ClCompile Include="application\rail.cpp" />
-    <ClCompile Include="application\Skydome.cpp" />
-    <ClCompile Include="application\score.cpp" />
     <ClCompile Include="engine\GameCore.cpp" />
     <ClCompile Include="engine\TYFrameWork.cpp" />
     <ClCompile Include="engine\ParticleClass.cpp" />
+    <ClCompile Include="application\global\Ground.cpp" />
+    <ClCompile Include="application\player\Player.cpp" />
+    <ClCompile Include="application\player\Weapon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
@@ -173,7 +177,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\GameScene.h" />
-    <ClInclude Include="application\Enemy.h" />
+    <ClInclude Include="application\Enemy\Enemy.h" />
+    <ClInclude Include="application\Enemy\EnemyManager.h" />
+    <ClInclude Include="application\global\Collider.h" />
+    <ClInclude Include="application\global\CollisionManager.h" />
+    <ClInclude Include="application\global\CollisionTypeIdDef.h" />
+    <ClInclude Include="application\global\ContactRecord.h" />
     <ClInclude Include="engine\Audio.h" />
     <ClInclude Include="engine\Camera.h" />
     <ClInclude Include="engine\D3DResourceLeakChecker.h" />
@@ -207,12 +216,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\WorldTransform.h" />
     <ClInclude Include="engine\ImGuiManager.h" />
     <ClInclude Include="engine\GlobalVariables.h" />
-    <ClInclude Include="application\rail.h" />
-    <ClInclude Include="application\Skydome.h" />
-    <ClInclude Include="application\score.h" />
     <ClInclude Include="engine\GameCore.h" />
     <ClInclude Include="engine\TYFrameWork.h" />
     <ClInclude Include="engine\ParticleClass.h" />
+    <ClInclude Include="application\global\Ground.h" />
+    <ClInclude Include="application\player\Player.h" />
+    <ClInclude Include="application\player\Weapon.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

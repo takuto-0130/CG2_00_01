@@ -1,74 +1,118 @@
 #pragma once
-#include "struct.h"
-#include <map>
-#include <string>
-#include <variant>
-#include "json.hpp"
+#include "variant"
+#include "map"
+#include "string"
+#include "mathFunc.h"
+#include <json.hpp>
+
+using json = nlohmann::json;
+
+/// <summary>
+/// グローバル変数
+/// </summary>
+const std::string kDirectoryPath = "Resources/GlobalVariables/";
 
 class GlobalVariables {
-public:
-	static GlobalVariables* GetInstance();
+public: // インナークラス
 
-	void CreateGroup(const std::string& groupName);
+	// 項目
+	struct Item {
+		// 項目の値
+		std::variant<int32_t, float, Vector3, bool> value;
+	};
 
+	// グループ
+	struct Group {
+		std::map<std::string, Item> items;
+	};
 
-	void SetValue(const std::string& groupName, const std::string& key, int32_t value);
+public: // メンバ関数
 
-	void AddItem(const std::string& groupName, const std::string& key, int32_t value);
-
-	int32_t GetIntValue(const std::string& groupName, const std::string& key) const;
-
-
-	void SetValue(const std::string& groupName, const std::string& key, float value);
-
-	void AddItem(const std::string& groupName, const std::string& key, float value);
-
-	float GetFloatValue(const std::string& groupName, const std::string& key) const;
-
-
-	void SetValue(const std::string& groupName, const std::string& key, const Vector3 value);
-
-	void AddItem(const std::string& groupName, const std::string& key, const Vector3 value);
-
-	Vector3 GetVector3Value(const std::string& groupName, const std::string& key) const;
-
-
-
+	/// <summary>
+	/// 更新
+	/// </summary>
 	void Update();
 
 	/// <summary>
-	/// ファイルに書き出し
+	/// インスタンスの取得
 	/// </summary>
-	void SaveFile(const std::string& groupName);
+	static GlobalVariables* GetInstance();
 
 	/// <summary>
-	/// ファイルから読み込み
+	/// グループの作成
 	/// </summary>
-	void LoadFile(const std::string& groupName);
+	void CreateGroup(const std::string& groupName);
+
+	/// <summary>
+	/// ファイルの書き出し
+	/// </summary>
+	void SaveFile(const std::string& groupName);
 
 	/// <summary>
 	/// ディレクトリの全ファイル読み込み
 	/// </summary>
 	void LoadFiles();
 
+	/// <summary>
+	/// ファイルから読み込む
+	/// </summary>
+	/// <param name="groupName"></param>
+	void LoadFile(const std::string& groupName);
+
+	/// <summary>
+	/// 項目の追加(int)
+	/// </summary>
+	void AddItem(const std::string& groupName, const std::string& key, int32_t value);
+
+	/// <summary>
+	/// 項目の追加(float)
+	/// </summary>
+	void AddItem(const std::string& groupName, const std::string& key, float value);
+
+	/// <summary>
+	/// 項目の追加(Vector3)
+	/// </summary>
+	void AddItem(const std::string& groupName, const std::string& key, const Vector3& value);
+
+	/// <summary>
+	/// 項目の追加(bool)
+	/// </summary>
+	void AddItem(const std::string& groupName, const std::string& key, const bool& value);
+
+	// 値のセット（int）
+	void SetValue(const std::string& groupName, const std::string& key, int32_t value);
+	// 値のセット（float）
+	void SetValue(const std::string& groupName, const std::string& key, float value);
+	// 値のセット（Vector3）
+	void SetValue(const std::string& groupName, const std::string& key, const Vector3 value);
+	// 値のセット (bool)
+	void SetValue(const std::string& groupName, const std::string& key, const bool& value);
+
+
+
+public: // アクセッサ
+
+	int32_t GetIntValue(const std::string& groupName, const std::string& key) const;
+	float GetFloatValue(const std::string& groupName, const std::string& key) const;
+	Vector3 GetVector3Value(const std::string& groupName, const std::string& key) const;
+	bool GetBoolValue(const std::string& groupName, const std::string& key) const;
+
+
 private:
-	GlobalVariables();
-	~GlobalVariables();
+	// コンストラクタ
+	GlobalVariables() = default;
+	// デストラクタ
+	~GlobalVariables() = default;
+	// コピーコンストラクタを無効
 	GlobalVariables(const GlobalVariables& obj) = delete;
+	// 代入演算子を無効
 	GlobalVariables& operator=(const GlobalVariables& obj) = delete;
 
-private:
-	struct Item {
-		std::variant<int32_t, float, Vector3> value;
-	};
-
-	struct Group {
-		std::map<std::string, Item> items;
-	};
-
+	// 全データ
 	std::map<std::string, Group> datas_;
 
-	using json = nlohmann::json;
-	// グローバル変数の保存先ファイルパス
-	const std::string kDirectoryPath = "Resources/GlobalVariables/";
+
+
 };
+
+

@@ -25,31 +25,38 @@ void GameScene::Initialize(Camera* camera) {
 	Audio::GetInstance()->Initialize();
 	input_ = Input::GetInstance();
 
-	Audio::GetInstance()->SetPitch(pitch_);
 	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
-	/*Audio::GetInstance()->LoadWave("BGM_2");
-	int num = Audio::GetInstance()->PlayWave("BGM_2");
-	Audio::GetInstance()->SetBGMVolume(num, 1.0f);
-	Audio::GetInstance()->LoadWave("BGM_2");
-	int num2 = Audio::GetInstance()->PlayWave("BGM_2");
-	Audio::GetInstance()->SetBGMVolume(num2, -0.9f);*/
+
+	collisionManager_ = std::make_unique<CollisionManager>();
+	collisionManager_->Initialize();
+
+
+	player_ = std::make_unique<Player>();
+	player_->Initialize();
+	player_->Update();
+
+	//=============== エネミー ===============//
+	enemyGroup_ = std::make_unique<EnemyManager>();
+	enemyGroup_->Initialize();
+	enemyGroup_->SetPlayer(player_.get());
+
+	// =============== 地面 =============//
+	ground_ = std::make_unique<Ground>();
+	ground_->Initialize();
+	
 }
 
 #pragma region // 初期化以外
 void GameScene::Update() {
+
+	// プレイヤーの更新
+	player_->Update();
+
+	// 敵の更新
+	enemyGroup_->Update();
+
 #ifdef _DEBUG
-
-	ImGui::Begin("a");
-	ImGui::DragFloat("pitch", &pitch_, 0.001f);
-	ImGui::End();
-
 #endif // _DEBUG
-	if (input_->TriggerKey(DIK_SPACE)) {
-		Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
-	}
-	Audio::GetInstance()->SetPitch(pitch_);
-	Audio::GetInstance()->CheckBuffer();
-	//Audio::GetInstance()->SetEffect(XAUDIO2FX_I3DL2_PRESET_UNDERWATER);
 }
 
 void GameScene::Draw() {
@@ -73,5 +80,28 @@ void GameScene::Draw() {
 	SpriteBasis::GetInstance()->BasisDrawSetting();
 	/// ↓前景
 #pragma endregion
+}
+
+void GameScene::CheckAllCollisions()
+{
+	// 衝突マネージャーのリセット
+	collisionManager_->Reset();
+
+	// コライダーをリストに登録
+	collisionManager_->AddCollider(player_.get());
+
+	// コライダーリストに登録
+	collisionManager_->AddCollider(player_->GetWeapon());
+
+	// 敵全てについて
+	 // 敵全てのコライダーをリストに登録
+	auto enemyColliders = enemyGroup_->GetColliders();
+	for (auto& collider : enemyColliders) {
+		collisionManager_->AddCollider(collider);
+	}
+
+
+	// 衝突判定と応答
+	collisionManager_->CheckAllCollisions();
 }
 
