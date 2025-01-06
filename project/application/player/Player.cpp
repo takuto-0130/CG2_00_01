@@ -9,7 +9,7 @@
 const std::array<Player::ConstAttack, Player::ComboNum> Player::kConstAttacks_ = {
 	{
 		{0, 0, 10, 30, 0.0f, 0.0f, 0.15f},  // 1段目
-		{15, 10, 15, 50, 0.2f, 0.0f, 0.0f}, // 2段目
+		{15, 10, 15, 50, 1.3f, 0.0f, 0.0f}, // 2段目
 		{15, 10, 15, 30, 0.2f, 0.0f, 0.0f} // 3段目
 	}
 };
@@ -349,6 +349,7 @@ void Player::BehaviorAttackUpdate()
 	if (workAttack_.comboIndex == 1) {
 		// 2段目のコンボ処理
 		if (workAttack_.inComboPhase == 0) {
+			Vector3 moveVec = { 0,0,attack[workAttack_.comboIndex].anticipationSpeed };
 			// 2段目: 振りかぶりの動作
 			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].anticipationTime) {
 				workAttack_.inComboPhase++;
@@ -358,6 +359,9 @@ void Player::BehaviorAttackUpdate()
 			R_arm_transform_.rotation_.x = -swingRotare;
 			R_arm_transform_.rotation_.z = swingRotare;
 			body_transform_.rotation_.y = -0.45f;
+
+			Matrix4x4 rotaY = MakeRotateYMatrix(transform_.rotation_.y);
+			transform_.translation_ += TransformM(moveVec, rotaY);
 		}
 		else if (workAttack_.inComboPhase == 1) {
 			// 2段目: 攻撃振りの動作

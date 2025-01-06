@@ -132,7 +132,7 @@ void Enemy::Move()
 	playerPos = playerPos - Vector3{ 0,1.0f,0 };
 	Vector3 pos = { playerPos - transform_.translation_ };
 	float weponRadius = 4.0f;
-	if (Length(pos) > weponRadius + radius_)// プレイヤーの半径 + エネミー半径 - 0.1fくらい？
+	if (Length(pos) > weponRadius + radius_)
 	{
 		pos = Normalize(pos);
 		transform_.translation_ += pos * speed_;
