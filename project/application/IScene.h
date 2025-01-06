@@ -2,7 +2,7 @@
 #include "Input.h"
 #include "Camera.h"
 
-enum Scene {STAGE};
+enum Scene {TITLE, STAGE};
 class IScene {
 protected:
 	static int sceneNo_;

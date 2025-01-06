@@ -1,6 +1,7 @@
 #include "GameCore.h"
 #include "ParticleClass.h"
 #include "GameScene.h"
+#include "TitleScene.h"
 #ifdef _DEBUG
 #include <imgui.h>
 #endif // _DEBUG
@@ -27,6 +28,8 @@ void GameCore::Initialize()
 	Audio::GetInstance()->Initialize();
 
 
+	sceneArr_[Scene::TITLE] = std::make_unique<TitleScene>();
+	sceneArr_[Scene::TITLE]->Init();
 	sceneArr_[Scene::STAGE] = std::make_unique<GameScene>();
 	sceneArr_[Scene::STAGE]->Init();
 	sceneArr_[Scene::STAGE]->SetCamera(camera.get());

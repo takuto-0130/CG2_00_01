@@ -141,6 +141,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\TYFrameWork.cpp" />
     <ClCompile Include="engine\ParticleClass.cpp" />
     <ClCompile Include="application\IScene.cpp" />
+    <ClCompile Include="application\TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
@@ -207,6 +208,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\TYFrameWork.h" />
     <ClInclude Include="engine\ParticleClass.h" />
     <ClInclude Include="application\IScene.h" />
+    <ClInclude Include="application\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

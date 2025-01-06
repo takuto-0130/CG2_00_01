@@ -176,7 +176,10 @@ public:
 	}
 
 	void DisableEffect() {
-		streamVoice->DisableEffect(0);
+		if (streamVoice)
+		{
+			streamVoice->DisableEffect(0);
+		}
 	}
 private:
 	void StreamAudio(const char* filename);
