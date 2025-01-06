@@ -4,6 +4,12 @@
 #include <numbers>
 #include <imgui.h>
 
+void ParticleClass::CollisionEmit(Vector3 pos)
+{
+	isEmit_ = true;
+	emitter_.transform.translate = pos;
+}
+
 ParticleClass::Particle ParticleClass::MakeNewParticle(std::mt19937& random, const Vector3& translate) {
 	Particle parti;
 
@@ -71,6 +77,8 @@ void ParticleClass::Initialize(DirectXBasis* dxBasis, SrvManager* srvManager)
 
 	useBillboard = true;
 
+	isEmit_ = false;
+
 }
 
 void ParticleClass::Update()
@@ -85,10 +93,11 @@ void ParticleClass::Update()
 
 	numInstance = 0;
 
-	emitter_.frequencyTime += kDeltaTime;
-	if (emitter_.frequency <= emitter_.frequencyTime) {
+	//emitter_.frequencyTime += kDeltaTime;
+	if (/*emitter_.frequency <= emitter_.frequencyTime*/isEmit_) {
 		particles.splice(particles.end(), Emit(emitter_, random));
-		emitter_.frequencyTime -= emitter_.frequency;
+		/*emitter_.frequencyTime -= emitter_.frequency;*/
+		isEmit_ = false;
 	}
 
 	for (std::list<Particle>::iterator partiIterator = particles.begin(); partiIterator != particles.end();) {

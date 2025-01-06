@@ -41,33 +41,25 @@ void GameScene::Init() {
 	ground_ = std::make_unique<Ground>();
 	ground_->Initialize();
 	cameraOffset_ = { 0, 5, -3 };
-	
+
+	phase_ = GamePhase::kFadeIn;
+	fade_ = std::make_unique<Fade>();
+	fade_->Initialize();
+	fade_->Start(Status::FadeIn, 2.0f);
+
+	player_->Update();
 }
 
 #pragma region // 初期化以外
 void GameScene::Update() {
+	fade_->Update();
 
-	// 衝突判定と応答
-	CheckAllCollisions();
-
-	// プレイヤーの更新
-	player_->Update();
-
-	camera_->FollowCamera(player_->GetPosition());
-	ground_->Update();
-
-	// 敵の更新
-	enemyGroup_->Update();
-
-
-	if (input_->TriggerKey(DIK_RETURN)) {
-		sceneNo_ = CLEAR;
-	}
 
 #ifdef _DEBUG
 	ImGui::Begin("GAME");
 	ImGui::End();
 #endif // _DEBUG
+	ChangePhase();
 }
 
 void GameScene::Draw() {
@@ -92,6 +84,8 @@ void GameScene::Draw() {
 	// 前景スプライト描画前
 	SpriteBasis::GetInstance()->BasisDrawSetting();
 	/// ↓前景
+
+	fade_->Draw();
 #pragma endregion
 }
 
@@ -116,5 +110,45 @@ void GameScene::CheckAllCollisions()
 
 	// 衝突判定と応答
 	collisionManager_->CheckAllCollisions();
+}
+
+void GameScene::ChangePhase()
+{
+	switch (phase_) {
+	case GamePhase::kGame:
+
+		// 衝突判定と応答
+		CheckAllCollisions();
+
+		// プレイヤーの更新
+		player_->Update();
+
+		camera_->FollowCamera(player_->GetPosition());
+		ground_->Update();
+
+		// 敵の更新
+		enemyGroup_->Update();
+
+		if (enemyGroup_->GetEliminateCount() >= clearEliminateCount_) {
+			phase_ = GamePhase::kFadeOut;
+			fade_->Start(Status::FadeOut, 2.0f);
+		}
+
+		break;
+	case GamePhase::kFadeIn:
+		if (fade_->IsFinished()) {
+			phase_ = GamePhase::kGame;
+		}
+		camera_->FollowCamera(player_->GetPosition());
+		ground_->Update();
+		break;
+	case GamePhase::kFadeOut:
+		if (fade_->IsFinished()) {
+			// シーンの切り替え依頼
+			sceneNo_ = CLEAR;
+		}
+		break;
+
+	}
 }
 

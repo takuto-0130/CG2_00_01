@@ -11,7 +11,7 @@ void Ground::Initialize()
 
 	obj_->SetModel("Ground.obj");
 	transform_.Initialize();
-	transform_.scale_ = { 200, 1, 200 };
+	transform_.scale_ = { 100, 1, 100 };
 }
 
 void Ground::Update()

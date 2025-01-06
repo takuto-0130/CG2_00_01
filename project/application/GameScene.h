@@ -12,6 +12,12 @@
 #include "Enemy/EnemyManager.h"
 #include "global/Ground.h"
 
+enum class GamePhase {
+	kFadeIn,
+	kGame,
+	kFadeOut
+};
+
 /// <summary>
 /// ゲームシーン
 /// </summary>
@@ -43,9 +49,13 @@ public: // メンバ関数
 
 
 private:
-
+	void ChangePhase();
 
 private: // メンバ変数
+	std::unique_ptr<Fade> fade_;
+	GamePhase phase_ = GamePhase::kFadeIn;
+
+	uint32_t clearEliminateCount_ = 50;
 
 
 	float pitch_ = 1.0f;

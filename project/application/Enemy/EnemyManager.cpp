@@ -14,12 +14,23 @@ EnemyManager::~EnemyManager()
 
 void EnemyManager::Initialize()
 {
+	enemys_.remove_if([](const std::shared_ptr<Enemy>& enemy) {
+		return true;
+		});
 	Timer_ = 0;
+	eliminateCount_ = 0;
 }
 
 void EnemyManager::Update()
 {
 	RandomPop();
+
+
+	for (std::shared_ptr<Enemy> enemy : enemys_) {
+		if (enemy->IsDelete()) {
+			eliminateCount_++;
+		}
+	}
 
 	enemys_.remove_if([](const std::shared_ptr<Enemy>& enemy) {
 		return enemy->IsDelete();
@@ -43,7 +54,7 @@ void EnemyManager::RandomPop()
 	std::uniform_int_distribution<> distrib(1, kMaxAngle);
 	std::mt19937 gen(rd_());
 	int angle = distrib(gen);
-	if(Timer_%interval_ == 0)
+	if(Timer_%interval_ == 0 && Timer_ < maxPopTime_)
 	{
 		Vector3 pos = TransformVector3(kPopPos, MakeRotateYMatrix(popAngle_ * static_cast<float>(angle))) + player_->GetPosition();
 		PopEnemy(pos);

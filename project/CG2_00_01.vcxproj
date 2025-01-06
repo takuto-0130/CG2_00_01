@@ -151,6 +151,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\player\Weapon.cpp" />
     <ClCompile Include="application\IScene.cpp" />
     <ClCompile Include="application\TitleScene.cpp" />
+    <ClCompile Include="application\Fade.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
@@ -228,6 +229,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\player\Weapon.h" />
     <ClInclude Include="application\IScene.h" />
     <ClInclude Include="application\TitleScene.h" />
+    <ClInclude Include="application\Fade.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

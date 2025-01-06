@@ -26,6 +26,8 @@ public:
 	void AAA();
 	std::vector<Collider*>GetColliders();
 
+	uint32_t GetEliminateCount() { return eliminateCount_; }
+
 private:
 
 	// 出現(ランダム)
@@ -46,6 +48,7 @@ private:
 
 	int32_t Timer_;
 	int32_t interval_ = 20;
+	int32_t maxPopTime_ = 2000;
 
 
 	Player* player_;
@@ -55,6 +58,8 @@ private:
 	const int kMaxAngle = 360;
 	Vector3 kPopPos = { 0 ,0 ,50.0f };
 	std::random_device rd_;
+
+	uint32_t eliminateCount_ = 0;
 
 };
 

@@ -4,7 +4,7 @@
 #include <struct.h>
 #include <Camera.h>
 
-const uint32_t kNumMaxInstance = 100; // インスタンス数
+const uint32_t kNumMaxInstance = 500; // インスタンス数
 const float kDeltaTime = 1.0f / 60.0f;
 
 
@@ -88,6 +88,8 @@ public:
 	// エミッターをの設定を変更
 	void SetEmitter(Emitter emitter) { emitter_ = emitter; }
 
+	void CollisionEmit(Vector3 pos);
+
 private:
 
 	Particle MakeNewParticle(std::mt19937& random, const Vector3& translate);
@@ -150,5 +152,7 @@ private:
 	Transform transform = {};
 
 	uint32_t numInstance = 0;
+
+	bool isEmit_ = false;
 };
 

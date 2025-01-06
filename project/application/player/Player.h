@@ -16,15 +16,8 @@
 enum class Behavior {
 	kRoot,
 	kAttack,
-	kJump
 };
 
-enum class ComboPhase {
-	kAnticipation,	// 振りかぶり
-	kCharge,		// ため
-	kSwing,			// 攻撃の振り
-	kRecovery		// 攻撃後の硬直
-};
 
 class Player : public Collider
 {
@@ -33,10 +26,10 @@ public: // 構造体
 	/// コンボ構造体
 	/// </summary>
 	struct ConstAttack {
-		uint32_t anticipationTime;   // 振りかぶりの時間<frame>
-		uint32_t chargeTime;         // ための時間<frame>
-		uint32_t swingTime;          // 攻撃の振りの時間<frame>
-		uint32_t recoveryTime;       // 攻撃後の硬直時間<frame>
+		uint32_t anticipationTime;   // 振りかぶり時間
+		uint32_t chargeTime;         // ため時間
+		uint32_t swingTime;          // 攻撃振り時間
+		uint32_t recoveryTime;       // 硬直時間
 		float anticipationSpeed;     // 振りかぶり時の移動速度
 		float chargeSpeed;           // ため時の移動速度
 		float swingSpeed;            // 攻撃時の移動速度
@@ -44,14 +37,8 @@ public: // 構造体
 	struct WorkAttack {
 		uint32_t attackParameter_ = 0; // コンボ進行を管理するパラメーター
 		int32_t comboIndex = 0;        // 現在のコンボ段階（0, 1, 2...）
-		int32_t inComboPhase = 0;      // 1段の中でどのフェーズか（振りかぶりなど）
-		bool comboNext = false;        // 次のコンボに進むかどうかのフラグ
-	};
-	struct _WorkAttack {
-		uint32_t attackParameter_ = 0; // コンボ進行を管理するパラメーター
-		int32_t comboIndex = 0;        // 現在のコンボ段階（0, 1, 2...）
-		ComboPhase inComboPhase = ComboPhase::kAnticipation;      // 1段の中でどのフェーズか（振りかぶりなど）
-		bool comboNext = false;        // 次のコンボに進むかどうかのフラグ
+		int32_t inComboPhase = 0;      // 1段の中でどのフェーズか
+		bool comboNext = false;        // 次のコンボに進むかどうか
 	};
 
 public: // メンバ関数（公開）
@@ -113,11 +100,6 @@ private: // メンバ関数（非公開）
 	void BehaviorAttackInit();
 
 	/// <summary>
-	/// ジャンプ初期化
-	/// </summary>
-	void BehaviorJumpInit();
-
-	/// <summary>
 	/// 通常行動更新
 	/// </summary>
 	void BehaviorRootUpdate();
@@ -128,14 +110,11 @@ private: // メンバ関数（非公開）
 	void BehaviorAttackUpdate();
 
 	/// <summary>
-	/// ジャンプ更新
-	/// </summary>
-	void BehaviorJumpUpdate();
-
-	/// <summary>
 	/// 自機の浮遊
 	/// </summary>
 	void UpdateFloating();
+
+	void MoveLimit();
 
 public: // アクセッサ1
 
@@ -199,6 +178,6 @@ public:
 
 	WorkAttack workAttack_;
 
-	_WorkAttack _workAttack_;
+	float moveLimit_ = 60.0f;
 };					 
 

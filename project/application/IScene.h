@@ -1,6 +1,7 @@
 #pragma once
 #include "Input.h"
 #include "Camera.h"
+#include "Fade.h"
 
 enum Scene {TITLE, STAGE, CLEAR};
 class IScene {

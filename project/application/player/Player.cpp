@@ -9,7 +9,7 @@
 const std::array<Player::ConstAttack, Player::ComboNum> Player::kConstAttacks_ = {
 	{
 		{0, 0, 10, 30, 0.0f, 0.0f, 0.15f},  // 1段目
-		{15, 10, 15, 50, 1.3f, 0.0f, 0.0f}, // 2段目
+		{15, 10, 15, 50, 0.8f, 0.0f, 0.0f}, // 2段目
 		{15, 10, 15, 30, 0.2f, 0.0f, 0.0f} // 3段目
 	}
 };
@@ -23,7 +23,7 @@ Player::~Player()
 }
 void Player::Initialize()
 {
-	// ============ 各オブジェクトの生成処理 ============//
+	// obj
 	baseObject_ = new Object3d();
 	headObject_ = new Object3d();
 	bodyObject_ = new Object3d();
@@ -36,7 +36,6 @@ void Player::Initialize()
 	L_arm_Object_->Initialize();
 	R_arm_Object_->Initialize();
 
-	// obj
 	ModelManager::GetInstance()->LoadModel("Resources", "float_head.obj");
 	headObject_->SetModel("float_head.obj");
 	ModelManager::GetInstance()->LoadModel("Resources", "float_body.obj");
@@ -74,7 +73,7 @@ void Player::Initialize()
 
 	// その他機能の初期化
 	input_ = Input::GetInstance();
-	moveSpeed_ = { 0.5f,0.5f ,0.5f };
+	moveSpeed_ = { 0.3f, 0.3f ,0.3f };
 
 	// 通常モーションで初期化
 	Behavior behavior_ = Behavior::kRoot;
@@ -146,9 +145,7 @@ Vector3 Player::GetCenterPosition() const
 
 void Player::LastUpdate()
 {
-	// 一番最後に呼ばないとダメ
-	// セットも一緒に
-
+	MoveLimit();
 	// 各オブジェクトの更新
 	transform_.TransferMatrix();
 	body_transform_.TransferMatrix();
@@ -208,9 +205,6 @@ void Player::BehaviorInitialize()
 		case Behavior::kAttack:
 			BehaviorAttackInit();
 			break;
-		case Behavior::kJump:
-			BehaviorJumpInit();
-			break;
 		}
 		// 振る舞いリクエストをリセット
 		behaviortRquest_ = std::nullopt;
@@ -231,9 +225,6 @@ void Player::BehaviorUpdate() {
 		// 攻撃行動更新
 		BehaviorAttackUpdate();
 		break;
-	case Behavior::kJump:
-		BehaviorJumpUpdate();
-		break;
 	}
 }
 
@@ -253,18 +244,6 @@ void Player::BehaviorAttackInit()
 	L_arm_transform_.rotation_.x = 0.0f;
 	weapon_->RecordClear();
 	attackSpeed_ = 0.25f;
-}
-
-void Player::BehaviorJumpInit()
-{
-	body_transform_.translation_.y = 0.0f;
-	R_arm_transform_.rotation_.x = 0.0f;
-	L_arm_transform_.rotation_.x = 0.0f;
-
-	// ジャンプ初速
-	const float kJumpFirstSpeed = 0.5f;
-	// ジャンプ初速を与える
-	velocity_.y = kJumpFirstSpeed;
 }
 
 void Player::BehaviorRootUpdate()
@@ -395,24 +374,6 @@ void Player::BehaviorAttackUpdate()
 
 }
 
-
-void Player::BehaviorJumpUpdate()
-{
-	// 移動
-	body_transform_.translation_ += velocity_;
-	// 重力加速度
-	const float kGravityAcceleration = 0.05f;
-	// 加速度ベクトル
-	Vector3 accelerationVector = { 0, -kGravityAcceleration, 0 };
-	// 加速する
-	velocity_ += accelerationVector;
-	if (body_transform_.translation_.y <= 0) {
-		body_transform_.translation_.y = 0;
-		// ジャンプ終了
-		behaviortRquest_ = Behavior::kRoot;
-	}
-}
-
 void Player::UpdateFloating()
 {
 	// プレイヤーの浮遊
@@ -429,4 +390,10 @@ void Player::UpdateFloating()
 	// 浮遊を武器のY座標に反映
 	Vector3 weaponTranslation = weapon_->GetTranslation();
 	weapon_->SetTranslation(Vector3{ weaponTranslation.x, sin(weaponFloatingParameter_) * weaponFloatingAmplitude_, weaponTranslation.z });
+}
+
+void Player::MoveLimit()
+{
+	transform_.translation_.x = std::clamp(transform_.translation_.x, -moveLimit_, moveLimit_);
+	transform_.translation_.z = std::clamp(transform_.translation_.z, -moveLimit_, moveLimit_);
 }
