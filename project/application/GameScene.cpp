@@ -22,35 +22,16 @@ GameScene::~GameScene() {
 void GameScene::Init() {
 	input_ = Input::GetInstance();
 
-	/*Audio::GetInstance()->SetPitch(pitch_);
-	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);*/
-	Audio::GetInstance()->LoadWave("BGM_2");
+	Audio::GetInstance()->SetPitch(pitch_);
+	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
+	/*Audio::GetInstance()->LoadWave("BGM_2");
 	int num = Audio::GetInstance()->PlayWave("BGM_2");
-	Audio::GetInstance()->SetBGMVolume(num, 1.0f);
-	Audio::GetInstance()->LoadWave("BGM_2");
-	int num2 = Audio::GetInstance()->PlayWave("BGM_2");
-	Audio::GetInstance()->SetBGMVolume(num2, -0.9f);
+	Audio::GetInstance()->SetBGMVolume(num, 1.0f);*/
 }
 
 #pragma region // 初期化以外
 void GameScene::Update() {
 
-	// 衝突判定と応答
-	CheckAllCollisions();
-
-	// プレイヤーの更新
-	player_->Update();
-
-	camera_->FollowCamera(player_->GetPosition());
-	ground_->Update();
-
-	// 敵の更新
-	enemyGroup_->Update();
-
-
-	if (input_->TriggerKey(DIK_RETURN)) {
-		sceneNo_ = CLEAR;
-	}
 
 #ifdef _DEBUG
 
@@ -74,9 +55,6 @@ void GameScene::Draw() {
 #pragma region 3Dオブジェクト
 	// 3Dオブジェクト描画前
 	Object3dBasis::GetInstance()->BasisDrawSetting();
-	player_->Draw();
-	enemyGroup_->Draw();
-	ground_->Draw();
 
 #pragma endregion
 
@@ -89,24 +67,5 @@ void GameScene::Draw() {
 
 void GameScene::CheckAllCollisions()
 {
-	// 衝突マネージャーのリセット
-	collisionManager_->Reset();
-
-	// コライダーをリストに登録
-	collisionManager_->AddCollider(player_.get());
-
-	// コライダーリストに登録
-	collisionManager_->AddCollider(player_->GetWeapon());
-
-	// 敵全てについて
-	 // 敵全てのコライダーをリストに登録
-	auto enemyColliders = enemyGroup_->GetColliders();
-	for (auto& collider : enemyColliders) {
-		collisionManager_->AddCollider(collider);
-	}
-
-
-	// 衝突判定と応答
-	collisionManager_->CheckAllCollisions();
 }
 

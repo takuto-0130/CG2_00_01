@@ -8,9 +8,6 @@
 #include "WorldTransform.h"
 #include <sstream>
 #include "Audio.h"
-#include "player/Player.h"
-#include "Enemy/EnemyManager.h"
-#include "global/Ground.h"
 
 /// <summary>
 /// ゲームシーン
@@ -53,10 +50,5 @@ private: // メンバ変数
 	Vector3 cameraOffset_;
 
 
-	std::unique_ptr<Player> player_;
-	std::unique_ptr<Ground> ground_;
-	std::unique_ptr<EnemyManager> enemyGroup_;
-	// 衝突マネージャ
-	std::unique_ptr<CollisionManager> collisionManager_;
 };
 
