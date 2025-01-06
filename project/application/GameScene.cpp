@@ -22,26 +22,14 @@ GameScene::~GameScene() {
 void GameScene::Init() {
 	input_ = Input::GetInstance();
 
-	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
-
-	collisionManager_ = std::make_unique<CollisionManager>();
-	collisionManager_->Initialize();
-
-	// 自機
-	player_ = std::make_unique<Player>();
-	player_->Initialize();
-	player_->Update();
-
-	// 敵集団
-	enemyGroup_ = std::make_unique<EnemyManager>();
-	enemyGroup_->Initialize();
-	enemyGroup_->SetPlayer(player_.get());
-
-	// 地面
-	ground_ = std::make_unique<Ground>();
-	ground_->Initialize();
-	cameraOffset_ = { 0, 5, -3 };
-	
+	/*Audio::GetInstance()->SetPitch(pitch_);
+	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);*/
+	Audio::GetInstance()->LoadWave("BGM_2");
+	int num = Audio::GetInstance()->PlayWave("BGM_2");
+	Audio::GetInstance()->SetBGMVolume(num, 1.0f);
+	Audio::GetInstance()->LoadWave("BGM_2");
+	int num2 = Audio::GetInstance()->PlayWave("BGM_2");
+	Audio::GetInstance()->SetBGMVolume(num2, -0.9f);
 }
 
 #pragma region // 初期化以外
@@ -65,9 +53,13 @@ void GameScene::Update() {
 	}
 
 #ifdef _DEBUG
-	ImGui::Begin("GAME");
+
+	ImGui::Begin("a");
+	ImGui::DragFloat("pitch", &pitch_, 0.01f);
 	ImGui::End();
 #endif // _DEBUG
+	Audio::GetInstance()->SetPitch(pitch_);
+	Audio::GetInstance()->SetEffect(XAUDIO2FX_I3DL2_PRESET_UNDERWATER);
 }
 
 void GameScene::Draw() {

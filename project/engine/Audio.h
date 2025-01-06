@@ -13,7 +13,6 @@
 #include <condition_variable>
 #include <Logger.h>
 #include <xaudio2fx.h>
-#include <imgui.h>
 
 
 // WAVヘッダーの定義
@@ -108,7 +107,7 @@ public:
 	void SetPitch(float pitch) {
 		if(streamVoice)
 		{
-			pitch_.store(pitch);
+			streamVoice->SetFrequencyRatio(pitch);
 		}
 	}
 
@@ -174,18 +173,6 @@ public:
 			}
 			streamVoice->EnableEffect(0);
 		}
-	}
-
-	void CheckBuffer() {
-#ifdef _DEBUG
-		int a = audioBuffers[0].size();
-		float b = pitch_.load();
-		ImGui::Begin("c");
-		ImGui::DragInt("buffer", &a);
-		ImGui::DragFloat("pitch", &b, 0.001f);
-		ImGui::End();
-
-#endif // _DEBUG
 	}
 private:
 	void StreamAudio(const char* filename);
@@ -286,7 +273,6 @@ private:
 	XAUDIO2FX_REVERB_PARAMETERS reverbParameters = {};
 	XAUDIO2_EFFECT_CHAIN effectChain = {};
 	XAUDIO2_EFFECT_DESCRIPTOR effect[1] = {};
-	std::atomic<float> pitch_ = 1.0f;
 
 	// サウンド格納ディレクトリ
 	std::string directoryPath_;
