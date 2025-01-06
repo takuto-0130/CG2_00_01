@@ -49,6 +49,10 @@ private: // メンバ変数
 
 	Vector3 cameraOffset_;
 
+#ifdef _DEBUG
+	bool isEffect_ = false;
+#endif // _DEBUG
+
 
 };
 

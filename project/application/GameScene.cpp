@@ -37,10 +37,17 @@ void GameScene::Update() {
 
 	ImGui::Begin("a");
 	ImGui::DragFloat("pitch", &pitch_, 0.01f);
+	ImGui::Checkbox("isEffect", &isEffect_);
 	ImGui::End();
 #endif // _DEBUG
 	Audio::GetInstance()->SetPitch(pitch_);
-	Audio::GetInstance()->SetEffect(XAUDIO2FX_I3DL2_PRESET_UNDERWATER);
+	if(isEffect_)
+	{
+		Audio::GetInstance()->SetEffect(XAUDIO2FX_I3DL2_PRESET_UNDERWATER);
+	}
+	else {
+		Audio::GetInstance()->DisableEffect();
+	}
 }
 
 void GameScene::Draw() {
