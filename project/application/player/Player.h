@@ -56,7 +56,7 @@ public: // 構造体
 
 public: // メンバ関数（公開）
 
-
+	~Player();
 
 	/// <summary>
 	/// 初期化

@@ -15,14 +15,11 @@
 #include "imgui.h"
 #endif // DEBUG_
 
-GameScene::GameScene() {}
-
 GameScene::~GameScene() {
 	Audio::GetInstance()->StopStreaming();
 }
 
-void GameScene::Initialize(Camera* camera) {
-	Audio::GetInstance()->Initialize();
+void GameScene::Init() {
 	input_ = Input::GetInstance();
 
 	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
@@ -30,32 +27,46 @@ void GameScene::Initialize(Camera* camera) {
 	collisionManager_ = std::make_unique<CollisionManager>();
 	collisionManager_->Initialize();
 
-
+	// 自機
 	player_ = std::make_unique<Player>();
 	player_->Initialize();
 	player_->Update();
 
-	//=============== エネミー ===============//
+	// 敵集団
 	enemyGroup_ = std::make_unique<EnemyManager>();
 	enemyGroup_->Initialize();
 	enemyGroup_->SetPlayer(player_.get());
 
-	// =============== 地面 =============//
+	// 地面
 	ground_ = std::make_unique<Ground>();
 	ground_->Initialize();
+	cameraOffset_ = { 0, 5, -3 };
 	
 }
 
 #pragma region // 初期化以外
 void GameScene::Update() {
 
+	// 衝突判定と応答
+	CheckAllCollisions();
+
 	// プレイヤーの更新
 	player_->Update();
+
+	camera_->FollowCamera(player_->GetPosition());
+	ground_->Update();
 
 	// 敵の更新
 	enemyGroup_->Update();
 
+
+	if (input_->TriggerKey(DIK_RETURN)) {
+		sceneNo_ = CLEAR;
+	}
+
 #ifdef _DEBUG
+	ImGui::Begin("GAME");
+	ImGui::End();
 #endif // _DEBUG
 }
 
@@ -71,7 +82,9 @@ void GameScene::Draw() {
 #pragma region 3Dオブジェクト
 	// 3Dオブジェクト描画前
 	Object3dBasis::GetInstance()->BasisDrawSetting();
-
+	player_->Draw();
+	enemyGroup_->Draw();
+	ground_->Draw();
 
 #pragma endregion
 

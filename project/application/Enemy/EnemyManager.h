@@ -7,6 +7,8 @@
 class EnemyManager
 {
 public:
+	~EnemyManager();
+
 	// 初期化
 	void Initialize();
 

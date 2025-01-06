@@ -1,5 +1,6 @@
 #pragma once
 
+#include "IScene.h"
 #include "Input.h"
 #include "Model.h"
 #include "Sprite.h"
@@ -14,33 +15,29 @@
 /// <summary>
 /// ゲームシーン
 /// </summary>
-class GameScene {
+class GameScene : public IScene {
 
 public: // メンバ関数
-	/// <summary>
-	/// コンストクラタ
-	/// </summary>
-	GameScene();
 
 	/// <summary>
 	/// デストラクタ
 	/// </summary>
-	~GameScene();
+	~GameScene() override;
 
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(Camera* camera);
+	void Init() override;
 
 	/// <summary>
 	/// 毎フレーム処理
 	/// </summary>
-	void Update();
+	void Update() override;
 
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw() override;
 
 	void CheckAllCollisions();
 
@@ -50,9 +47,11 @@ private:
 
 private: // メンバ変数
 
-	Input* input_ = nullptr;
 
 	float pitch_ = 1.0f;
+
+	Vector3 cameraOffset_;
+
 
 	std::unique_ptr<Player> player_;
 	std::unique_ptr<Ground> ground_;

@@ -1,7 +1,7 @@
 #pragma once
 #include "TYFrameWork.h"
+#include "IScene.h"
 
-#include "GameScene.h"
 class GameCore : public TYFrameWork
 {
 public: // メンバ変数
@@ -19,6 +19,12 @@ public: // メンバ変数
 	void Draw() override;
 
 private:
-	std::unique_ptr<GameScene> gameScene;
+
+
+	std::unique_ptr<IScene> sceneArr_[3];
+	Input* input = nullptr;
+
+	int currentSceneNo_;
+	int prevSceneNo_;
 };
 

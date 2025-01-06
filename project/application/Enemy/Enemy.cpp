@@ -47,7 +47,6 @@ void Enemy::Update()
 
 	ImGui::Begin("enemy");
 	ImGui::InputFloat3("pos", &transform_.translation_.x);
-	ImGui::Checkbox("onLight", &onLight_);
 	ImGui::End();
 
 #endif // _DEBUG

@@ -67,9 +67,6 @@ private:
 	// トランスフォーム
 	WorldTransform transform_;
 
-	// モデル
-	Model* models_;
-
 	// オブジェクト
 	Object3d* object_ = nullptr;
 

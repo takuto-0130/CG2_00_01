@@ -11,9 +11,7 @@ void Ground::Initialize()
 
 	obj_->SetModel("Ground.obj");
 	transform_.Initialize();
-	transform_.scale_ = { 0.3f,0.3f,0.3f };
-	//transform_.rotation_.y = std::numbers::pi_v<float> / 4.0f;
-	transform_.translation_.z = -150;
+	transform_.scale_ = { 200, 1, 200 };
 }
 
 void Ground::Update()

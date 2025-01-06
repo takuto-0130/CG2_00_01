@@ -4,14 +4,23 @@
 #include <imgui.h>
 #endif 
 #include "GlobalVariables.h"
+#include <numbers>
 
 const std::array<Player::ConstAttack, Player::ComboNum> Player::kConstAttacks_ = {
 	{
-		{0, 0, 20, 0, 0.0f, 0.0f, 0.15f},  // 1段目
-		{15, 10, 15, 0, 0.2f, 0.0f, 0.0f}, // 2段目
+		{0, 0, 10, 30, 0.0f, 0.0f, 0.15f},  // 1段目
+		{15, 10, 15, 50, 0.2f, 0.0f, 0.0f}, // 2段目
 		{15, 10, 15, 30, 0.2f, 0.0f, 0.0f} // 3段目
 	}
 };
+Player::~Player()
+{
+	delete baseObject_;
+	delete headObject_;
+	delete bodyObject_;
+	delete L_arm_Object_;
+	delete R_arm_Object_;
+}
 void Player::Initialize()
 {
 	// ============ 各オブジェクトの生成処理 ============//
@@ -27,45 +36,42 @@ void Player::Initialize()
 	L_arm_Object_->Initialize();
 	R_arm_Object_->Initialize();
 
-	// 武器の生成
-	weapon_ = std::make_unique<Weapon>();
-	weapon_->Initialize();
-	weapon_->SetTranslation(Vector3{ -0.5f,-0.5f,0.0f });
-	weapon_->SetRotation(Vector3{ 1.5f,0.0f,0.0f });
-
-	// ============ obj読み込み ============//
+	// obj
 	ModelManager::GetInstance()->LoadModel("Resources", "float_head.obj");
-	ModelManager::GetInstance()->LoadModel("Resources","float_body.obj");
-	ModelManager::GetInstance()->LoadModel("Resources","float_L_arm.obj");
-	ModelManager::GetInstance()->LoadModel("Resources","float_R_arm.obj");
-
-	// ============ モデルをセット  ============ //
 	headObject_->SetModel("float_head.obj");
+	ModelManager::GetInstance()->LoadModel("Resources", "float_body.obj");
 	bodyObject_->SetModel("float_body.obj");
+	ModelManager::GetInstance()->LoadModel("Resources", "float_L_arm.obj");
 	L_arm_Object_->SetModel("float_L_arm.obj");
+	ModelManager::GetInstance()->LoadModel("Resources", "float_R_arm.obj");
 	R_arm_Object_->SetModel("float_R_arm.obj");
 
-	// ============ 各ワールドトランスフォームの初期化 ============//
+
+	// ワールドトランスフォームの初期化
 	transform_.Initialize();
 	body_transform_.Initialize();
 	head_transform_.Initialize();
 	L_arm_transform_.Initialize();
 	R_arm_transform_.Initialize();
 
-
-
-	// オブジェクトを親子付け
+	// 親子付け
 	body_transform_.parent_ = &transform_;
 	head_transform_.parent_ = &body_transform_;
 	L_arm_transform_.parent_ = &body_transform_;
 	R_arm_transform_.parent_ = &body_transform_;
-	
 
 	// 腕の位置をセット
 	L_arm_transform_.translation_ = { -0.5f ,1.0f,0.0f };
 	R_arm_transform_.translation_ = { 0.5f ,1.0f,0.0f };
+
+	// 武器
+	weapon_ = std::make_unique<Weapon>();
+	weapon_->Initialize();
+	weapon_->SetTranslation(Vector3{ -0.5f,-0.5f,0.0f });
+	weapon_->SetRotation(Vector3{ 1.5f,0.0f,0.0f });
 	
 	weapon_->SetParent(R_arm_transform_);
+
 	// その他機能の初期化
 	input_ = Input::GetInstance();
 	moveSpeed_ = { 0.5f,0.5f ,0.5f };
@@ -97,8 +103,6 @@ void Player::Update()
 {
 	// 各行動の初期化
 	BehaviorInitialize();
-
-
 
 	// 各行動の更新
 	BehaviorUpdate();
@@ -290,7 +294,8 @@ void Player::BehaviorAttackUpdate()
 	if (input_->TriggerKey(DIK_SPACE)) {
 		workAttack_.comboNext = true;  // 次のコンボへ進む準備
 	}
-	//if (workAttack_.comboIndex == 0) {
+	float swingRotare = std::numbers::pi_v<float> / 2.0f;
+	if (workAttack_.comboIndex == 0) {
 		// コンボの各フェーズを進行
 		if (workAttack_.inComboPhase == 0) {
 			// 1段目: 振りかぶりの動作
@@ -299,7 +304,7 @@ void Player::BehaviorAttackUpdate()
 				workAttack_.attackParameter_ = 0;
 			}
 			// 腕を振り上げるモーションやプレイヤーの回転
-			R_arm_transform_.rotation_.x = -2.0f;
+			R_arm_transform_.rotation_.x = -swingRotare;
 		}
 		else if (workAttack_.inComboPhase == 1) {
 			// 攻撃の溜めるモーションやエフェクトの発生
@@ -315,7 +320,7 @@ void Player::BehaviorAttackUpdate()
 				workAttack_.attackParameter_ = 0;
 			}
 			// 例: プレイヤーが前に出て武器を振る
-			R_arm_transform_.rotation_.x += 0.1f;
+			R_arm_transform_.rotation_.x += swingRotare / float(attack[workAttack_.comboIndex].swingTime);
 		}
 		else if (workAttack_.inComboPhase == 3) {
 			// 攻撃後の硬直等
@@ -338,44 +343,50 @@ void Player::BehaviorAttackUpdate()
 			}
 			// 硬直中の静止モーションなど
 		}
-	//}
+	}
 
 	// 2段目以降も同様
-	//if (workAttack_.comboIndex == 1) {
-	//	// 2段目のコンボ処理
-	//	if (workAttack_.inComboPhase == 0) {
-	//		// 2段目: 振りかぶりの動作
-	//		if (++workAttack_.attackParameter_ >= attack.anticipationTime) {
-	//			workAttack_.inComboPhase++;
-	//			workAttack_.attackParameter_ = 0;
-	//		}
-	//		// 例: 2段目の振りかぶりモーション
-	//		L_arm_transform_.rotation_.x += 0.05f;
-	//	}
-	//	else if (workAttack_.inComboPhase == 1) {
-	//		// 2段目: 攻撃振りの動作
-	//		if (++workAttack_.attackParameter_ >= attack.swingTime) {
-	//			workAttack_.inComboPhase++;
-	//			workAttack_.attackParameter_ = 0;
-	//		}
-	//		// 例: 2段目の攻撃モーション
-	//		L_arm_transform_.rotation_.x -= 0.1f;
-	//	}
-	//	else if (workAttack_.inComboPhase == 2) {
-	//		// 2段目: 硬直状態
-	//		if (++workAttack_.attackParameter_ >= attack.recoveryTime) {
-	//			workAttack_.comboNext = false;
-	//			/*workAttack_.comboIndex++;
-	//			workAttack_.attackParameter_ = 0;*/
-	//			workAttack_.comboIndex = 0;
-	//			behavior_ = Behavior::kRoot;
-	//			if (workAttack_.comboIndex >= ComboNum) {
-	//				workAttack_.comboIndex = 0;
-	//				behavior_ = Behavior::kRoot;
-	//			}
-	//		}
-	//	}
-	//}
+	if (workAttack_.comboIndex == 1) {
+		// 2段目のコンボ処理
+		if (workAttack_.inComboPhase == 0) {
+			// 2段目: 振りかぶりの動作
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].anticipationTime) {
+				workAttack_.inComboPhase++;
+				workAttack_.attackParameter_ = 0;
+			}
+			// 例: 2段目の振りかぶりモーション
+			R_arm_transform_.rotation_.x = -swingRotare;
+			R_arm_transform_.rotation_.z = swingRotare;
+			body_transform_.rotation_.y = -0.45f;
+		}
+		else if (workAttack_.inComboPhase == 1) {
+			// 2段目: 攻撃振りの動作
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime) {
+				workAttack_.inComboPhase++;
+				workAttack_.attackParameter_ = 0;
+			}
+			// 例: 2段目の攻撃モーション
+			body_transform_.rotation_.y += 0.06f;
+			R_arm_transform_.rotation_.x += 0.2f;
+		}
+		else if (workAttack_.inComboPhase == 2) {
+			// 2段目: 硬直状態
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].recoveryTime) {
+				workAttack_.comboNext = false;
+				/*workAttack_.comboIndex++;
+				workAttack_.attackParameter_ = 0;*/
+				workAttack_.comboIndex = 0;
+				behavior_ = Behavior::kRoot;
+				R_arm_transform_.rotation_.x = 0;
+				R_arm_transform_.rotation_.z = 0;
+				body_transform_.rotation_.y = 0;
+				if (workAttack_.comboIndex >= ComboNum) {
+					workAttack_.comboIndex = 0;
+					behavior_ = Behavior::kRoot;
+				}
+			}
+		}
+	}
 	// 3段目
 
 }

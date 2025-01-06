@@ -26,9 +26,9 @@ private: // メンバ変数
 	// ファークリップ距離
 	float farClip_;
 
-	Vector3 followCameraOffsetPosition_ = Vector3(0.0f, 0.0f, 0.0f);
+	Vector3 followCameraOffsetPosition_ = Vector3(0.0f, 20.0f, -35.0f);
 
-	Vector3 followCameraOffsetRotare_ = Vector3(0.f, 0.0f, 0.0f);
+	Vector3 followCameraOffsetRotare_ = Vector3(0.51f, 0.0f, 0.0f);
 
 public: // メンバ関数
 	void SetRotate(const Vector3& rotate) { transform_.rotate = rotate; }
@@ -36,6 +36,10 @@ public: // メンバ関数
 	
 	void SetTranslate(const Vector3& translate) { transform_.translate = translate; }
 	const Vector3& GetTranslate() { return transform_.translate; }
+
+	void SetOffsetRotate(const Vector3& rotate) { followCameraOffsetRotare_ = rotate; }
+
+	void SetOffsetTranslate(const Vector3& translate) { followCameraOffsetPosition_ = translate; }
 
 	void SetFovY(const float& horizontalFOV) { horizontalFOV_ = horizontalFOV; }
 	void SetAspectRate(const float& aspectRatio) { aspectRatio_ = aspectRatio; }

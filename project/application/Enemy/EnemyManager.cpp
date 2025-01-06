@@ -5,6 +5,13 @@
 #include "operatorOverload.h"
 
 
+EnemyManager::~EnemyManager()
+{
+	enemys_.remove_if([](const std::shared_ptr<Enemy>& enemy) {
+		return true;
+		});
+}
+
 void EnemyManager::Initialize()
 {
 	Timer_ = 0;

@@ -25,7 +25,7 @@ void Camera::FollowCamera(const Vector3& target)
 {
 	// カメラの位置を対象の後方に設定
 	transform_.rotate = followCameraOffsetRotare_;
-	transform_.translate = target + followCameraOffsetPosition_; // 例: 後方10ユニット、上に4ユニットオフセット
+	transform_.translate = target + followCameraOffsetPosition_;
 	worldMatrix_ = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
 	viewMatrix_ = Inverse(worldMatrix_);
 }

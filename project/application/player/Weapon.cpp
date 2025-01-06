@@ -4,7 +4,9 @@
 #include "Matrix4x4Func.h"
 #include "../Enemy/Enemy.h"
 
-Weapon::~Weapon(){}
+Weapon::~Weapon(){
+	delete object_;
+}
 
 void Weapon::Initialize()
 {

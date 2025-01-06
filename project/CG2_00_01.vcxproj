@@ -111,6 +111,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\global\Collider.cpp" />
     <ClCompile Include="application\global\CollisionManager.cpp" />
     <ClCompile Include="application\global\ContactRecord.cpp" />
+    <ClCompile Include="application\ClearScene.cpp" />
     <ClCompile Include="engine\Audio.cpp" />
     <ClCompile Include="engine\Camera.cpp" />
     <ClCompile Include="engine\D3DResourceLeakChecker.cpp" />
@@ -148,6 +149,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\global\Ground.cpp" />
     <ClCompile Include="application\player\Player.cpp" />
     <ClCompile Include="application\player\Weapon.cpp" />
+    <ClCompile Include="application\IScene.cpp" />
+    <ClCompile Include="application\TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
@@ -183,6 +186,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\global\CollisionManager.h" />
     <ClInclude Include="application\global\CollisionTypeIdDef.h" />
     <ClInclude Include="application\global\ContactRecord.h" />
+    <ClInclude Include="application\ClearScene.h" />
     <ClInclude Include="engine\Audio.h" />
     <ClInclude Include="engine\Camera.h" />
     <ClInclude Include="engine\D3DResourceLeakChecker.h" />
@@ -222,6 +226,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\global\Ground.h" />
     <ClInclude Include="application\player\Player.h" />
     <ClInclude Include="application\player\Weapon.h" />
+    <ClInclude Include="application\IScene.h" />
+    <ClInclude Include="application\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
