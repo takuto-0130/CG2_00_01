@@ -12,8 +12,7 @@ class Player;
 enum class EnemyBehavior {
 	kRoot,
 	kKnockBack,
-	kCorpse,
-	kLight
+	kCorpse
 };
 class Enemy : public Collider
 {
@@ -65,10 +64,6 @@ public: // メンバ関数
 	const WorldTransform& GetWorldTransform() { return transform_; }
 
 
-	void SetOnLight(bool onLight) { onLight_ = onLight; }
-
-	bool GetOnLight() const { return onLight_; }
-
 	Vector3 GetPosition() { return transform_.translation_; }
 
 
@@ -113,11 +108,6 @@ private: // メンバ関数
 	/// </summary>
 	void BehaviorCorpseInit();
 
-	/// <summary>
-	/// ライト初期化
-	/// </summary>
-	void BehaviorLightInit();
-
 
 	/// <summary>
 	/// 通常行動更新
@@ -134,11 +124,6 @@ private: // メンバ関数
 	/// </summary>
 	void BehaviorCorpseUpdate();
 
-	/// <summary>
-	/// ライト更新
-	/// </summary>
-	void BehaviorLightUpdate();
-
 
 	float easeOutBounce(float x);
 
@@ -146,12 +131,13 @@ private: // メンバ変数
 	std::unique_ptr<Object3d> object_;
 	WorldTransform transform_{};
 
+	std::unique_ptr<Object3d> shadowObj_;
+	WorldTransform shadowTransform_{};
+
 	// プレイヤーの情報取得用
 	Player* player_ = nullptr;
 #pragma region // エネミーのステータス(外部に出す)
-	const float kNomalSpeed_ = 0.4f;
-	const float kOnLightSpeed_ = 0.1f;
-	float speed_ = kNomalSpeed_;
+	float speed_ = 0.4f;
 	float radius_ = 0.3f;
 	bool isDelete_ = false;
 
@@ -174,8 +160,6 @@ private: // メンバ変数
 	const int kMaxCorpseTimer_ = 120;
 	int corpseTimer_ = 0;
 
-	bool onLight_ = false;
-	const int kMaxLightTimer_ = 360;
 	int lightTimer_ = 0;
 #pragma endregion
 

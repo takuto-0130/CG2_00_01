@@ -37,9 +37,9 @@ public: // メンバ関数
 	void SetTranslate(const Vector3& translate) { transform_.translate = translate; }
 	const Vector3& GetTranslate() { return transform_.translate; }
 
-	void SetOffsetRotate(const Vector3& rotate) { followCameraOffsetRotare_ = rotate; }
+	void SetOffsetRotate(Vector3 rotate) { followCameraOffsetRotare_ = rotate; }
 
-	void SetOffsetTranslate(const Vector3& translate) { followCameraOffsetPosition_ = translate; }
+	void SetOffsetTranslate(Vector3 translate) { followCameraOffsetPosition_ = translate; }
 
 	void SetFovY(const float& horizontalFOV) { horizontalFOV_ = horizontalFOV; }
 	void SetAspectRate(const float& aspectRatio) { aspectRatio_ = aspectRatio; }

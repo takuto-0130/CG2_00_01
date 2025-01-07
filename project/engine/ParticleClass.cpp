@@ -93,10 +93,10 @@ void ParticleClass::Update()
 
 	numInstance = 0;
 
-	//emitter_.frequencyTime += kDeltaTime;
-	if (/*emitter_.frequency <= emitter_.frequencyTime*/isEmit_) {
+	emitter_.frequencyTime += kDeltaTime;
+	if (emitter_.frequency <= emitter_.frequencyTime/*isEmit_*/) {
 		particles.splice(particles.end(), Emit(emitter_, random));
-		/*emitter_.frequencyTime -= emitter_.frequency;*/
+		emitter_.frequencyTime -= emitter_.frequency;
 		isEmit_ = false;
 	}
 

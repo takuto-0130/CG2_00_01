@@ -9,6 +9,8 @@ public: // メンバ変数
 	// 初期化
 	void Initialize() override;
 
+	void AddGlobalVariables();
+
 	// 終了
 	void Finalize() override;
 
@@ -20,6 +22,7 @@ public: // メンバ変数
 
 private:
 
+	GlobalVariables* globalVar_ = nullptr;
 
 	std::unique_ptr<IScene> sceneArr_[3];
 	Input* input = nullptr;

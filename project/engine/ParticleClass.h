@@ -66,6 +66,16 @@ public:
 	// 描画
 	void Draw();
 
+	// カメラをセットする
+	void SetCamera(Camera* camera) { camera_ = camera; }
+
+	// エミッターをの設定を変更
+	void SetEmitter(Emitter emitter) { emitter_ = emitter; }
+
+	void CollisionEmit(Vector3 pos);
+
+private:
+
 	void CreateRootSignature();
 
 	D3D12_INPUT_LAYOUT_DESC CreateInputElementDesc();
@@ -81,16 +91,6 @@ public:
 	void CreateParticleResource();
 
 	void CreateMaterialResource();
-
-	// カメラをセットする
-	void SetCamera(Camera* camera) { camera_ = camera; }
-
-	// エミッターをの設定を変更
-	void SetEmitter(Emitter emitter) { emitter_ = emitter; }
-
-	void CollisionEmit(Vector3 pos);
-
-private:
 
 	Particle MakeNewParticle(std::mt19937& random, const Vector3& translate);
 	std::list<Particle> Emit(const Emitter& emitter, std::mt19937& random);

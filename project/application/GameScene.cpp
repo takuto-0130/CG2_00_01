@@ -23,6 +23,7 @@ void GameScene::Init() {
 	input_ = Input::GetInstance();
 
 	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
+	globalVar_ = GlobalVariables::GetInstance();
 
 	collisionManager_ = std::make_unique<CollisionManager>();
 	collisionManager_->Initialize();
@@ -40,14 +41,22 @@ void GameScene::Init() {
 	// 地面
 	ground_ = std::make_unique<Ground>();
 	ground_->Initialize();
-	cameraOffset_ = { 0, 5, -3 };
 
 	phase_ = GamePhase::kFadeIn;
 	fade_ = std::make_unique<Fade>();
 	fade_->Initialize();
-	fade_->Start(Status::FadeIn, 2.0f);
+	fade_->Start(Status::FadeIn, globalVar_->GetFloatValue("global", "fadeTime(sec)"));
 
 	player_->Update();
+	ApplyGlobalVariables();
+}
+
+void GameScene::ApplyGlobalVariables()
+{
+	const char* groupName = "global";
+	clearEliminateCount_ = globalVar_->GetIntValue(groupName, "clearEliminateCount");
+	camera_->SetOffsetRotate(globalVar_->GetVector3Value(groupName, "cameraOffsetR"));
+	camera_->SetOffsetTranslate(globalVar_->GetVector3Value(groupName, "cameraOffsetT"));
 }
 
 #pragma region // 初期化以外
@@ -58,6 +67,7 @@ void GameScene::Update() {
 #ifdef _DEBUG
 	ImGui::Begin("GAME");
 	ImGui::End();
+	ApplyGlobalVariables();
 #endif // _DEBUG
 	ChangePhase();
 }
@@ -131,7 +141,7 @@ void GameScene::ChangePhase()
 
 		if (enemyGroup_->GetEliminateCount() >= clearEliminateCount_) {
 			phase_ = GamePhase::kFadeOut;
-			fade_->Start(Status::FadeOut, 2.0f);
+			fade_->Start(Status::FadeOut, globalVar_->GetFloatValue("global", "fadeTime(sec)"));
 		}
 
 		break;

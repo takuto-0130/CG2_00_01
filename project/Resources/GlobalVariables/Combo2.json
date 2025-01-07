@@ -1,0 +1,10 @@
+{
+    "Combo2": {
+        "AttackRadius": 1.5,
+        "anticipationSpeed": 0.6499999761581421,
+        "anticipationTime": 10,
+        "chargeTime": 10,
+        "recoveryTime": 30,
+        "swingTime": 15
+    }
+}

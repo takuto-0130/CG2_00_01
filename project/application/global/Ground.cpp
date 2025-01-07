@@ -2,6 +2,7 @@
 #include "ModelManager.h"
 #include <imgui.h>
 #include <numbers>
+#include "GlobalVariables.h"
 
 void Ground::Initialize()
 {
@@ -11,7 +12,8 @@ void Ground::Initialize()
 
 	obj_->SetModel("Ground.obj");
 	transform_.Initialize();
-	transform_.scale_ = { 100, 1, 100 };
+
+	transform_.scale_ = GlobalVariables::GetInstance()->GetVector3Value("global", "fieldScale");
 }
 
 void Ground::Update()

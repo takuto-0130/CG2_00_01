@@ -8,6 +8,7 @@ enum class ClearPhase {
 };
 class ClearScene : public IScene {
 public:
+	ClearScene();
 	void Init() override;
 	void Update() override;
 	void Draw() override;
@@ -18,5 +19,5 @@ private:
 private:
 	std::unique_ptr<Fade> fade_;
 	ClearPhase phase_ = ClearPhase::kFadeIn;
-	std::unique_ptr<Sprite> clearSprite_;
+	std::unique_ptr<Sprite> clearSprite_ = nullptr;
 };

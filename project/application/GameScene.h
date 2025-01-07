@@ -35,6 +35,8 @@ public: // メンバ関数
 	/// </summary>
 	void Init() override;
 
+	void ApplyGlobalVariables();
+
 	/// <summary>
 	/// 毎フレーム処理
 	/// </summary>
@@ -56,11 +58,6 @@ private: // メンバ変数
 	GamePhase phase_ = GamePhase::kFadeIn;
 
 	uint32_t clearEliminateCount_ = 50;
-
-
-	float pitch_ = 1.0f;
-
-	Vector3 cameraOffset_;
 
 
 	std::unique_ptr<Player> player_;

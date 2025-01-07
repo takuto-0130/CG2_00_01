@@ -5,6 +5,7 @@
 #include "EnemyManager.h"
 #include "operatorOverload.h"
 #include "stdio.h"
+#include "ParticleClass.h"
 // 次のシリアルナンバー
 uint32_t Enemy::nextSerialNumber_ = 0;
 Enemy::Enemy()
@@ -21,19 +22,25 @@ Enemy::~Enemy()
 
 void Enemy::Initialize(const Vector3& pos)
 {
+	ModelManager::GetInstance()->LoadModel("Resources", "enemy.obj");
 	object_ = std::make_unique<Object3d>();
 	object_->Initialize();
-	object_->SetModel("float_head.obj");
-	//object_->SetTranslate(pos);
-	//transform_ = { object_->GetScale(),object_->GetRotation() ,object_->GetTranslate() };
+	object_->SetModel("enemy.obj");
+
+	ModelManager::GetInstance()->LoadModel("Resources", "circleShadow.obj");
+	shadowObj_ = std::make_unique<Object3d>();
+	shadowObj_->Initialize();
+	shadowObj_->SetModel("circleShadow.obj");
+
 	transform_.Initialize();
 	transform_.translation_ = pos;
-	//transform_.translation_.y = transform_.translation_.y - 2.0f;
+
+	shadowTransform_.Initialize();
+	shadowTransform_.translation_ = { transform_.translation_.x, 0, transform_.translation_.z };
+
 	// 種別のIDの設定
 	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kEnemy));
 	
-
-
 }
 
 void Enemy::Update()
@@ -55,15 +62,15 @@ void Enemy::Update()
 
 void Enemy::UpdateTransform()
 {
+	shadowTransform_.translation_ = { transform_.translation_.x, 0, transform_.translation_.z };
 	transform_.TransferMatrix();
+	shadowTransform_.TransferMatrix();
 }
 
 void Enemy::Draw()
 {
-	if(behavior_ != EnemyBehavior::kLight)
-	{
-		object_->Draw(transform_);
-	}
+	shadowObj_->Draw(shadowTransform_);
+	object_->Draw(transform_);
 }
 
 
@@ -84,9 +91,6 @@ void Enemy::BehaviorInitialize()
 		case EnemyBehavior::kCorpse:
 			BehaviorCorpseInit();
 			break;
-		case EnemyBehavior::kLight:
-			BehaviorLightInit();
-			break;
 		}
 		// 振る舞いリクエストをリセット
 		behaviortRquest_ = std::nullopt;
@@ -101,6 +105,9 @@ void Enemy::OnCollision([[maybe_unused]] Collider* other)
 	{
 		switch (behavior_) {
 		case EnemyBehavior::kRoot:
+			onCollision_ = true;
+			ParticleClass::GetInstance()->CollisionEmit(GetCenterPosition());
+			break;
 		case EnemyBehavior::kCorpse:
 			onCollision_ = true;
 			break;
@@ -122,12 +129,6 @@ Vector3 Enemy::GetCenterPosition() const
 
 void Enemy::Move()
 {
-	if (!onLight_) {
-		speed_ = kNomalSpeed_;
-	}
-	else {
-		speed_ = kOnLightSpeed_;
-	}
 	Vector3 playerPos = player_->GetPosition();
 	playerPos = playerPos - Vector3{ 0,1.0f,0 };
 	Vector3 pos = { playerPos - transform_.translation_ };
@@ -160,16 +161,12 @@ void Enemy::BehaviorUpdate()
 	case EnemyBehavior::kCorpse:
 		BehaviorCorpseUpdate();
 		break;
-	case EnemyBehavior::kLight:
-		BehaviorLightUpdate();
-		break;
 	}
 }
 
 void Enemy::BehaviorRootInit()
 {
 	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kEnemy));
-	onLight_ = false;
 	onCollision_ = false;
 	Turning();
 }
@@ -188,13 +185,6 @@ void Enemy::BehaviorCorpseInit()
 {
 	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kEnemy));
 	corpseTimer_ = kMaxCorpseTimer_;
-	onCollision_ = false;
-}
-
-void Enemy::BehaviorLightInit()
-{
-	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kNone));
-	lightTimer_ = kMaxLightTimer_;
 	onCollision_ = false;
 }
 
@@ -217,13 +207,7 @@ void Enemy::BehaviorKnockBackUpdate()
 		paramater_ += step_;
 	}
 	else {
-		if(!onLight_)
-		{
-			behaviortRquest_ = EnemyBehavior::kCorpse;
-		}
-		else {
-			isDelete_ = true;
-		}
+		behaviortRquest_ = EnemyBehavior::kCorpse;
 	}
 }
 
@@ -231,20 +215,6 @@ void Enemy::BehaviorCorpseUpdate()
 {
 	if (corpseTimer_ > 0) {
 		corpseTimer_--;
-	}
-	else {
-		isDelete_ = true;
-	}
-	if (onCollision_)
-	{
-		behaviortRquest_ = EnemyBehavior::kLight;
-	}
-}
-
-void Enemy::BehaviorLightUpdate()
-{
-	if (lightTimer_ > 0) {
-		lightTimer_--;
 	}
 	else {
 		isDelete_ = true;

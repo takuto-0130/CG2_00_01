@@ -1,0 +1,21 @@
+{
+    "global": {
+        "cameraOffsetR": [
+            0.5099999904632568,
+            0.0,
+            0.0
+        ],
+        "cameraOffsetT": [
+            0.0,
+            20.0,
+            -35.0
+        ],
+        "clearEliminateCount": 152,
+        "fadeTime(sec)": 2.0,
+        "fieldScale": [
+            100.0,
+            1.0,
+            100.0
+        ]
+    }
+}

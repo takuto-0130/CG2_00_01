@@ -1,0 +1,10 @@
+{
+    "Player": {
+        "moveLimit": 60.0,
+        "moveSpeed": 0.15000000596046448,
+        "playerFloatAmplitude": 0.10000000149011612,
+        "playerFloatPeriod": 60.0,
+        "weaponFloatAmplitude": 0.15000000596046448,
+        "weaponFloatPeriod": 80.0
+    }
+}

@@ -9,6 +9,7 @@
 #include <Input.h>
 #include <numbers>
 #include "../global/Collider.h"
+#include "GlobalVariables.h"
 
 /// <summary>
 /// 振る舞い
@@ -49,6 +50,14 @@ public: // メンバ関数（公開）
 	/// 初期化
 	/// </summary>	
 	void Initialize();
+
+	void AddGlobalVariables();
+
+	void ApplyGlobalVariables();
+
+	void AddComboVariables();
+
+	void ApplyComboVariables();
 
 	/// <summary>
 	/// 更新
@@ -124,6 +133,9 @@ public: // アクセッサ1
 	Weapon* GetWeapon() { return weapon_.get(); }
 
 private: // メンバ変数
+	Input* input_ = nullptr;
+	GlobalVariables* globalVar_ = nullptr;
+
 	// ポインタ
 	std::unique_ptr<Weapon> weapon_;
 
@@ -133,12 +145,7 @@ private: // メンバ変数
 	Object3d* bodyObject_ = nullptr;
 	Object3d* L_arm_Object_ = nullptr;
 	Object3d* R_arm_Object_ = nullptr;
-
-	
-
-	Model* models_;
-	Input* input_ = nullptr;
-	Vector3 moveSpeed_;
+	float moveSpeed_ = 0;
 
 	// メインのtransform
 	WorldTransform transform_;
@@ -147,37 +154,41 @@ private: // メンバ変数
 	WorldTransform L_arm_transform_;
 	WorldTransform R_arm_transform_;
 
-public:
+
+	std::unique_ptr<Object3d> shadowObj_;
+	WorldTransform shadowTransform_{};
 
 	// プレイヤーの浮遊用パラメータ
-	float playerFloatingParameter_ = 0.0f; // プレイヤーの浮遊パラメータ
-	const float playerFloatingAmplitude_ = 0.1f; // プレイヤーの浮遊振幅
-	const float playerFloatingPeriod_ = 60; // プレイヤーの浮遊周期
-	const float playerFloatingStep_ = 2.0f * static_cast<float>(std::numbers::pi) / static_cast<float>(playerFloatingPeriod_);
+	float playerFloatingParameter_ = 0; // プレイヤーの浮遊パラメータ
+	float playerFloatingAmplitude_ = 0; // プレイヤーの浮遊振幅
+	float playerFloatingPeriod_ = 0; // プレイヤーの浮遊周期
+	float playerFloatingStep_ = 0;
 
 	// 武器の浮遊用パラメータ
-	float weaponFloatingParameter_ = 0.0f; // 武器の浮遊パラメータ
-	const float weaponFloatingAmplitude_ = 0.15f; // 武器の浮遊振幅
-	const float weaponFloatingPeriod_ = 80; // 武器の浮遊周期
-	const float weaponFloatingStep_ = 2.0f * static_cast<float>(std::numbers::pi) / static_cast<float>(weaponFloatingPeriod_);
+	float weaponFloatingParameter_ = 0; // 武器の浮遊パラメータ
+	float weaponFloatingAmplitude_ = 0; // 武器の浮遊振幅
+	float weaponFloatingPeriod_ = 0; // 武器の浮遊周期
+	float weaponFloatingStep_ = 0;
+
+	// 速度
+	Vector3 velocity_ = {};
+
+	// コンボの最大数
+	static const int ComboNum = 3;
+
+	std::array<ConstAttack, ComboNum> kConstAttacks_;
+
+	WorkAttack workAttack_;
+
+	float moveLimit_ = 0;
+
+public:
 
 	// 振る舞い
 	Behavior behavior_ = Behavior::kRoot;
 	// 次の振る舞いリクエスト
 	std::optional<Behavior> behaviortRquest_ = std::nullopt;
+};
 
-	// 速度
-	Vector3 velocity_ = {};
-
-	// 攻撃速度
-	float attackSpeed_ = 0.25f;
-	// コンボの最大数
-	static const int ComboNum = 3;
-
-	static const std::array<ConstAttack, ComboNum> kConstAttacks_;
-
-	WorkAttack workAttack_;
-
-	float moveLimit_ = 60.0f;
-};					 
+float easeOutQuart(float t);
 

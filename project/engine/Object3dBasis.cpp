@@ -26,6 +26,7 @@ void Object3dBasis::Initialize(DirectXBasis* directXBasis)
 
 	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
 	directionalLightData->direction = { 0.0f,-1.0f,0.0f };
+	directionalLightData->direction = Normalize(directionalLightData->direction);
 	directionalLightData->intensity = 1.0f;
 
 }

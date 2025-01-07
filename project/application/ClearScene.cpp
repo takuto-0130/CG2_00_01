@@ -1,16 +1,29 @@
 #include "ClearScene.h"
+#include "SpriteBasis.h"
 #include "imgui.h"
 
-void ClearScene::Init() { 
+ClearScene::ClearScene()
+{
+	TextureManager::GetInstance()->LoadTexture("Resources/clear.png");
+	clearSprite_ = std::make_unique<Sprite>();
+	clearSprite_->Initialize("Resources/clear.png");
+	clearSprite_->SetSize(Vector2{ 1280.0f,720.0f });
+	clearSprite_->SetTextureSize(Vector2{ 1280,720 });
+	clearSprite_->SetColor({ 1,1,1,1 });
+	globalVar_ = GlobalVariables::GetInstance();
+}
+
+void ClearScene::Init() {
 	input_ = Input::GetInstance();
 	phase_ = ClearPhase::kFadeIn;
 	fade_ = std::make_unique<Fade>();
 	fade_->Initialize();
-	fade_->Start(Status::FadeIn, 2.0f);
+	fade_->Start(Status::FadeIn, globalVar_->GetFloatValue("global", "fadeTime(sec)"));
 }
 
 void ClearScene::Update() {
 	fade_->Update();
+	clearSprite_->Update();
 
 #ifdef _DEBUG
 	ImGui::Begin("CLEAR");
@@ -21,7 +34,8 @@ void ClearScene::Update() {
 }
 
 void ClearScene::Draw() {
-
+	SpriteBasis::GetInstance()->BasisDrawSetting();
+	clearSprite_->Draw();
 	fade_->Draw();
 }
 
@@ -32,7 +46,7 @@ void ClearScene::ChangePhase()
 
 		if (input_->TriggerKey(DIK_SPACE)) {
 			phase_ = ClearPhase::kFadeOut;
-			fade_->Start(Status::FadeOut, 2.0f);
+			fade_->Start(Status::FadeOut, globalVar_->GetFloatValue("global", "fadeTime(sec)"));
 		}
 
 		break;

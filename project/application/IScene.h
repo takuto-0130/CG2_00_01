@@ -2,6 +2,7 @@
 #include "Input.h"
 #include "Camera.h"
 #include "Fade.h"
+#include "GlobalVariables.h"
 
 enum Scene {TITLE, STAGE, CLEAR};
 class IScene {
@@ -9,6 +10,7 @@ protected:
 	static int sceneNo_;
 	Input* input_ = nullptr;
 	Camera* camera_ = nullptr;
+	GlobalVariables* globalVar_ = nullptr;
 
 public:
 	virtual void Init() = 0;
