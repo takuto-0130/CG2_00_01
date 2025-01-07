@@ -1,11 +1,11 @@
 {
     "Combo3": {
         "AttackRadius": 5.0,
-        "anticipationTime": 35,
+        "anticipationTime": 30,
         "chargeTime": 0,
-        "jumpHight": 4.0,
+        "jumpHight": 6.0,
         "recoveryTime": 30,
         "swingRotate": 2.356194496154785,
-        "swingTime": 15
+        "swingTime": 10
     }
 }

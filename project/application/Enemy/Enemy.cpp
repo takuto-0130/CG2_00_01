@@ -69,7 +69,10 @@ void Enemy::UpdateTransform()
 
 void Enemy::Draw()
 {
-	shadowObj_->Draw(shadowTransform_);
+	if(behavior_ == EnemyBehavior::kRoot)
+	{
+		shadowObj_->Draw(shadowTransform_);
+	}
 	object_->Draw(transform_);
 }
 
@@ -173,6 +176,7 @@ void Enemy::BehaviorRootInit()
 
 void Enemy::BehaviorKnockBackInit()
 {
+	ParticleClass::GetInstance()->CollisionEmit(GetCenterPosition());
 	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kNone));
 	paramater_ = step_;
 	knockBackVec_ = Normalize(transform_.translation_ - player_->GetPosition());
@@ -205,6 +209,8 @@ void Enemy::BehaviorKnockBackUpdate()
 	if (paramater_ < knockBackTime_)
 	{
 		paramater_ += step_;
+		transform_.scale_ += scalePlus;
+		object_->SetColor({ 1,1,1,1.0f - (static_cast<float>(paramater_) / static_cast<float>(knockBackTime_)) });
 	}
 	else {
 		behaviortRquest_ = EnemyBehavior::kCorpse;
@@ -213,12 +219,7 @@ void Enemy::BehaviorKnockBackUpdate()
 
 void Enemy::BehaviorCorpseUpdate()
 {
-	if (corpseTimer_ > 0) {
-		corpseTimer_--;
-	}
-	else {
-		isDelete_ = true;
-	}
+	isDelete_ = true;
 }
 
 float Enemy::easeOutBounce(float x)

@@ -4,27 +4,29 @@
 #include <numbers>
 #include <imgui.h>
 
+#include "Object3dBasis.h"
+
 void ParticleClass::CollisionEmit(Vector3 pos)
 {
-	isEmit_ = true;
+	std::mt19937 random(seedGene());
 	emitter_.transform.translate = pos;
+	particles.splice(particles.end(), Emit(emitter_, random));
+	emitter_.frequencyTime -= emitter_.frequency;
 }
 
 ParticleClass::Particle ParticleClass::MakeNewParticle(std::mt19937& random, const Vector3& translate) {
 	Particle parti;
 
-	std::uniform_real_distribution<float> distVec(-1.0f, 1.0f);
-	parti.transform.scale = { 1.f,1.f,1.f };
+	std::uniform_real_distribution<float> distVec(-2.0f, 2.0f);
+	parti.transform.scale = { 0.5f,0.5f,0.5f };
 	parti.transform.rotate = { 0.f,0.f,0.f };
-	parti.transform.translate = { distVec(random),distVec(random),distVec(random) };
-	parti.transform.translate += translate;
+	parti.transform.translate = translate;
 	parti.velocity = { distVec(random),distVec(random),distVec(random) };
 
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
 	parti.color = { distColor(random),distColor(random),distColor(random),1.0f };
 
-	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-	parti.lifeTime = distTime(random);
+	parti.lifeTime = 0.7f;
 	parti.currentTime = 0;
 
 	return parti;
@@ -53,21 +55,21 @@ void ParticleClass::Initialize(DirectXBasis* dxBasis, SrvManager* srvManager)
 	dxBasis_ = dxBasis;
 	srvManager_ = srvManager;
 
-	// PSO関連
-	CreateRootSignature();
-	inputLayoutDesc_ = CreateInputElementDesc();
-	CreateBlendState();
-	CreateRasterizerState();
-	LoadShader();
-	CreatePipelineState();
-	// リソースの生成と値の設定
-	CreateParticleResource();
-	CreateMaterialResource();
+	//// PSO関連
+	//CreateRootSignature();
+	//inputLayoutDesc_ = CreateInputElementDesc();
+	//CreateBlendState();
+	//CreateRasterizerState();
+	//LoadShader();
+	//CreatePipelineState();
+	//// リソースの生成と値の設定
+	//CreateParticleResource();
+	//CreateMaterialResource();
 
 	emitter_.transform.scale = { 1,1,1 };
 	emitter_.frequency = 0.5f;
 	emitter_.frequencyTime = 0.0f;
-	emitter_.count = 3;
+	emitter_.count = 1;
 
 	accel.acceleration = { 5.0f,0.0f,0.0f };
 	accel.area.min = { -1.0f, -1.0f, -1.0f };
@@ -79,14 +81,21 @@ void ParticleClass::Initialize(DirectXBasis* dxBasis, SrvManager* srvManager)
 
 	isEmit_ = false;
 
+	ModelManager::GetInstance()->LoadModel("Resources", "enemyParti.obj");
+	obj_ = std::make_unique<Object3d>();
+	obj_->Initialize();
+	obj_->SetModel("enemyParti.obj");
+	for (int i = 0; i < 300; ++i) {
+		trans_[i].Initialize();
+	}
 }
 
 void ParticleClass::Update()
 {
 	std::mt19937 random(seedGene());
 
-	Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
-	Matrix4x4 billboardMatrix = Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
+	backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
+	billboardMatrix = Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
 	billboardMatrix.m[3][0] = 0.0f;
 	billboardMatrix.m[3][1] = 0.0f;
 	billboardMatrix.m[3][2] = 0.0f;
@@ -94,23 +103,50 @@ void ParticleClass::Update()
 	numInstance = 0;
 
 	emitter_.frequencyTime += kDeltaTime;
-	if (emitter_.frequency <= emitter_.frequencyTime/*isEmit_*/) {
-		particles.splice(particles.end(), Emit(emitter_, random));
-		emitter_.frequencyTime -= emitter_.frequency;
-		isEmit_ = false;
-	}
+	//if (emitter_.frequency <= emitter_.frequencyTime/*isEmit_*/) {
+	//	particles.splice(particles.end(), Emit(emitter_, random));
+	//	emitter_.frequencyTime -= emitter_.frequency;
+	//	isEmit_ = false;
+	//}
 
+	//for (std::list<Particle>::iterator partiIterator = particles.begin(); partiIterator != particles.end();) {
+	//	if ((*partiIterator).lifeTime <= (*partiIterator).currentTime) {
+	//		partiIterator = particles.erase(partiIterator);
+	//		continue;
+	//	}
+
+	//	if (isAccel) {
+	//		if (IsCollision(accel.area, (*partiIterator).transform.translate)) {
+	//			(*partiIterator).velocity = accel.acceleration;
+	//		}
+	//	}
+
+
+	//	(*partiIterator).transform.rotate = transform.rotate;
+	//	(*partiIterator).transform.translate += (*partiIterator).velocity * kDeltaTime;
+	//	(*partiIterator).currentTime += kDeltaTime; // 経過時間を足す
+	//	if (numInstance < kNumMaxInstance)
+	//	{
+	//		Matrix4x4 worldMatrixP = MakeAffineMatrix((*partiIterator).transform.scale, (*partiIterator).transform.rotate, (*partiIterator).transform.translate);
+	//		if (useBillboard) {
+	//			worldMatrixP = worldMatrixP * billboardMatrix;
+	//		}
+	//		Matrix4x4 WVPMatrix = worldMatrixP * camera_->GetViewProjectionMatrix();
+	//		instancingData_[numInstance].WVP = WVPMatrix;
+	//		instancingData_[numInstance].World = worldMatrixP;
+	//		instancingData_[numInstance].color = (*partiIterator).color;
+	//		float alpha = 1.0f - ((*partiIterator).currentTime / (*partiIterator).lifeTime);
+	//		instancingData_[numInstance].color.w = alpha;
+	//		++numInstance; // 生きてるパーティクルをカウント
+	//	}
+	//	++partiIterator;
+	//}
 	for (std::list<Particle>::iterator partiIterator = particles.begin(); partiIterator != particles.end();) {
 		if ((*partiIterator).lifeTime <= (*partiIterator).currentTime) {
 			partiIterator = particles.erase(partiIterator);
 			continue;
 		}
 
-		if (isAccel) {
-			if (IsCollision(accel.area, (*partiIterator).transform.translate)) {
-				(*partiIterator).velocity = accel.acceleration;
-			}
-		}
 
 
 		(*partiIterator).transform.rotate = transform.rotate;
@@ -122,12 +158,6 @@ void ParticleClass::Update()
 			if (useBillboard) {
 				worldMatrixP = worldMatrixP * billboardMatrix;
 			}
-			Matrix4x4 WVPMatrix = worldMatrixP * camera_->GetViewProjectionMatrix();
-			instancingData_[numInstance].WVP = WVPMatrix;
-			instancingData_[numInstance].World = worldMatrixP;
-			instancingData_[numInstance].color = (*partiIterator).color;
-			float alpha = 1.0f - ((*partiIterator).currentTime / (*partiIterator).lifeTime);
-			instancingData_[numInstance].color.w = alpha;
 			++numInstance; // 生きてるパーティクルをカウント
 		}
 		++partiIterator;
@@ -136,7 +166,7 @@ void ParticleClass::Update()
 
 void ParticleClass::Draw()
 {
-	auto commandList = dxBasis_->GetCommandList();
+	/*auto commandList = dxBasis_->GetCommandList();
 	commandList->SetGraphicsRootSignature(rootSignature_.Get());
 	commandList->SetPipelineState(graphicsPipelineState_.Get());
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -146,7 +176,28 @@ void ParticleClass::Draw()
 
 	srvManager_->SetGraphicsRootDescriptorTable(1, srvIndex);
 	srvManager_->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath));
-	commandList->DrawInstanced(UINT(modelData.vertices.size()), numInstance, 0, 0);
+	commandList->DrawInstanced(UINT(modelData.vertices.size()), numInstance, 0, 0);*/
+
+	//Object3dBasis::GetInstance()->BasisDrawSetting();
+	numInstance = 0;
+	for (std::list<Particle>::iterator partiIterator = particles.begin(); partiIterator != particles.end();) {
+		if (numInstance < kNumMaxInstance)
+		{
+			Matrix4x4 worldMatrixP = MakeAffineMatrix((*partiIterator).transform.scale, (*partiIterator).transform.rotate, (*partiIterator).transform.translate);
+			/*if (useBillboard) {
+				worldMatrixP = worldMatrixP * billboardMatrix;
+			}*/
+			float alpha = 1.0f - ((*partiIterator).currentTime / (*partiIterator).lifeTime);
+			obj_->SetColor({ 1,1,1,0.7f });
+			trans_[numInstance].scale_ = (*partiIterator).transform.scale;
+			trans_[numInstance].translation_ = (*partiIterator).transform.translate;
+			trans_[numInstance].rotation_ = (*partiIterator).transform.rotate;
+			trans_[numInstance].TransferMatrix();
+			obj_->Draw(trans_[numInstance]);
+			++numInstance; // 生きてるパーティクルをカウント
+		}
+		++partiIterator;
+	}
 }
 
 void ParticleClass::CreateRootSignature()

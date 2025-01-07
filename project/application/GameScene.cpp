@@ -84,9 +84,11 @@ void GameScene::Draw() {
 #pragma region 3Dオブジェクト
 	// 3Dオブジェクト描画前
 	Object3dBasis::GetInstance()->BasisDrawSetting();
+	ground_->Draw();
 	player_->Draw();
 	enemyGroup_->Draw();
-	ground_->Draw();
+
+	ParticleClass::GetInstance()->Draw();
 
 #pragma endregion
 

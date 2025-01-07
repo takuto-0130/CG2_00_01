@@ -11,7 +11,6 @@
 void GameCore::Initialize()
 {
 	TYFrameWork::Initialize();
-	ParticleClass::GetInstance()->Initialize(directXBasis.get(), srvManager.get());
 	globalVar_ = GlobalVariables::GetInstance();
 	globalVar_->LoadFiles();
 	AddGlobalVariables();
@@ -47,6 +46,7 @@ void GameCore::Initialize()
 	sceneArr_[Scene::CLEAR]->Init();
 	currentSceneNo_ = 0;
 	prevSceneNo_ = currentSceneNo_;
+	ParticleClass::GetInstance()->Initialize(directXBasis.get(), srvManager.get());
 }
 
 void GameCore::AddGlobalVariables()
@@ -104,7 +104,7 @@ void GameCore::Draw()
 	//gameScene->Draw();
 	sceneArr_[currentSceneNo_]->Draw();
 
-	ParticleClass::GetInstance()->Draw();
+	//ParticleClass::GetInstance()->Draw();
 
 	imgui->Draw();
 	directXBasis->DrawEnd();

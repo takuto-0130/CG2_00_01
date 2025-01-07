@@ -136,7 +136,7 @@ private: // メンバ変数
 
 	// プレイヤーの情報取得用
 	Player* player_ = nullptr;
-#pragma region // エネミーのステータス(外部に出す)
+#pragma region 
 	float speed_ = 0.4f;
 	float radius_ = 0.3f;
 	bool isDelete_ = false;
@@ -161,6 +161,8 @@ private: // メンバ変数
 	int corpseTimer_ = 0;
 
 	int lightTimer_ = 0;
+
+	Vector3 scalePlus = { 0.02f, 0.02f, 0.02f };
 #pragma endregion
 
 public:

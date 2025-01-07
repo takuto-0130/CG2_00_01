@@ -4,6 +4,9 @@
 #include <struct.h>
 #include <Camera.h>
 
+#include "WorldTransform.h"
+#include "Object3d.h"
+
 const uint32_t kNumMaxInstance = 500; // インスタンス数
 const float kDeltaTime = 1.0f / 60.0f;
 
@@ -97,6 +100,13 @@ private:
 	bool IsCollision(const AABB& a, const Vector3& point);
 
 private:
+	Matrix4x4 backToFrontMatrix = MakeIdentity4x4();
+	Matrix4x4 billboardMatrix = MakeIdentity4x4();
+	std::unique_ptr<Object3d> obj_;
+	WorldTransform trans_[300];
+
+
+
 
 	ModelData modelData;
 
