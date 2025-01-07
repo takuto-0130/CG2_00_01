@@ -63,7 +63,7 @@ public:
 		return &instance;
 	}
 	// 初期化
-	void Initialize(DirectXBasis* dxBasis, SrvManager* srvManager);
+	void Initialize();
 	// 更新
 	void Update();
 	// 描画
@@ -79,22 +79,6 @@ public:
 
 private:
 
-	void CreateRootSignature();
-
-	D3D12_INPUT_LAYOUT_DESC CreateInputElementDesc();
-
-	void CreateBlendState();
-
-	void CreateRasterizerState();
-
-	void LoadShader();
-
-	void CreatePipelineState();
-
-	void CreateParticleResource();
-
-	void CreateMaterialResource();
-
 	Particle MakeNewParticle(std::mt19937& random, const Vector3& translate);
 	std::list<Particle> Emit(const Emitter& emitter, std::mt19937& random);
 	bool IsCollision(const AABB& a, const Vector3& point);
@@ -106,58 +90,13 @@ private:
 	WorldTransform trans_[300];
 
 
-
-
-	ModelData modelData;
-
-	uint32_t srvIndex = 0;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
-
 	std::list<Particle> particles;
 	std::random_device seedGene;
 
 
 	Emitter emitter_{};
 
-	AccelerationField accel;
-	bool isAccel = false;
-
-	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU;
-	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU;
-
-	bool useBillboard = false;
-
-
-	// ルートシグネチャ
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_ = nullptr;
-	// PSO
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_ = nullptr;
-
-	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc_{};
-	// BlendState
-	D3D12_BLEND_DESC blendDesc_{};
-	D3D12_RASTERIZER_DESC rasterizerDesc_{};
-
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob_ = nullptr;
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob_ = nullptr;
-
-	ID3DBlob* signatureBlob = nullptr;
-	ID3DBlob* errorBlob = nullptr;
-
-	DirectXBasis* dxBasis_ = nullptr;
-	SrvManager* srvManager_ = nullptr;
 	Camera* camera_ = nullptr;
-
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
-	ParticleForGPU* instancingData_ = nullptr;
-	Material* materialData_;
-	VertexData* vertexData_ = nullptr;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
 
 	Transform transform = {};
 

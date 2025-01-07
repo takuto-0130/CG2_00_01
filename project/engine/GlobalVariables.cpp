@@ -1,13 +1,13 @@
 #include "GlobalVariables.h"
 #include <fstream>
 #include "Windows.h"
-#ifdef _DEBUG
 #include <imgui.h>
-#endif 
 
 
 using namespace std;
 void GlobalVariables::Update() {
+#ifdef _DEBUG
+
 	if (!ImGui::Begin("Global Variables", nullptr, ImGuiWindowFlags_MenuBar)) {
 		ImGui::End();
 		return;
@@ -64,6 +64,8 @@ void GlobalVariables::Update() {
 	}
 
 	ImGui::End();
+
+#endif // _DEBUG
 }
 
 GlobalVariables* GlobalVariables::GetInstance() {

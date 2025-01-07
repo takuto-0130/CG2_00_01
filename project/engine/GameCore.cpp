@@ -46,7 +46,7 @@ void GameCore::Initialize()
 	sceneArr_[Scene::CLEAR]->Init();
 	currentSceneNo_ = 0;
 	prevSceneNo_ = currentSceneNo_;
-	ParticleClass::GetInstance()->Initialize(directXBasis.get(), srvManager.get());
+	ParticleClass::GetInstance()->Initialize();
 }
 
 void GameCore::AddGlobalVariables()
