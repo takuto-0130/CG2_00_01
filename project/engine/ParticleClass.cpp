@@ -66,6 +66,7 @@ void ParticleClass::Initialize(DirectXBasis* dxBasis, SrvManager* srvManager)
 	//CreateParticleResource();
 	//CreateMaterialResource();
 
+
 	emitter_.transform.scale = { 1,1,1 };
 	emitter_.frequency = 0.5f;
 	emitter_.frequencyTime = 0.0f;
