@@ -1095,7 +1095,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	assert(SUCCEEDED(hr));
 #pragma endregion
 
-
+#pragma region
 	//RootSignatureを生成する
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -1268,24 +1268,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	assert(SUCCEEDED(hr));
 
 
-	//実際に頂点リソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(device, sizeof(VertexData) * 3);
-
-	//頂点バッファビューを作成する
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	//リソースの先頭アドレスから使う
-	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	//使用するリソースサイズは頂点3つ分のサイズ
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * 3;
-	//1頂点当たりのサイズ
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-	//頂点リソースにデータを書き込む
-	VertexData* vertexData = nullptr;
-	//書き込むためのアドレスを取得
-	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-
-
 
 	ModelData modelData;
 	modelData.vertices.push_back({ .position = {1.0f,1.0f,0.0f,1.0f}, .texCoord = {0.0f,0.0f}, .normal = {0.0f,0.0f,-1.0f} });
@@ -1306,8 +1288,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	VertexData* modelVertexData = nullptr;
 	modelVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&modelVertexData));
 	std::memcpy(modelVertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
-	
 
+#pragma endregion
 
 
 	//マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
@@ -1322,12 +1304,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	materialData->uvTransform = MakeIdentity4x4();
 
 
-	///////
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource = CreateBufferResource(device, sizeof(TransfomationMatrix));
-
-	TransfomationMatrix* transformationMatrixData = nullptr;
-
-	transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
 
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
@@ -1335,11 +1311,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
 	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHieght), 0.0f, 100.0f);
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-	*transformationMatrixData =
-	{
-		worldViewProjectionMatrix,
-		MakeIdentity4x4()
-	};
 	//////
 	const uint32_t kNumMaxInstance = 100; // インスタンス数
 	// Instancing用のTransformationMatrixリソースを作る
@@ -1354,62 +1325,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 		instancingData[index].World = MakeIdentity4x4();
 		instancingData[index].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
-
-
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource2 = CreateBufferResource(device, sizeof(TransfomationMatrix));
-
-	TransfomationMatrix* transformationMatrixData2 = nullptr; 
-	
-	Transform transform2{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{-2.0f,0.0f,0.0f} };
-
-	Matrix4x4 worldMatrix2 = MakeAffineMatrix(transform2.scale, transform2.rotate, transform2.translate);
-	Matrix4x4 viewMatrix2 = MakeIdentity4x4();
-	Matrix4x4 projectionMatrix2 = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHieght), 0.0f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrix2 = Multiply(worldMatrix2, Multiply(viewMatrix2, projectionMatrix2));
-
-	transformationMatrixResource2->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData2));
-	*transformationMatrixData2 =
-	{
-		worldViewProjectionMatrix2,
-		MakeIdentity4x4()
-	};
-
-
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource3 = CreateBufferResource(device, sizeof(TransfomationMatrix));
-
-	TransfomationMatrix* transformationMatrixData3 = nullptr;
-
-	Transform transform3{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{2.0f,0.0f,0.0f} };
-
-	Matrix4x4 worldMatrix3 = MakeAffineMatrix(transform3.scale, transform3.rotate, transform3.translate);
-	Matrix4x4 viewMatrix3 = MakeIdentity4x4();
-	Matrix4x4 projectionMatrix3 = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHieght), 0.0f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrix3 = Multiply(worldMatrix3, Multiply(viewMatrix3, projectionMatrix3));
-
-	transformationMatrixResource3->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData3));
-	*transformationMatrixData3 =
-	{
-		worldViewProjectionMatrix3,
-		MakeIdentity4x4()
-	};
-
-
-
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource = CreateBufferResource(device, sizeof(DirectionalLight));
-
-	DirectionalLight* directionalLightData = nullptr;
-
-	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-
-	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-	directionalLightData->direction = { 0.0f,-1.0f,0.0f };
-	directionalLightData->intensity = 1.0f;
-
-
-
 
 
 	//ビューポート
@@ -1551,7 +1466,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 				particles.splice(particles.end(), Emit(emitter, random));
 			}
 			ImGui::End();
-			directionalLightData->direction = Normalize(directionalLightData->direction);
 
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
@@ -1563,8 +1477,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			viewMatrix = Inverse(cameraMatrix);
 			projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHieght), 0.1f, 100.0f);
 			worldViewProjectionMatrix = worldMatrix * viewMatrix * projectionMatrix;
-			transformationMatrixData->WVP = worldViewProjectionMatrix;
-			transformationMatrixData->World = worldMatrix;
 
 			Matrix4x4 billboardMatrix = backToFrontMatrix * cameraMatrix;
 			billboardMatrix.m[3][0] = 0.0f; // 平行移動成分を排除
@@ -1652,11 +1564,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 			commandList->SetGraphicsRootSignature(rootSignature.Get());
 			commandList->SetPipelineState(graphicsPipelineState.Get());
 
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
+			
 			commandList->IASetVertexBuffers(0, 1, &modelVertexBufferView);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			
