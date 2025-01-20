@@ -77,6 +77,8 @@ private:
 	~Audio();
 	Audio(Audio&) = default;
 	Audio& operator=(Audio&) = default;
+
+#pragma region
 public:
 	void StartStreaming(const char* filename, bool isLoop = false) {
 		// すでにストリーミング中の場合は終了
@@ -109,29 +111,6 @@ public:
 		{
 			streamVoice->SetFrequencyRatio(pitch);
 		}
-	}
-
-	/**
-	 * @brief エフェクトチェーンの初期化
-	 */
-	void InitEffectChain() {
-		// リバーブエフェクトを作成
-		IUnknown* reverbEffect = nullptr;
-		if (FAILED(XAudio2CreateReverb(&reverbEffect))) // Reverbエフェクトを作成
-		{
-			Logger::Log("Failed to create reverb effect.");
-		}
-		else {
-			Logger::Log("succece to create reverb effect.");
-		}
-		// エフェクトチェーンの設定
-		effect[0].pEffect = reverbEffect;  // リバーブエフェクトのインターフェース
-		effect[0].InitialState = FALSE;		// 初期状態で無効化
-		effect[0].OutputChannels = 2;      // ステレオ出力
-		effectChain.EffectCount = 1;
-		effectChain.pEffectDescriptors = effect;
-		ApplyEffectChain();
-		reverbEffect->Release();
 	}
 
 	/**
@@ -184,6 +163,29 @@ public:
 private:
 	void StreamAudio(const char* filename);
 
+	/**
+	 * @brief エフェクトチェーンの初期化
+	 */
+	void InitEffectChain() {
+		// リバーブエフェクトを作成
+		IUnknown* reverbEffect = nullptr;
+		if (FAILED(XAudio2CreateReverb(&reverbEffect))) // Reverbエフェクトを作成
+		{
+			Logger::Log("Failed to create reverb effect.");
+		}
+		else {
+			Logger::Log("succece to create reverb effect.");
+		}
+		// エフェクトチェーンの設定
+		effect[0].pEffect = reverbEffect;  // リバーブエフェクトのインターフェース
+		effect[0].InitialState = FALSE;		// 初期状態で無効化
+		effect[0].OutputChannels = 2;      // ステレオ出力
+		effectChain.EffectCount = 1;
+		effectChain.pEffectDescriptors = effect;
+		ApplyEffectChain();
+		reverbEffect->Release();
+	}
+#pragma endregion
 
 private: // 構造体
 	// チャンクヘッダー

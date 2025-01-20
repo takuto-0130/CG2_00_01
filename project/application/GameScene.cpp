@@ -9,7 +9,7 @@
 #include "ParticleClass.h"
 #include <fstream>
 #include <istream>
-#include "Audio.h"
+#include "../engine/Audio/Audio.h"
 
 #ifdef _DEBUG
 #include "imgui.h"
@@ -23,7 +23,7 @@ void GameScene::Init() {
 	input_ = Input::GetInstance();
 
 	Audio::GetInstance()->SetPitch(pitch_);
-	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
+	Audio::GetInstance()->StartStreaming("fanfare.wav", false);
 	/*Audio::GetInstance()->LoadWave("BGM_2");
 	int num = Audio::GetInstance()->PlayWave("BGM_2");
 	Audio::GetInstance()->SetBGMVolume(num, 1.0f);*/

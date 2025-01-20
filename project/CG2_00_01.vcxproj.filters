@@ -165,7 +165,7 @@
     <ClCompile Include="engine\TYFrameWork.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Audio.cpp">
+    <ClCompile Include="engine\Audio\Audio.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\ParticleClass.cpp">
@@ -175,6 +175,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\TitleScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Audio\StreamingAudio.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -294,7 +297,7 @@
     <ClInclude Include="engine\sound.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Audio.h">
+    <ClInclude Include="engine\Audio\Audio.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\ParticleClass.h">
@@ -304,6 +307,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\TitleScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Audio\StreamingAudio.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

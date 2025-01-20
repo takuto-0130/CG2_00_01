@@ -106,7 +106,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="application\GameScene.cpp" />
-    <ClCompile Include="engine\Audio.cpp" />
+    <ClCompile Include="engine\Audio\Audio.cpp" />
     <ClCompile Include="engine\Camera.cpp" />
     <ClCompile Include="engine\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="engine\DirectXBasis.cpp" />
@@ -142,6 +142,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\ParticleClass.cpp" />
     <ClCompile Include="application\IScene.cpp" />
     <ClCompile Include="application\TitleScene.cpp" />
+    <ClCompile Include="engine\Audio\StreamingAudio.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
@@ -171,7 +172,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\GameScene.h" />
-    <ClInclude Include="engine\Audio.h" />
+    <ClInclude Include="engine\Audio\Audio.h" />
     <ClInclude Include="engine\Camera.h" />
     <ClInclude Include="engine\D3DResourceLeakChecker.h" />
     <ClInclude Include="engine\DirectXBasis.h" />
@@ -209,6 +210,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\ParticleClass.h" />
     <ClInclude Include="application\IScene.h" />
     <ClInclude Include="application\TitleScene.h" />
+    <ClInclude Include="engine\Audio\StreamingAudio.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
