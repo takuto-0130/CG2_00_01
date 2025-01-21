@@ -17,6 +17,8 @@
 #include "Object3dBasis.h"
 #include "ImGuiManager.h"
 #include "Input.h"
+#include "SceneManager.h"
+#include "AbstractSceneFactory.h"
 #ifdef _DEBUG
 #include <imgui.h>
 #endif // _DEBUG
@@ -53,7 +55,7 @@ protected:
 	std::unique_ptr<D3DResourceLeakChecker> leakCheck;
 #endif // _DEBUG
 
-	std::unique_ptr<WindowsApp> windowsApp;
+	std::unique_ptr<WindowsApp> windowsApp = nullptr;
 	std::unique_ptr<DirectXBasis> directXBasis = nullptr;
 	std::unique_ptr<SrvManager> srvManager = nullptr;
 	SpriteBasis* spriteBasis = nullptr;
@@ -61,8 +63,10 @@ protected:
 	ModelManager* modelManager = nullptr;
 	Input* input = nullptr;
 	ImGuiManager* imgui = nullptr;
-	std::unique_ptr<Camera> camera;
-	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
+	std::unique_ptr<Camera> camera = nullptr;
+
+	SceneManager* sceneManager_ = nullptr;
+	std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr;
 
 	bool endRequest_ = false;
 };

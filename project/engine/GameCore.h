@@ -19,12 +19,7 @@ public: // メンバ変数
 	void Draw() override;
 
 private:
-
-
-	std::unique_ptr<IScene> sceneArr_[3];
 	Input* input = nullptr;
 
-	int currentSceneNo_;
-	int prevSceneNo_;
 };
 

@@ -5,6 +5,13 @@ SceneManager::~SceneManager()
 	delete scene_;
 }
 
+void SceneManager::ChangeScene(const std::string& sceneName)
+{
+	assert(sceneFactory_);
+	assert(nextScene_ == nullptr);
+	nextScene_ = sceneFactory_->CreateScene(sceneName);
+}
+
 void SceneManager::Update()
 {
 	// シーン切り替え機構
@@ -18,6 +25,10 @@ void SceneManager::Update()
 		// シーン切り替え
 		scene_ = nextScene_;
 		nextScene_ = nullptr;
+
+		// シーンマネージャーをセット
+		scene_->SetSceneManager(this);
+
 		// シーンの初期化
 		scene_->Init();
 	}

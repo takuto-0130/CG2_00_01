@@ -1,5 +1,6 @@
 #pragma once
 #include "IScene.h"
+#include "AbstractSceneFactory.h"
 class SceneManager
 {
 public:
@@ -9,15 +10,15 @@ public:
 		return &instance;
 	}
 
-private:
 	SceneManager() = default;
 	~SceneManager();
+private:
 	SceneManager(SceneManager&) = default;
 	SceneManager& operator=(SceneManager&) = default;
 public:
 
 	// 次シーン予約
-	void SetNextScene(IScene* nextScene) { nextScene_ = nextScene; }
+	void ChangeScene(const std::string& sceneName);
 
 	// 更新
 	void Update();
@@ -25,8 +26,13 @@ public:
 	// 描画
 	void Draw();
 
+	// シーンファクトリーのセッター
+	void SetSceneFactory(AbstractSceneFactory* sceneFactory) { sceneFactory_ = sceneFactory; }
+
 private:
 	IScene* scene_ = nullptr;
 	IScene* nextScene_ = nullptr;
+
+	AbstractSceneFactory* sceneFactory_ = nullptr;
 };
 

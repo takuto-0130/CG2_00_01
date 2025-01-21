@@ -140,10 +140,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\GameCore.cpp" />
     <ClCompile Include="engine\TYFrameWork.cpp" />
     <ClCompile Include="engine\ParticleClass.cpp" />
-    <ClCompile Include="application\IScene.cpp" />
     <ClCompile Include="application\TitleScene.cpp" />
     <ClCompile Include="engine\Audio\StreamingAudio.cpp" />
     <ClCompile Include="engine\SceneManager.cpp" />
+    <ClCompile Include="application\SceneFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
@@ -172,6 +172,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\AbstractSceneFactory.h" />
     <ClInclude Include="application\GameScene.h" />
     <ClInclude Include="engine\Audio\Audio.h" />
     <ClInclude Include="engine\Camera.h" />
@@ -213,6 +214,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\TitleScene.h" />
     <ClInclude Include="engine\Audio\StreamingAudio.h" />
     <ClInclude Include="engine\SceneManager.h" />
+    <ClInclude Include="application\SceneFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

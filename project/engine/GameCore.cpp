@@ -1,7 +1,7 @@
 #include "GameCore.h"
 #include "ParticleClass.h"
-#include "GameScene.h"
-#include "TitleScene.h"
+#include "Audio/Audio.h"
+#include "SceneFactory.h"
 #ifdef _DEBUG
 #include <imgui.h>
 #endif // _DEBUG
@@ -27,14 +27,9 @@ void GameCore::Initialize()
 
 	Audio::GetInstance()->Initialize();
 
-
-	sceneArr_[Scene::TITLE] = std::make_unique<TitleScene>();
-	sceneArr_[Scene::TITLE]->Init();
-	sceneArr_[Scene::STAGE] = std::make_unique<GameScene>();
-	sceneArr_[Scene::STAGE]->Init();
-	sceneArr_[Scene::STAGE]->SetCamera(camera.get());
-	currentSceneNo_ = Scene::STAGE;
-	prevSceneNo_ = currentSceneNo_;
+	sceneFactory_ = std::make_unique<SceneFactory>();
+	sceneManager_->SetSceneFactory(sceneFactory_.get());
+	sceneManager_->ChangeScene("TITLE");
 }
 
 void GameCore::Finalize()
@@ -50,17 +45,11 @@ void GameCore::Update()
 		endRequest_ = true;
 	}
 	else { //ゲーム処理
-		TYFrameWork::Update();
 		imgui->Begin();
+		TYFrameWork::Update();
 		camera->Update();
 
-		prevSceneNo_ = currentSceneNo_;
-		currentSceneNo_ = sceneArr_[currentSceneNo_]->GetSceneNo();
-		if (prevSceneNo_ != currentSceneNo_) {
-			sceneArr_[currentSceneNo_]->Init();
-		}
 		/// ↓更新処理ここから
-		sceneArr_[currentSceneNo_]->Update();
 
 		imgui->End();
 	}
@@ -74,8 +63,7 @@ void GameCore::Draw()
 	srvManager->BeginDraw();
 
 	// 描画コマンド
-	//gameScene->Draw();
-	sceneArr_[currentSceneNo_]->Draw();
+	sceneManager_->Draw();
 
 	imgui->Draw();
 	directXBasis->DrawEnd();

@@ -36,18 +36,14 @@ void TYFrameWork::Initialize()
 	input = Input::GetInstance();
 	input->Initialize(windowsApp->GetHwnd());
 
-	IXAudio2MasteringVoice* masterVoice;
-	HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-	assert(SUCCEEDED(result));
-	result = xAudio2->CreateMasteringVoice(&masterVoice);
-	assert(SUCCEEDED(result));
 	TextureManager::GetInstance()->Initialize(directXBasis.get(), srvManager.get());
+
+	sceneManager_ = SceneManager::GetInstance();
 #pragma endregion
 }
 
 void TYFrameWork::Finalize()
 {
-	xAudio2.Reset();
 	imgui->Finalize();
 	input->Finalize();
 	windowsApp->Finalize();
@@ -56,4 +52,5 @@ void TYFrameWork::Finalize()
 void TYFrameWork::Update()
 {
 	input->Update();
+	sceneManager_->Update();
 }
