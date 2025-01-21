@@ -46,6 +46,9 @@ void StreamingAudio::SetPitch(float pitch)
 	{
 		streamVoice->SetFrequencyRatio(pitch);
 	}
+	else {
+		Logger::Log("UnInitialized streamVoice.");
+	}
 }
 
 void StreamingAudio::ApplyEffectChain()
@@ -71,6 +74,9 @@ void StreamingAudio::SetEffect(const XAUDIO2FX_REVERB_I3DL2_PARAMETERS parameter
 			Logger::Log("Failed to set effect parameters.");
 		}
 		streamVoice->EnableEffect(0);
+	}
+	else {
+		Logger::Log("UnInitialized streamVoice.");
 	}
 }
 

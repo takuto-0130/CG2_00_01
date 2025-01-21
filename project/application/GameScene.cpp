@@ -35,11 +35,15 @@ void GameScene::Update() {
 
 #ifdef _DEBUG
 
-	ImGui::Begin("a");
+	ImGui::Begin("Sound Test");
 	ImGui::DragFloat("pitch", &pitch_, 0.01f);
 	ImGui::Checkbox("isEffect", &isEffect_);
+	ImGui::Text("Space ReStartStreaming");
 	ImGui::End();
 #endif // _DEBUG
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+		Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
+	}
 	Audio::GetInstance()->SetPitch(pitch_);
 	if(isEffect_)
 	{

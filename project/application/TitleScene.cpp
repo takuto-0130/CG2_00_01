@@ -9,6 +9,7 @@ void TitleScene::Update() {
 	}
 #ifdef _DEBUG
 	ImGui::Begin("TITLE");
+	ImGui::Text("Space to GameScene");
 	ImGui::End();
 #endif // _DEBUG
 

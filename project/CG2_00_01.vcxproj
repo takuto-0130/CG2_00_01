@@ -143,6 +143,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\IScene.cpp" />
     <ClCompile Include="application\TitleScene.cpp" />
     <ClCompile Include="engine\Audio\StreamingAudio.cpp" />
+    <ClCompile Include="engine\SceneManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
@@ -211,6 +212,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\IScene.h" />
     <ClInclude Include="application\TitleScene.h" />
     <ClInclude Include="engine\Audio\StreamingAudio.h" />
+    <ClInclude Include="engine\SceneManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
