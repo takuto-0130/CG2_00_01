@@ -5,6 +5,8 @@
 #endif 
 #include "GlobalVariables.h"
 #include <numbers>
+#include "CameraShake.h"
+#include "HitStop.h"
 
 Player::~Player()
 {
@@ -138,6 +140,9 @@ void Player::AddComboVariables()
 	globalVar_->AddItem(groupName, "recoveryTime", int(1));
 	globalVar_->AddItem(groupName, "AttackRadius", 1.0f);
 	globalVar_->AddItem(groupName, "swingRotate", std::numbers::pi_v<float> / 2.0f);
+	globalVar_->AddItem(groupName, "CameraShakeRange", Vector3(0,0,0));
+	globalVar_->AddItem(groupName, "CameraShakeTime", 0.0f);
+	globalVar_->AddItem(groupName, "HitStopTime", 0.0f);
 	
 
 	groupName = "Combo2";
@@ -148,6 +153,9 @@ void Player::AddComboVariables()
 	globalVar_->AddItem(groupName, "recoveryTime", int(1));
 	globalVar_->AddItem(groupName, "anticipationSpeed", 1.0f);
 	globalVar_->AddItem(groupName, "AttackRadius", 1.0f);
+	globalVar_->AddItem(groupName, "CameraShakeRange", Vector3(0, 0, 0));
+	globalVar_->AddItem(groupName, "CameraShakeTime", 0.0f);
+	globalVar_->AddItem(groupName, "HitStopTime", 0.0f);
 
 	groupName = "Combo3";
 	globalVar_->CreateGroup(groupName);
@@ -158,6 +166,9 @@ void Player::AddComboVariables()
 	globalVar_->AddItem(groupName, "AttackRadius", 1.0f);
 	globalVar_->AddItem(groupName, "swingRotate", (3.0f * std::numbers::pi_v<float>) / 4.0f);
 	globalVar_->AddItem(groupName, "jumpHight", 1.0f);
+	globalVar_->AddItem(groupName, "CameraShakeRange", Vector3(0, 0, 0));
+	globalVar_->AddItem(groupName, "CameraShakeTime", 0.0f);
+	globalVar_->AddItem(groupName, "HitStopTime", 0.0f);
 }
 
 void Player::ApplyComboVariables()
@@ -319,7 +330,6 @@ void Player::BehaviorRootInit()
 {
 	playerFloatingParameter_ = 0.0f;
 	weaponFloatingParameter_ = 0.0f;
-	weapon_->RecordClear();
 	R_arm_transform_.rotation_.x = 0.0f;
 	L_arm_transform_.rotation_.x = 0.0f;
 }
@@ -382,9 +392,10 @@ void Player::BehaviorAttackUpdate()
 		}
 		else if (workAttack_.inComboPhase == 2) {
 			// 攻撃モーションやエフェクトの発生
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime) {
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime) { // 攻撃終了
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
+				CameraShake::GetInstance()->SetShake(globalVar_->GetVector3Value("Combo1", "CameraShakeRange"), globalVar_->GetFloatValue("Combo1", "CameraShakeTime"));
 			}
 			R_arm_transform_.rotation_.x += swingRotare / float(attack[workAttack_.comboIndex].swingTime);
 		}
@@ -429,9 +440,10 @@ void Player::BehaviorAttackUpdate()
 		}
 		else if (workAttack_.inComboPhase == 1) {
 			// 2段目: 攻撃振りの動作
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime) {
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime) { // 攻撃終了
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
+				CameraShake::GetInstance()->SetShake(globalVar_->GetVector3Value("Combo2", "CameraShakeRange"), globalVar_->GetFloatValue("Combo2", "CameraShakeTime"));
 			}
 			body_transform_.rotation_.y += 0.06f;
 			R_arm_transform_.rotation_.x += 0.2f;
@@ -480,9 +492,10 @@ void Player::BehaviorAttackUpdate()
 			}
 		}
 		else if (workAttack_.inComboPhase == 2) {
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime) {
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime) { // 攻撃終了
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
+				CameraShake::GetInstance()->SetShake(globalVar_->GetVector3Value("Combo3", "CameraShakeRange"), globalVar_->GetFloatValue("Combo3", "CameraShakeTime"));
 			}
 			R_arm_transform_.rotation_.x += swingRotare / float(attack[workAttack_.comboIndex].swingTime);
 			body_transform_.translation_.y -= globalVar_->GetFloatValue("Combo3", "jumpHight") / float(attack[workAttack_.comboIndex].swingTime);
@@ -499,6 +512,21 @@ void Player::BehaviorAttackUpdate()
 				body_transform_.rotation_.y = 0;
 				body_transform_.translation_.y = 0;
 			}
+		}
+	}
+
+	if (weapon_->GetisHit()) {
+		if (workAttack_.comboIndex == 0) 
+		{
+			HitStop::GetInstance()->SetHitStop(globalVar_->GetFloatValue("Combo1", "HitStopTime"));
+		}
+		else if (workAttack_.comboIndex == 1)
+		{
+			HitStop::GetInstance()->SetHitStop(globalVar_->GetFloatValue("Combo2", "HitStopTime"));
+		}
+		else if (workAttack_.comboIndex == 2) 
+		{
+			HitStop::GetInstance()->SetHitStop(globalVar_->GetFloatValue("Combo3", "HitStopTime"));
 		}
 	}
 }

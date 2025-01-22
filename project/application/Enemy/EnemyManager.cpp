@@ -85,7 +85,7 @@ Vector3 EnemyManager::TransformVector3(const Vector3& vector, const Matrix4x4& m
 	return result;
 }
 
-void EnemyManager::AAA()
+void EnemyManager::AddCollider()
 {
 	for (std::shared_ptr<Enemy> enemy : enemys_) {
 		collisionManager_->AddCollider(enemy.get());

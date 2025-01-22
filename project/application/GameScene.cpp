@@ -10,6 +10,8 @@
 #include <fstream>
 #include <istream>
 #include "Audio.h"
+#include "CameraShake.h"
+#include "HitStop.h"
 
 #ifdef _DEBUG
 #include "imgui.h"
@@ -63,6 +65,7 @@ void GameScene::ApplyGlobalVariables()
 void GameScene::Update() {
 	fade_->Update();
 
+	HitStop::GetInstance()->Update();
 
 #ifdef _DEBUG
 	ImGui::Begin("GAME");
@@ -88,7 +91,7 @@ void GameScene::Draw() {
 	player_->Draw();
 	enemyGroup_->Draw();
 
-	ParticleClass::GetInstance()->Draw();
+	//ParticleClass::GetInstance()->Draw();
 
 #pragma endregion
 
@@ -126,41 +129,58 @@ void GameScene::CheckAllCollisions()
 
 void GameScene::ChangePhase()
 {
-	switch (phase_) {
+	switch (phase_) 
+	{
 	case GamePhase::kGame:
 
-		// 衝突判定と応答
-		CheckAllCollisions();
+		if(!HitStop::GetInstance()->IsHitStop())
+		{
+			// 衝突判定と応答
+			CheckAllCollisions();
 
-		// プレイヤーの更新
-		player_->Update();
+			// プレイヤーの更新
+			player_->Update();
 
-		camera_->FollowCamera(player_->GetPosition());
-		ground_->Update();
+			CameraUpdate();
 
-		// 敵の更新
-		enemyGroup_->Update();
+			ground_->Update();
 
-		if (enemyGroup_->GetEliminateCount() >= clearEliminateCount_) {
-			phase_ = GamePhase::kFadeOut;
-			fade_->Start(Status::FadeOut, globalVar_->GetFloatValue("global", "fadeTime(sec)"));
+			// 敵の更新
+			enemyGroup_->Update();
+
+			if (enemyGroup_->GetEliminateCount() >= clearEliminateCount_) 
+			{
+				phase_ = GamePhase::kFadeOut;
+				fade_->Start(Status::FadeOut, globalVar_->GetFloatValue("global", "fadeTime(sec)"));
+			}
 		}
 
 		break;
 	case GamePhase::kFadeIn:
-		if (fade_->IsFinished()) {
+		if (fade_->IsFinished()) 
+		{
 			phase_ = GamePhase::kGame;
 		}
 		camera_->FollowCamera(player_->GetPosition());
 		ground_->Update();
 		break;
 	case GamePhase::kFadeOut:
-		if (fade_->IsFinished()) {
+		if (fade_->IsFinished()) 
+		{
 			// シーンの切り替え依頼
 			sceneNo_ = CLEAR;
 		}
 		break;
 
 	}
+}
+
+void GameScene::CameraUpdate()
+{
+	CameraShake::GetInstance()->Update();
+	if (CameraShake::GetInstance()->IsShake()) {
+		camera_->SetOffsetTranslate(globalVar_->GetVector3Value("global", "cameraOffsetT") + CameraShake::GetInstance()->GetShake());
+	}
+	camera_->FollowCamera(player_->GetPosition());
 }
 

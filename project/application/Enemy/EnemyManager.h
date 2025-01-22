@@ -23,7 +23,7 @@ public:
 	/// </summary>
 	void SetPlayer(Player* player) { player_ = player; }
 
-	void AAA();
+	void AddCollider();
 	std::vector<Collider*>GetColliders();
 
 	uint32_t GetEliminateCount() { return eliminateCount_; }

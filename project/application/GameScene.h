@@ -53,6 +53,8 @@ public: // メンバ関数
 private:
 	void ChangePhase();
 
+	void CameraUpdate();
+
 private: // メンバ変数
 	std::unique_ptr<Fade> fade_;
 	GamePhase phase_ = GamePhase::kFadeIn;

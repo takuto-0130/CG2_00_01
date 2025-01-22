@@ -44,7 +44,7 @@ void GameCore::Initialize()
 	sceneArr_[Scene::CLEAR] = std::make_unique<ClearScene>();
 	sceneArr_[Scene::CLEAR]->SetCamera(camera.get());
 	sceneArr_[Scene::CLEAR]->Init();
-	currentSceneNo_ = 0;
+	currentSceneNo_ = Scene::STAGE;
 	prevSceneNo_ = currentSceneNo_;
 	ParticleClass::GetInstance()->Initialize();
 }
@@ -101,10 +101,7 @@ void GameCore::Draw()
 	srvManager->BeginDraw();
 
 	// 描画コマンド
-	//gameScene->Draw();
 	sceneArr_[currentSceneNo_]->Draw();
-
-	//ParticleClass::GetInstance()->Draw();
 
 	imgui->Draw();
 	directXBasis->DrawEnd();

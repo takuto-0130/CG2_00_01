@@ -1,6 +1,13 @@
 {
     "Combo1": {
         "AttackRadius": 1.5,
+        "CameraShakeRange": [
+            0.18000000715255737,
+            0.0,
+            0.18000000715255737
+        ],
+        "CameraShakeTime": 0.14000000059604645,
+        "HitStopTime": 0.019999999552965164,
         "anticipationTime": 0,
         "chargeTime": 0,
         "recoveryTime": 20,

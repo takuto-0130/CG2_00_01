@@ -46,6 +46,7 @@ Vector3 Weapon::GetCenterPosition() const
 
 void Weapon::OnCollision(Collider* other)
 {
+	isHit_ = false;
 	// 衝突相手の種別IDを取得
 	uint32_t typeID = other->GetTypeID();
 	// 衝突相手が敵なら
