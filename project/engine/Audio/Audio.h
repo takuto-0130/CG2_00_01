@@ -14,6 +14,8 @@
 #include <Logger.h>
 #include <xaudio2fx.h>
 
+#include "StreamingAudio.h"
+
 
 // WAVヘッダーの定義
 struct WAVHeader {
