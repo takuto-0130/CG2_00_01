@@ -91,7 +91,7 @@ void GameScene::Draw() {
 	player_->Draw();
 	enemyGroup_->Draw();
 
-	//ParticleClass::GetInstance()->Draw();
+	ParticleClass::GetInstance()->Draw();
 
 #pragma endregion
 

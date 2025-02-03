@@ -109,7 +109,7 @@ void Enemy::OnCollision([[maybe_unused]] Collider* other)
 		switch (behavior_) {
 		case EnemyBehavior::kRoot:
 			onCollision_ = true;
-			ParticleClass::GetInstance()->CollisionEmit(GetCenterPosition());
+			ParticleClass::GetInstance()->CollisionEmit(GetCenterPosition(), 1.0f);
 			break;
 		case EnemyBehavior::kCorpse:
 			onCollision_ = true;
@@ -176,7 +176,7 @@ void Enemy::BehaviorRootInit()
 
 void Enemy::BehaviorKnockBackInit()
 {
-	ParticleClass::GetInstance()->CollisionEmit(GetCenterPosition());
+	ParticleClass::GetInstance()->CollisionEmit(GetCenterPosition(), 1.0f);
 	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kNone));
 	paramater_ = step_;
 	knockBackVec_ = Normalize(transform_.translation_ - player_->GetPosition());
@@ -208,6 +208,10 @@ void Enemy::BehaviorKnockBackUpdate()
 	transform_.translation_.z += knockBackVec_.z * kKnockBackSpeed_;
 	if (paramater_ < knockBackTime_)
 	{
+		if (std::fmod(paramater_, (step_ * 3.0f)) == 0)
+		{
+			ParticleClass::GetInstance()->CollisionEmit(GetCenterPosition(), 1.0f - paramater_ / knockBackTime_);
+		}
 		paramater_ += step_;
 		transform_.scale_ += scalePlus;
 		object_->SetColor({ 1,1,1,1.0f - (static_cast<float>(paramater_) / static_cast<float>(knockBackTime_)) });

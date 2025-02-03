@@ -6,22 +6,25 @@
 
 #include "Object3dBasis.h"
 
-void ParticleClass::CollisionEmit(Vector3 pos)
+void ParticleClass::CollisionEmit(Vector3 pos, float t)
 {
 	std::mt19937 random(seedGene());
 	emitter_.transform.translate = pos;
-	particles.splice(particles.end(), Emit(emitter_, random));
+	emitter_.isEmit = true;
+	particles.splice(particles.end(), Emit(emitter_, random, t));
 	emitter_.frequencyTime -= emitter_.frequency;
 }
 
-ParticleClass::Particle ParticleClass::MakeNewParticle(std::mt19937& random, const Vector3& translate) {
+ParticleClass::Particle ParticleClass::MakeNewParticle(std::mt19937& random, const Vector3& translate, float t) {
 	Particle parti;
 
 	std::uniform_real_distribution<float> distVec(-2.0f, 2.0f);
-	parti.transform.scale = { 0.5f,0.5f,0.5f };
+	std::uniform_real_distribution<float> distScale(0.2f, 0.6f);
+	float scale = distScale(random) * t;
+	parti.transform.scale = { scale,scale,scale };
 	parti.transform.rotate = { 0.f,0.f,0.f };
 	parti.transform.translate = translate;
-	parti.velocity = { distVec(random),distVec(random),distVec(random) };
+	parti.velocity = { distVec(random) * t,distVec(random) * t,distVec(random) * t };
 
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
 	parti.color = { distColor(random),distColor(random),distColor(random),1.0f };
@@ -32,10 +35,10 @@ ParticleClass::Particle ParticleClass::MakeNewParticle(std::mt19937& random, con
 	return parti;
 }
 
-std::list<ParticleClass::Particle> ParticleClass::Emit(const Emitter& emitter, std::mt19937& random) {
+std::list<ParticleClass::Particle> ParticleClass::Emit(const Emitter& emitter, std::mt19937& random, float t) {
 	std::list<Particle> particles;
 	for (uint32_t count = 0; count < emitter.count; ++count) {
-		particles.push_back(MakeNewParticle(random, emitter.transform.translate));
+		particles.push_back(MakeNewParticle(random, emitter.transform.translate, t));
 	}
 	return particles;
 }
@@ -95,7 +98,7 @@ void ParticleClass::Draw()
 		if (numInstance < kNumMaxInstance)
 		{
 			Matrix4x4 worldMatrixP = MakeAffineMatrix((*partiIterator).transform.scale, (*partiIterator).transform.rotate, (*partiIterator).transform.translate);
-			obj_->SetColor({ 1,1,1,0.7f });
+			obj_->SetColor({ 1,1,1,0.4f });
 			trans_[numInstance].scale_ = (*partiIterator).transform.scale;
 			trans_[numInstance].translation_ = (*partiIterator).transform.translate;
 			trans_[numInstance].rotation_ = (*partiIterator).transform.rotate;

@@ -7,7 +7,7 @@
 #include "WorldTransform.h"
 #include "Object3d.h"
 
-const uint32_t kNumMaxInstance = 500; // インスタンス数
+const uint32_t kNumMaxInstance = 300; // インスタンス数
 const float kDeltaTime = 1.0f / 60.0f;
 
 
@@ -36,6 +36,7 @@ private:
 		uint32_t count;
 		float frequency;
 		float frequencyTime;
+		bool isEmit;
 	};
 
 	struct AABB {
@@ -75,12 +76,12 @@ public:
 	// エミッターをの設定を変更
 	void SetEmitter(Emitter emitter) { emitter_ = emitter; }
 
-	void CollisionEmit(Vector3 pos);
+	void CollisionEmit(Vector3 pos, float t);
 
 private:
 
-	Particle MakeNewParticle(std::mt19937& random, const Vector3& translate);
-	std::list<Particle> Emit(const Emitter& emitter, std::mt19937& random);
+	Particle MakeNewParticle(std::mt19937& random, const Vector3& translate, float t);
+	std::list<Particle> Emit(const Emitter& emitter, std::mt19937& random, float t);
 	bool IsCollision(const AABB& a, const Vector3& point);
 
 private:
