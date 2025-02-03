@@ -26,6 +26,6 @@ public:
 private:
 	// ワールド変換データ
 	WorldTransform transform_;
-	Object3d* obj_;
+	std::unique_ptr<Object3d> obj_;
 };
 

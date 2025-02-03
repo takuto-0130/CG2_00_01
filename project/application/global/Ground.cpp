@@ -7,7 +7,7 @@
 void Ground::Initialize()
 {
 	ModelManager::GetInstance()->LoadModel("Resources", "Ground.obj");
-	obj_ = new Object3d();
+	obj_ = std::make_unique<Object3d>();
 	obj_->Initialize();
 
 	obj_->SetModel("Ground.obj");
