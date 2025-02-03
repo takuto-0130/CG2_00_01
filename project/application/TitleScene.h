@@ -1,12 +1,15 @@
 #pragma once
 #include "IScene.h"
 
-enum class TitlePhase {
+enum class TitlePhase
+{
 	kFadeIn,
 	kTitle,
 	kFadeOut
 };
-class TitleScene : public IScene {
+
+class TitleScene : public IScene
+{
 public:
 	TitleScene();
 

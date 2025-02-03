@@ -17,7 +17,8 @@ class ParticleClass
 {
 private:
 
-	struct Particle {
+	struct Particle 
+	{
 		Transform transform;
 		Vector3 velocity;
 		Vector4 color;
@@ -25,13 +26,15 @@ private:
 		float currentTime;
 	};
 
-	struct ParticleForGPU {
+	struct ParticleForGPU 
+	{
 		Matrix4x4 WVP;
 		Matrix4x4 World;
 		Vector4 color;
 	};
 
-	struct Emitter {
+	struct Emitter 
+	{
 		Transform transform;
 		uint32_t count;
 		float frequency;
@@ -39,12 +42,14 @@ private:
 		bool isEmit;
 	};
 
-	struct AABB {
+	struct AABB 
+	{
 		Vector3 min;
 		Vector3 max;
 	};
 
-	struct AccelerationField {
+	struct AccelerationField 
+	{
 		Vector3 acceleration;
 		AABB area;
 	};

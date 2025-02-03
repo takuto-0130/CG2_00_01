@@ -12,7 +12,8 @@ TitleScene::TitleScene()
 	globalVar_ = GlobalVariables::GetInstance();
 }
 
-void TitleScene::Init() {
+void TitleScene::Init()
+{
 	input_ = Input::GetInstance();
 	phase_ = TitlePhase::kFadeIn; 
 	fade_ = std::make_unique<Fade>();
@@ -20,9 +21,11 @@ void TitleScene::Init() {
 	fade_->Start(Status::FadeIn, globalVar_->GetFloatValue("global", "fadeTime(sec)"));
 }
 
-void TitleScene::Update() {
+void TitleScene::Update() 
+{
 	fade_->Update();
 	titleSprite_->Update();
+
 #ifdef _DEBUG
 	ImGui::Begin("TITLE");
 	ImGui::End();
@@ -31,7 +34,8 @@ void TitleScene::Update() {
 	ChangePhase();
 }
 
-void TitleScene::Draw() {
+void TitleScene::Draw() 
+{
 
 	SpriteBasis::GetInstance()->BasisDrawSetting();
 	titleSprite_->Draw();
@@ -40,22 +44,26 @@ void TitleScene::Draw() {
 
 void TitleScene::ChangePhase()
 {
-	switch (phase_) {
+	switch (phase_) 
+	{
 	case TitlePhase::kTitle:
 
-		if (input_->TriggerKey(DIK_SPACE)) {
+		if (input_->TriggerKey(DIK_SPACE)) 
+		{
 			phase_ = TitlePhase::kFadeOut;
 			fade_->Start(Status::FadeOut, globalVar_->GetFloatValue("global", "fadeTime(sec)"));
 		}
 
 		break;
 	case TitlePhase::kFadeIn:
-		if (fade_->IsFinished()) {
+		if (fade_->IsFinished()) 
+		{
 			phase_ = TitlePhase::kTitle;
 		}
 		break;
 	case TitlePhase::kFadeOut:
-		if (fade_->IsFinished()) {
+		if (fade_->IsFinished()) 
+		{
 			// シーンの切り替え依頼
 			sceneNo_ = STAGE;
 		}

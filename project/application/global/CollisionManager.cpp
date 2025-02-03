@@ -4,7 +4,8 @@
 #include "GlobalVariables.h"
 #include "ModelManager.h"
 #include "operatorOverload.h"
-void CollisionManager::Initialize() {
+void CollisionManager::Initialize() 
+{
 
 	// モデル読み込み
 	//ModelManager::GetInstance()->LoadModel("ICO.obj");
@@ -15,16 +16,20 @@ void CollisionManager::Initialize() {
 	GlobalVariables::GetInstance()->CreateGroup(groupName);
 	globalvariables->AddItem(groupName, "Collider", isDrawCollider_);
 }
-void CollisionManager::UpdateWorldTransform() {
+
+void CollisionManager::UpdateWorldTransform() 
+{
 
 	ApplyGlobalVariables();
 
 	// 非表示なら抜ける
-	if (!isDrawCollider_) {
+	if (!isDrawCollider_)
+	{
 		return;
 	}
 	// 全てのコライダーについて
-	for (Collider* collider : colliders_) {
+	for (Collider* collider : colliders_)
+	{
 		// 更新
 		collider->UpdateWorldTransform();
 	}
@@ -32,28 +37,34 @@ void CollisionManager::UpdateWorldTransform() {
 
 
 }
-void CollisionManager::Draw() {
+void CollisionManager::Draw() 
+{
 	// 非表示なら抜ける
-	if (!isDrawCollider_) {
+	if (!isDrawCollider_)
+	{
 		return;
 	}
 	// 全てのコライダーについて
-	for (Collider* collider : colliders_) {
+	for (Collider* collider : colliders_)
+	{
 		// 描画
 		collider->Draw(obj_);
 	}
 }
-void CollisionManager::Reset() {
+void CollisionManager::Reset() 
+{
 	// リストを空っぽにする
 	colliders_.clear();
 
 }
 
-void CollisionManager::CheckCollisionPair(Collider* colliderA, Collider* colliderB) {
+void CollisionManager::CheckCollisionPair(Collider* colliderA, Collider* colliderB) 
+{
 	// 両方のIDが同じかどちらかがNoneだった場合早期リターン
 	if (colliderA->GetTypeID() == colliderB->GetTypeID() ||
 		colliderA->GetTypeID() == static_cast<uint32_t>(CollisionTypeIdDef::kNone) ||
-		colliderB->GetTypeID() == static_cast<uint32_t>(CollisionTypeIdDef::kNone)) {
+		colliderB->GetTypeID() == static_cast<uint32_t>(CollisionTypeIdDef::kNone))
+	{
 		return;
 	}
 	// コライダーAの座標を取得
@@ -65,7 +76,8 @@ void CollisionManager::CheckCollisionPair(Collider* colliderA, Collider* collide
 	// 座標AとBの距離を求める
 	float distance = Length(subtract);
 	// 球と球の交差判定
-	if (distance <= (colliderA->Getradius() + colliderB->Getradius())) {
+	if (distance <= (colliderA->Getradius() + colliderB->Getradius())) 
+	{
 		// コライダーAの衝突時コールバックを呼び出す
 		colliderA->OnCollision(colliderB);
 		// コライダーBの衝突時コールバックを呼び出す
@@ -73,17 +85,20 @@ void CollisionManager::CheckCollisionPair(Collider* colliderA, Collider* collide
 	}
 }
 
-void CollisionManager::CheckAllCollisions() {
+void CollisionManager::CheckAllCollisions() 
+{
 	// リスト内のペアを総当たり
 	std::list<Collider*>::iterator itrA = colliders_.begin();
-	for (; itrA != colliders_.end(); ++itrA) {
+	for (; itrA != colliders_.end(); ++itrA) 
+	{
 		Collider* colliderA = *itrA;
 
 		// イテレーターBはイテレーターAの次の要素から回す（重複判定を回避）
 		std::list<Collider*>::iterator itrB = itrA;
 		itrB++;
 
-		for (; itrB != colliders_.end(); ++itrB) {
+		for (; itrB != colliders_.end(); ++itrB) 
+		{
 			Collider* colliderB = *itrB;
 
 			// ペアの当たり判定
@@ -92,11 +107,13 @@ void CollisionManager::CheckAllCollisions() {
 	}
 }
 
-void CollisionManager::AddCollider(Collider* collider) {
+void CollisionManager::AddCollider(Collider* collider)
+{
 	colliders_.push_back(collider);
 }
 
-void CollisionManager::ApplyGlobalVariables() {
+void CollisionManager::ApplyGlobalVariables() 
+{
 	GlobalVariables* globalVariables = GlobalVariables::GetInstance();
 	const char* groupName = "Collider";
 	isDrawCollider_ = globalVariables->GetBoolValue(groupName, "Collider");

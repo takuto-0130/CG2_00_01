@@ -3,7 +3,8 @@
 #include <Object3d.h>
 #include "WorldTransform.h"
 
-enum class Status {
+enum class Status 
+{
 	None,
 	FadeIn,
 	FadeOut

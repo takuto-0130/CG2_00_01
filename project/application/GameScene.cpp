@@ -17,11 +17,13 @@
 #include "imgui.h"
 #endif // DEBUG_
 
-GameScene::~GameScene() {
+GameScene::~GameScene() 
+{
 	Audio::GetInstance()->StopStreaming();
 }
 
-void GameScene::Init() {
+void GameScene::Init()
+{
 	input_ = Input::GetInstance();
 
 	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
@@ -62,7 +64,8 @@ void GameScene::ApplyGlobalVariables()
 }
 
 #pragma region // 初期化以外
-void GameScene::Update() {
+void GameScene::Update() 
+{
 	fade_->Update();
 
 	HitStop::GetInstance()->Update();
@@ -75,7 +78,8 @@ void GameScene::Update() {
 	ChangePhase();
 }
 
-void GameScene::Draw() {
+void GameScene::Draw()
+{
 #pragma region 背景
 	// 背景スプライト描画前
 	SpriteBasis::GetInstance()->BasisDrawSetting();
@@ -118,7 +122,8 @@ void GameScene::CheckAllCollisions()
 	// 敵全てについて
 	 // 敵全てのコライダーをリストに登録
 	auto enemyColliders = enemyGroup_->GetColliders();
-	for (auto& collider : enemyColliders) {
+	for (auto& collider : enemyColliders)
+	{
 		collisionManager_->AddCollider(collider);
 	}
 
@@ -178,7 +183,8 @@ void GameScene::ChangePhase()
 void GameScene::CameraUpdate()
 {
 	CameraShake::GetInstance()->Update();
-	if (CameraShake::GetInstance()->IsShake()) {
+	if (CameraShake::GetInstance()->IsShake()) 
+	{
 		camera_->SetOffsetTranslate(globalVar_->GetVector3Value("global", "cameraOffsetT") + CameraShake::GetInstance()->GetShake());
 	}
 	camera_->FollowCamera(player_->GetPosition());

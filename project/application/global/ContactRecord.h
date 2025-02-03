@@ -4,7 +4,8 @@
 /// <summary>
 /// 接触記録
 /// </summary>
-class ContactRecord {
+class ContactRecord 
+{
 public:
 	// 履歴追加
 	void record(uint32_t number);
@@ -18,5 +19,4 @@ public:
 private:
 	// 履歴
 	std::vector<uint32_t> history_;
-
 };

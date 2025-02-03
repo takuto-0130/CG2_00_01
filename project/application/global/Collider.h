@@ -4,7 +4,8 @@
 #include "Object3d.h"
 #include "CollisionTypeIdDef.h"
 
-class Collider {
+class Collider 
+{
 public:
 	/// <summary>
 	/// 初期化
@@ -65,6 +66,4 @@ private:
 	float radius_ = 1.5f;
 	// 種別ID
 	uint32_t typeID_ = 0u;
-
-
 };

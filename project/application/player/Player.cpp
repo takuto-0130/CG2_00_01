@@ -218,7 +218,8 @@ void Player::Draw()
 	bodyObject_->Draw(body_transform_);
 	L_arm_Object_->Draw(L_arm_transform_);
 	R_arm_Object_->Draw(R_arm_transform_);
-	if (behavior_ == Behavior::kAttack) {
+	if (behavior_ == Behavior::kAttack) 
+	{
 		weapon_->Draw();
 	}
 }
@@ -228,7 +229,8 @@ void Player::OnCollision(Collider* other)
 	// 衝突相手の種別IDを取得
 	uint32_t typeID = other->GetTypeID();
 	// 衝突相手が敵なら
-	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy)) {
+	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy)) 
+	{
 
 	}
 }
@@ -262,26 +264,34 @@ void Player::Move()
 	Vector3 direction = {}; // プレイヤーの移動方向を計算するベクトル
 
 	// キーボードの入力で移動と方向の決定
-	if (input_->PushKey(DIK_W)) {
+	if (input_->PushKey(DIK_W))
+	{
 		transform_.translation_.z += moveSpeed_;
 		direction.z += 1.0f;
 	}
-	if (input_->PushKey(DIK_A)) {
+
+	if (input_->PushKey(DIK_A)) 
+	{
 		transform_.translation_.x -= moveSpeed_;
 		direction.x -= 1.0f;
 	}
-	if (input_->PushKey(DIK_S)) {
+
+	if (input_->PushKey(DIK_S)) 
+	{
 		transform_.translation_.z -= moveSpeed_;
 		direction.z -= 1.0f;
 	}
-	if (input_->PushKey(DIK_D)) {
+
+	if (input_->PushKey(DIK_D))
+	{
 		transform_.translation_.x += moveSpeed_;
 		direction.x += 1.0f;
 	}
 
 	float length = Length(direction);
 	// 移動している場合に方向ベクトルから回転を計算
-	if (length > 0) {
+	if (length > 0) 
+	{
 		// 向きの回転角度を計算（例: Y軸回転）
 		float angle = atan2(direction.x, direction.z); // Z軸が前と仮定
 
@@ -293,11 +303,13 @@ void Player::Move()
 /// モーション全体の初期化
 void Player::BehaviorInitialize()
 {
-	if (behaviortRquest_) {
+	if (behaviortRquest_) 
+	{
 		// 振る舞いを変更する
 		behavior_ = behaviortRquest_.value();
 		// 各振る舞いごとの初期化を実行
-		switch (behavior_) {
+		switch (behavior_) 
+		{
 		case Behavior::kRoot:
 		default:
 			BehaviorRootInit();
@@ -312,8 +324,10 @@ void Player::BehaviorInitialize()
 }
 
 /// モーション全体の更新
-void Player::BehaviorUpdate() {
-	switch (behavior_) {
+void Player::BehaviorUpdate()
+{
+	switch (behavior_)
+	{
 	case Behavior::kRoot:
 	default:
 		// 通常行動更新
@@ -351,7 +365,8 @@ void Player::BehaviorRootUpdate()
 	UpdateFloating();
 
 	// 攻撃ボタンが押されたらコンボを開始
-	if (input_->TriggerKey(DIK_SPACE)) {
+	if (input_->TriggerKey(DIK_SPACE)) 
+	{
 		// コンボの最初の段階に設定
 		workAttack_.comboIndex = 0;
 		workAttack_.inComboPhase = 0;
@@ -366,50 +381,62 @@ void Player::BehaviorAttackUpdate()
 	// 現在のコンボ情報を取得
 	const ConstAttack* attack = kConstAttacks_.data();
 	// 攻撃中に次の攻撃入力を受け付ける
-	if (input_->TriggerKey(DIK_SPACE)) {
+	if (input_->TriggerKey(DIK_SPACE)) 
+	{
 		workAttack_.comboNext = true;  // 次のコンボへ進む準備
 	}
 	float swingRotare = globalVar_->GetFloatValue("Combo1", "swingRotate");
 
 
 	// ===1段目=== //
-	if (workAttack_.comboIndex == 0) {
+	if (workAttack_.comboIndex == 0) 
+	{
 		weapon_->Setradius(globalVar_->GetFloatValue("Combo1", "AttackRadius"));
-		if (workAttack_.inComboPhase == 0) {
+		if (workAttack_.inComboPhase == 0)
+		{
 			// 振りかぶりの動作
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].anticipationTime) {
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].anticipationTime) 
+			{
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
 			}
 			R_arm_transform_.rotation_.x = -swingRotare;
 		}
-		else if (workAttack_.inComboPhase == 1) {
+		else if (workAttack_.inComboPhase == 1) 
+		{
 			// 攻撃の溜めるモーションやエフェクトの発生
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].chargeTime) {
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].chargeTime) 
+			{
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
 			}
 		}
-		else if (workAttack_.inComboPhase == 2) {
+		else if (workAttack_.inComboPhase == 2) 
+		{
 			// 攻撃モーションやエフェクトの発生
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime) { // 攻撃終了
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime)
+			{ // 攻撃終了
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
 				CameraShake::GetInstance()->SetShake(globalVar_->GetVector3Value("Combo1", "CameraShakeRange"), globalVar_->GetFloatValue("Combo1", "CameraShakeTime"));
 			}
 			R_arm_transform_.rotation_.x += swingRotare / float(attack[workAttack_.comboIndex].swingTime);
 		}
-		else if (workAttack_.inComboPhase == 3) {
+		else if (workAttack_.inComboPhase == 3) 
+		{
 			// 攻撃後の硬直等
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].recoveryTime) {
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].recoveryTime)
+			{
 				// コンボ終了時に戻る
-				if (workAttack_.comboIndex >= ComboNum || workAttack_.comboNext == false) {
+				if (workAttack_.comboIndex >= ComboNum || workAttack_.comboNext == false)
+				{
 					workAttack_.comboIndex = 0;
 					workAttack_.inComboPhase = 0;
 					behaviortRquest_ = Behavior::kRoot;
 					R_arm_transform_.rotation_.x = 0.0f;
 				}
-				else {
+				else 
+				{
 					workAttack_.comboNext = false;
 					workAttack_.comboIndex++;
 					workAttack_.attackParameter_ = 0;
@@ -421,13 +448,16 @@ void Player::BehaviorAttackUpdate()
 	}
 
 	// ===2段目=== //
-	if (workAttack_.comboIndex == 1) {
+	if (workAttack_.comboIndex == 1)
+	{
 		weapon_->Setradius(globalVar_->GetFloatValue("Combo2", "AttackRadius"));
 		// 2段目のコンボ処理
-		if (workAttack_.inComboPhase == 0) {
+		if (workAttack_.inComboPhase == 0)
+		{
 			Vector3 moveVec = { 0,0,attack[workAttack_.comboIndex].anticipationSpeed };
 			// 2段目: 振りかぶりの動作
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].anticipationTime) {
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].anticipationTime)
+			{
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
 			}
@@ -440,7 +470,8 @@ void Player::BehaviorAttackUpdate()
 		}
 		else if (workAttack_.inComboPhase == 1) {
 			// 2段目: 攻撃振りの動作
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime) { // 攻撃終了
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime)
+			{ // 攻撃終了
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
 				CameraShake::GetInstance()->SetShake(globalVar_->GetVector3Value("Combo2", "CameraShakeRange"), globalVar_->GetFloatValue("Combo2", "CameraShakeTime"));
@@ -448,10 +479,13 @@ void Player::BehaviorAttackUpdate()
 			body_transform_.rotation_.y += 0.06f;
 			R_arm_transform_.rotation_.x += 0.2f;
 		}
-		else if (workAttack_.inComboPhase == 2) {
+		else if (workAttack_.inComboPhase == 2) 
+		{
 			// 2段目: 硬直状態
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].recoveryTime) {
-				if (workAttack_.comboIndex >= ComboNum || workAttack_.comboNext == false) {
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].recoveryTime)
+			{
+				if (workAttack_.comboIndex >= ComboNum || workAttack_.comboNext == false)
+				{
 					workAttack_.comboNext = false;
 					workAttack_.comboIndex = 0;
 					workAttack_.inComboPhase = 0;
@@ -460,7 +494,8 @@ void Player::BehaviorAttackUpdate()
 					R_arm_transform_.rotation_.z = 0.0f;
 					body_transform_.rotation_.y = 0;
 				}
-				else {
+				else 
+				{
 					workAttack_.comboNext = false;
 					workAttack_.comboIndex++;
 					workAttack_.attackParameter_ = 0;
@@ -474,25 +509,32 @@ void Player::BehaviorAttackUpdate()
 	}
 
 	// 3段目
-	if (workAttack_.comboIndex == 2) {
+	if (workAttack_.comboIndex == 2) 
+	{
 		swingRotare = globalVar_->GetFloatValue("Combo3", "swingRotate");
-		if (workAttack_.inComboPhase == 0) {
+		if (workAttack_.inComboPhase == 0)
+		{
 			float t = (static_cast<float>(workAttack_.attackParameter_) / static_cast<float>(attack[workAttack_.comboIndex].anticipationTime));
 			R_arm_transform_.rotation_.x = -swingRotare * easeOutQuart(t);
 			body_transform_.translation_.y = easeOutQuart(t) * globalVar_->GetFloatValue("Combo3", "jumpHight");
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].anticipationTime) {
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].anticipationTime) 
+			{
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
 			}
 		}
-		else if (workAttack_.inComboPhase == 1) {
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].chargeTime) {
+		else if (workAttack_.inComboPhase == 1) 
+		{
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].chargeTime) 
+			{
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
 			}
 		}
-		else if (workAttack_.inComboPhase == 2) {
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime) { // 攻撃終了
+		else if (workAttack_.inComboPhase == 2) 
+		{
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].swingTime)
+			{ // 攻撃終了
 				workAttack_.inComboPhase++;
 				workAttack_.attackParameter_ = 0;
 				CameraShake::GetInstance()->SetShake(globalVar_->GetVector3Value("Combo3", "CameraShakeRange"), globalVar_->GetFloatValue("Combo3", "CameraShakeTime"));
@@ -500,9 +542,11 @@ void Player::BehaviorAttackUpdate()
 			R_arm_transform_.rotation_.x += swingRotare / float(attack[workAttack_.comboIndex].swingTime);
 			body_transform_.translation_.y -= globalVar_->GetFloatValue("Combo3", "jumpHight") / float(attack[workAttack_.comboIndex].swingTime);
 		}
-		else if (workAttack_.inComboPhase == 3) {
+		else if (workAttack_.inComboPhase == 3) 
+		{
 			weapon_->Setradius(globalVar_->GetFloatValue("Combo3", "AttackRadius"));
-			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].recoveryTime) {
+			if (++workAttack_.attackParameter_ >= attack[workAttack_.comboIndex].recoveryTime) 
+			{
 				workAttack_.comboNext = false;
 				workAttack_.comboIndex = 0;
 				workAttack_.inComboPhase = 0;
@@ -515,7 +559,8 @@ void Player::BehaviorAttackUpdate()
 		}
 	}
 
-	if (weapon_->GetisHit()) {
+	if (weapon_->GetisHit()) 
+	{
 		if (workAttack_.comboIndex == 0) 
 		{
 			HitStop::GetInstance()->SetHitStop(globalVar_->GetFloatValue("Combo1", "HitStopTime"));

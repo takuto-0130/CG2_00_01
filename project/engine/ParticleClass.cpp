@@ -15,7 +15,8 @@ void ParticleClass::CollisionEmit(Vector3 pos, float t)
 	emitter_.frequencyTime -= emitter_.frequency;
 }
 
-ParticleClass::Particle ParticleClass::MakeNewParticle(std::mt19937& random, const Vector3& translate, float t) {
+ParticleClass::Particle ParticleClass::MakeNewParticle(std::mt19937& random, const Vector3& translate, float t) 
+{
 	Particle parti;
 
 	std::uniform_real_distribution<float> distVec(-2.0f, 2.0f);
@@ -35,9 +36,11 @@ ParticleClass::Particle ParticleClass::MakeNewParticle(std::mt19937& random, con
 	return parti;
 }
 
-std::list<ParticleClass::Particle> ParticleClass::Emit(const Emitter& emitter, std::mt19937& random, float t) {
+std::list<ParticleClass::Particle> ParticleClass::Emit(const Emitter& emitter, std::mt19937& random, float t) 
+{
 	std::list<Particle> particles;
-	for (uint32_t count = 0; count < emitter.count; ++count) {
+	for (uint32_t count = 0; count < emitter.count; ++count) 
+	{
 		particles.push_back(MakeNewParticle(random, emitter.transform.translate, t));
 	}
 	return particles;
@@ -46,7 +49,8 @@ std::list<ParticleClass::Particle> ParticleClass::Emit(const Emitter& emitter, s
 bool ParticleClass::IsCollision(const AABB& a, const Vector3& point) {
 	Vector3 closestPoint = { std::clamp(point.x,a.min.x,a.max.x), std::clamp(point.y,a.min.y,a.max.y), std::clamp(point.z,a.min.z,a.max.z) };
 	float distance = Length(closestPoint - point);
-	if (distance <= 0) {
+	if (distance <= 0) 
+	{
 		return true;
 	}
 	return false;
@@ -67,7 +71,8 @@ void ParticleClass::Initialize()
 	obj_ = std::make_unique<Object3d>();
 	obj_->Initialize();
 	obj_->SetModel("enemyParti.obj");
-	for (int i = 0; i < 300; ++i) {
+	for (int i = 0; i < 300; ++i)
+	{
 		trans_[i].Initialize();
 	}
 }
@@ -76,13 +81,13 @@ void ParticleClass::Update()
 {
 	std::mt19937 random(seedGene());
 
-	for (std::list<Particle>::iterator partiIterator = particles.begin(); partiIterator != particles.end();) {
-		if ((*partiIterator).lifeTime <= (*partiIterator).currentTime) {
+	for (std::list<Particle>::iterator partiIterator = particles.begin(); partiIterator != particles.end();) 
+	{
+		if ((*partiIterator).lifeTime <= (*partiIterator).currentTime) 
+		{
 			partiIterator = particles.erase(partiIterator);
 			continue;
 		}
-
-
 
 		(*partiIterator).transform.rotate = transform.rotate;
 		(*partiIterator).transform.translate += (*partiIterator).velocity * kDeltaTime;
@@ -94,7 +99,8 @@ void ParticleClass::Update()
 void ParticleClass::Draw()
 {
 	numInstance = 0;
-	for (std::list<Particle>::iterator partiIterator = particles.begin(); partiIterator != particles.end();) {
+	for (std::list<Particle>::iterator partiIterator = particles.begin(); partiIterator != particles.end();)
+	{
 		if (numInstance < kNumMaxInstance)
 		{
 			Matrix4x4 worldMatrixP = MakeAffineMatrix((*partiIterator).transform.scale, (*partiIterator).transform.rotate, (*partiIterator).transform.translate);

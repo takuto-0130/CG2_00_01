@@ -7,16 +7,19 @@
 
 EnemyManager::~EnemyManager()
 {
-	enemys_.remove_if([](const std::shared_ptr<Enemy>& enemy) {
-		return true;
+	enemys_.remove_if([](const std::shared_ptr<Enemy>& enemy)
+		{
+			return true;
 		});
 }
 
 void EnemyManager::Initialize()
 {
-	enemys_.remove_if([](const std::shared_ptr<Enemy>& enemy) {
+	enemys_.remove_if([](const std::shared_ptr<Enemy>& enemy) 
+		{
 		return true;
 		});
+
 	Timer_ = 0;
 	eliminateCount_ = 0;
 }
@@ -26,24 +29,29 @@ void EnemyManager::Update()
 	RandomPop();
 
 
-	for (std::shared_ptr<Enemy> enemy : enemys_) {
-		if (enemy->IsDelete()) {
+	for (std::shared_ptr<Enemy> enemy : enemys_) 
+	{
+		if (enemy->IsDelete()) 
+		{
 			eliminateCount_++;
 		}
 	}
 
-	enemys_.remove_if([](const std::shared_ptr<Enemy>& enemy) {
-		return enemy->IsDelete();
-	});
+	enemys_.remove_if([](const std::shared_ptr<Enemy>& enemy)
+		{
+			return enemy->IsDelete();
+		});
 
-	for (std::shared_ptr<Enemy> enemy : enemys_) {
+	for (std::shared_ptr<Enemy> enemy : enemys_)
+	{
 		enemy->Update();
 	}
 }
 
 void EnemyManager::Draw()
 {
-	for (std::shared_ptr<Enemy> enemy : enemys_) {
+	for (std::shared_ptr<Enemy> enemy : enemys_) 
+	{
 		enemy->Draw();
 	}
 }
@@ -61,7 +69,8 @@ void EnemyManager::RandomPop()
 	}
 }
 
-void EnemyManager::PopEnemy(Vector3 position) {
+void EnemyManager::PopEnemy(Vector3 position) 
+{
 
 	std::shared_ptr<Enemy> enemy;
 	enemy.reset(new Enemy);
@@ -87,7 +96,8 @@ Vector3 EnemyManager::TransformVector3(const Vector3& vector, const Matrix4x4& m
 
 void EnemyManager::AddCollider()
 {
-	for (std::shared_ptr<Enemy> enemy : enemys_) {
+	for (std::shared_ptr<Enemy> enemy : enemys_) 
+	{
 		collisionManager_->AddCollider(enemy.get());
 	}
 }
@@ -95,7 +105,8 @@ void EnemyManager::AddCollider()
 std::vector<Collider*> EnemyManager::GetColliders()
 {
 	std::vector<Collider*> colliders;
-	for (auto& enemy : enemys_) {
+	for (auto& enemy : enemys_) 
+	{
 		colliders.push_back(enemy.get());
 	}
 	return colliders;

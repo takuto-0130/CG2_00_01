@@ -1,12 +1,15 @@
 #pragma once
 #include "IScene.h"
 
-enum class ClearPhase {
+enum class ClearPhase
+{
 	kFadeIn,
 	kClear,
 	kFadeOut
 };
-class ClearScene : public IScene {
+
+class ClearScene : public IScene 
+{
 public:
 	ClearScene();
 	void Init() override;

@@ -12,7 +12,8 @@
 #include "Enemy/EnemyManager.h"
 #include "global/Ground.h"
 
-enum class GamePhase {
+enum class GamePhase
+{
 	kFadeIn,
 	kGame,
 	kFadeOut
@@ -21,7 +22,9 @@ enum class GamePhase {
 /// <summary>
 /// ゲームシーン
 /// </summary>
-class GameScene : public IScene {
+class GameScene 
+	: public IScene 
+{
 
 public: // メンバ関数
 

@@ -14,7 +14,8 @@
 /// <summary>
 /// 振る舞い
 /// </summary>
-enum class Behavior {
+enum class Behavior
+{
 	kRoot,
 	kAttack,
 };
@@ -26,7 +27,8 @@ public: // 構造体
 	/// <summary>
 	/// コンボ構造体
 	/// </summary>
-	struct ConstAttack {
+	struct ConstAttack 
+	{
 		uint32_t anticipationTime;   // 振りかぶり時間
 		uint32_t chargeTime;         // ため時間
 		uint32_t swingTime;          // 攻撃振り時間
@@ -35,7 +37,9 @@ public: // 構造体
 		float chargeSpeed;           // ため時の移動速度
 		float swingSpeed;            // 攻撃時の移動速度
 	};
-	struct WorkAttack {
+
+	struct WorkAttack
+	{
 		uint32_t attackParameter_ = 0; // コンボ進行を管理するパラメーター
 		int32_t comboIndex = 0;        // 現在のコンボ段階（0, 1, 2...）
 		int32_t inComboPhase = 0;      // 1段の中でどのフェーズか

@@ -4,8 +4,15 @@
 #include "Fade.h"
 #include "GlobalVariables.h"
 
-enum Scene {TITLE, STAGE, CLEAR};
-class IScene {
+enum Scene 
+{
+	TITLE, 
+	STAGE, 
+	CLEAR
+};
+
+class IScene 
+{
 protected:
 	static int sceneNo_;
 	Input* input_ = nullptr;

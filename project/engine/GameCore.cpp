@@ -70,11 +70,13 @@ void GameCore::Finalize()
 void GameCore::Update()
 {
 	// Windowsメッセージ処理
-	if (windowsApp->ProcessMessage()) {
+	if (windowsApp->ProcessMessage()) 
+	{
 		// ゲームループを抜ける
 		endRequest_ = true;
 	}
-	else { //ゲーム処理
+	else
+	{ //ゲーム処理
 		TYFrameWork::Update();
 		imgui->Begin();
 		GlobalVariables::GetInstance()->Update();
@@ -83,7 +85,8 @@ void GameCore::Update()
 
 		prevSceneNo_ = currentSceneNo_;
 		currentSceneNo_ = sceneArr_[currentSceneNo_]->GetSceneNo();
-		if (prevSceneNo_ != currentSceneNo_) {
+		if (prevSceneNo_ != currentSceneNo_) 
+		{
 			sceneArr_[currentSceneNo_]->Init();
 		}
 		/// ↓更新処理ここから

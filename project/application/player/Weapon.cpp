@@ -4,7 +4,8 @@
 #include "Matrix4x4Func.h"
 #include "../Enemy/Enemy.h"
 
-Weapon::~Weapon(){
+Weapon::~Weapon()
+{
 	delete object_;
 }
 
@@ -50,12 +51,14 @@ void Weapon::OnCollision(Collider* other)
 	// 衝突相手の種別IDを取得
 	uint32_t typeID = other->GetTypeID();
 	// 衝突相手が敵なら
-	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy)) {
+	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy))
+	{
 		Enemy* enemy = static_cast<Enemy*>(other);
 		uint32_t serialNumber = enemy->GetSerialNumber();
 	
 		// 接触履歴があれば何もせずに抜ける
-		if (contactRecord_.CheckHistory(serialNumber)) {
+		if (contactRecord_.CheckHistory(serialNumber)) 
+		{
 			return;
 		}
 		// 接触履歴に登録

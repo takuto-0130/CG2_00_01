@@ -13,7 +13,8 @@ ClearScene::ClearScene()
 	globalVar_ = GlobalVariables::GetInstance();
 }
 
-void ClearScene::Init() {
+void ClearScene::Init() 
+{
 	input_ = Input::GetInstance();
 	phase_ = ClearPhase::kFadeIn;
 	fade_ = std::make_unique<Fade>();
@@ -21,7 +22,8 @@ void ClearScene::Init() {
 	fade_->Start(Status::FadeIn, globalVar_->GetFloatValue("global", "fadeTime(sec)"));
 }
 
-void ClearScene::Update() {
+void ClearScene::Update()
+{
 	fade_->Update();
 	clearSprite_->Update();
 
@@ -33,7 +35,8 @@ void ClearScene::Update() {
 	ChangePhase();
 }
 
-void ClearScene::Draw() {
+void ClearScene::Draw()
+{
 	SpriteBasis::GetInstance()->BasisDrawSetting();
 	clearSprite_->Draw();
 	fade_->Draw();
@@ -41,26 +44,27 @@ void ClearScene::Draw() {
 
 void ClearScene::ChangePhase()
 {
-	switch (phase_) {
+	switch (phase_) 
+	{
 	case ClearPhase::kClear:
-
-		if (input_->TriggerKey(DIK_SPACE)) {
+		if (input_->TriggerKey(DIK_SPACE)) 
+		{
 			phase_ = ClearPhase::kFadeOut;
 			fade_->Start(Status::FadeOut, globalVar_->GetFloatValue("global", "fadeTime(sec)"));
 		}
-
 		break;
 	case ClearPhase::kFadeIn:
-		if (fade_->IsFinished()) {
+		if (fade_->IsFinished())
+		{
 			phase_ = ClearPhase::kClear;
 		}
 		break;
 	case ClearPhase::kFadeOut:
-		if (fade_->IsFinished()) {
+		if (fade_->IsFinished()) 
+		{
 			// シーンの切り替え依頼
 			sceneNo_ = TITLE;
 		}
 		break;
-
 	}
 }

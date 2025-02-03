@@ -106,7 +106,8 @@ void Enemy::OnCollision([[maybe_unused]] Collider* other)
 	if (other->GetTypeID() == static_cast<uint32_t>(CollisionTypeIdDef::kPlayerWeapon) &&
 		player_->behavior_ == Behavior::kAttack)
 	{
-		switch (behavior_) {
+		switch (behavior_)
+		{
 		case EnemyBehavior::kRoot:
 			onCollision_ = true;
 			ParticleClass::GetInstance()->CollisionEmit(GetCenterPosition(), 1.0f);
@@ -152,7 +153,8 @@ void Enemy::Turning() {
 
 void Enemy::BehaviorUpdate()
 {
-	switch (behavior_) {
+	switch (behavior_) 
+	{
 	case EnemyBehavior::kRoot:
 	default:
 		// 通常行動更新
@@ -216,7 +218,8 @@ void Enemy::BehaviorKnockBackUpdate()
 		transform_.scale_ += scalePlus;
 		object_->SetColor({ 1,1,1,1.0f - (static_cast<float>(paramater_) / static_cast<float>(knockBackTime_)) });
 	}
-	else {
+	else 
+	{
 		behaviortRquest_ = EnemyBehavior::kCorpse;
 	}
 }
@@ -234,13 +237,16 @@ float Enemy::easeOutBounce(float x)
 	if (x < 1 / d1) {
 		return n1 * x * x;
 	}
-	else if (x < 2 / d1) {
+	else if (x < 2 / d1)
+	{
 		return n1 * (x -= 1.5f / d1) * x + 0.75f;
 	}
-	else if (x < 2.5f / d1) {
+	else if (x < 2.5f / d1)
+	{
 		return n1 * (x -= 2.25f / d1) * x + 0.9375f;
 	}
-	else {
+	else 
+	{
 		return n1 * (x -= 2.625f / d1) * x + 0.984375f;
 	}
 }
