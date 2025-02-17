@@ -1,6 +1,6 @@
 #include "GameCore.h"
 #include "ParticleClass.h"
-#include "Audio/Audio.h"
+#include "Audio/AudioManager.h"
 #include "SceneFactory.h"
 #ifdef _DEBUG
 #include <imgui.h>
@@ -25,7 +25,7 @@ void GameCore::Initialize()
 	modelManager = ModelManager::GetInstance();
 	modelManager->Initialize(directXBasis.get(), srvManager.get());
 
-	Audio::GetInstance()->Initialize();
+	AudioManager::GetInstance()->Initialize();
 
 	sceneFactory_ = std::make_unique<SceneFactory>();
 	sceneManager_->SetSceneFactory(sceneFactory_.get());

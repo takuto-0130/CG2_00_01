@@ -3,292 +3,64 @@
 #include <algorithm>
 #include <queue>
 
-// ファイルからデータを読み込む関数
-bool ReadAudioData(std::ifstream& file, std::vector<BYTE>& buffer) {
-	if (!file.read(reinterpret_cast<char*>(buffer.data()), buffer.size())) {
-		return false; // EOF またはエラー
-	}
-	return true;
-}
-
-// WAVファイルのヘッダーを読み込む
-bool ReadWavHeader(std::string filename, WAVHeader& header) {
-	std::ifstream file(filename, std::ios::binary);
-	if (!file) return false;
-
-	file.read(reinterpret_cast<char*>(&header), sizeof(WAVHeader));
-	return (header.riff[0] == 'R' && header.riff[1] == 'I' && header.riff[2] == 'F' && header.riff[3] == 'F') &&
-		(header.wave[0] == 'W' && header.wave[1] == 'A' && header.wave[2] == 'V' && header.wave[3] == 'E') &&
-		(header.fmt[0] == 'f' && header.fmt[1] == 'm' && header.fmt[2] == 't' && header.fmt[3] == ' ');  // 'fmt 'チャンク
-}
-
 Audio::~Audio()
 {
-	StopStreaming();
 	// BGMリソースの解放
 	for (auto SourceVoice : pSourceVoices_)
 	{
-		if (SourceVoice != nullptr)
+		if (SourceVoice)
 		{
 			SourceVoice->DestroyVoice();
 			SourceVoice = nullptr;
 		}
 	}
-	if (streamVoice != nullptr) {
-		streamVoice->DestroyVoice();
-		streamVoice = nullptr;
+	if (submixVoice_) {
+		submixVoice_->DestroyVoice();
+		submixVoice_ = nullptr;
 	}
-	if (masterVoice != nullptr)
-	{
-		masterVoice->DestroyVoice();
-		masterVoice = nullptr;
-	}
-	xAudio2.Reset();
 }
 
-void Audio::StreamAudio(const char* filename) {
-
-	std::string filePath = directoryPath_;
-	filePath += filename;
-
-	// WAVヘッダーの読み込み
-	WAVHeader header;
-	if (!ReadWavHeader(filePath, header)) {
-		Logger::Log("Error reading WAV header.\n");
-		return;
-	}
-
-	// WAVEFORMATEXの設定
-	WAVEFORMATEX waveFormat = {};
-	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
-	waveFormat.nChannels = header.numChannels;
-	waveFormat.nSamplesPerSec = header.sampleRate;
-	waveFormat.wBitsPerSample = header.bitsPerSample;
-	waveFormat.nBlockAlign = header.numChannels * (header.bitsPerSample / 8);
-	waveFormat.nAvgBytesPerSec = header.sampleRate * waveFormat.nBlockAlign;
-	waveFormat.cbSize = 0; // PCMでは0
-
-	// ストリーミング用のファイルを開く
-	std::ifstream audioFile(filePath, std::ios::binary);
-	if (!audioFile) {
-		Logger::Log("Error opening file.\n");
-		return;
-	}
-
-	// WAVファイルのデータ部分にシーク
-	audioFile.seekg(sizeof(WAVHeader));
-
-	// ストリーミング用のバッファを複数作成
-	constexpr int BUFFER_COUNT = 3; // バッファ数
-	size_t BUFFER_SIZE = header.sampleRate * waveFormat.nBlockAlign; // バッファサイズ
-	audioBuffers.resize(BUFFER_COUNT, std::vector<BYTE>(BUFFER_SIZE));
-	XAUDIO2_BUFFER xAudioBuffers[BUFFER_COUNT] = {};
-	StreamingVoiceCallback callback;
-
-
-	// ソースボイスを作成し、コールバックを渡す
-	if (FAILED(xAudio2->CreateSourceVoice(&streamVoice, &waveFormat, XAUDIO2_VOICE_USEFILTER, XAUDIO2_MAX_FREQ_RATIO, &callback, nullptr))) {
-		Logger::Log("Failed to create source voice.\n");
-		return;
-	}
-
-	InitEffectChain(); 
-	
-	
-	// ソースボイスを開始
-	streamVoice->Start(0);
-	// バッファリング処理
-	int currentBufferIndex = 0;
-
-	while (isStreaming.load()) {
-		std::vector<BYTE>& currentBuffer = audioBuffers[currentBufferIndex];
-		if (!ReadAudioData(audioFile, currentBuffer)) {
-			// EOF
-			if(isLoopStreaming.load()) { 
-				// EOF に達した場合、ファイルを先頭に戻してループ
-				audioFile.clear();  // EOF flag をクリア
-				audioFile.seekg(sizeof(WAVHeader), std::ios::beg);  // ヘッダーをスキップして再読み込み
-				if (!ReadAudioData(audioFile, currentBuffer)) {
-					break; // それでも読み込み失敗の場合はループ終了
-				}
-			}
-			else if (!isLoopStreaming.load()) {
-				break; // EOF
-			}
-			else {
-				Logger::Log("Failed to ReadAudioData.\n");
-				break; // 読み込みエラー
-			}
-		}
-
-		// 現在のバッファを設定
-		XAUDIO2_BUFFER& xBuffer = xAudioBuffers[currentBufferIndex];
-		xBuffer.AudioBytes = static_cast<UINT32>(currentBuffer.size());
-		xBuffer.pAudioData = currentBuffer.data();
-		xBuffer.Flags = 0;
-
-		// 最後のデータにはフラグを追加
-		if (audioFile.eof()) {
-			xBuffer.Flags = XAUDIO2_END_OF_STREAM;
-		}
-
-		// ソースボイスにバッファを送信
-		if (FAILED(streamVoice->SubmitSourceBuffer(&xBuffer))) {
-			Logger::Log("Failed to submit buffer.\n");
-			break;
-		}
-
-		Logger::Log("Buffer submitted.\n");
-
-		// 次のバッファを使用
-		currentBufferIndex = (currentBufferIndex + 1) % BUFFER_COUNT;
-
-		// コールバックで次のバッファの処理完了を待機
-		callback.WaitForBuffer();
-	}
-
-	// クリーンアップ
-	audioFile.close();
-	streamVoice->Stop(0);
-	streamVoice->DestroyVoice();
-	streamVoice = nullptr;
-	Logger::Log("Streaming finished.\n");
-}
-
-void Audio::Initialize(const std::string& directoryPath)
+void Audio::Initialize(Microsoft::WRL::ComPtr<IXAudio2> xAudio2, const std::string& directoryPath)
 {
 	directoryPath_ = directoryPath;
 	HRESULT result;
-	// インスタンスの生成
-	result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-	// マスターボイスの生成
-	result = xAudio2->CreateMasteringVoice(&masterVoice);
+
+	xAudio2_ = xAudio2;
+
+	// サブミックスボイスの生成
+	result = xAudio2_->CreateSubmixVoice(&submixVoice_, 2, 44100);
+	if (FAILED(result)) {
+		Logger::Log("Failed to create submix voice");
+		return;
+	}
 
 }
-void Audio::StopBGM(int resourceNum)
+void Audio::StopAudio(int resourceNum)
 {
 	pSourceVoices_[resourceNum]->Stop();
 	pSourceVoices_[resourceNum]->FlushSourceBuffers();
 }
 
-void Audio::PauseBGM(int resourceNum)
+void Audio::PauseAudio(int resourceNum)
 {
 	pSourceVoices_[resourceNum]->Stop();
 }
 
-void Audio::ReStartBGM(int resourceNum)
+void Audio::ReStartAudio(int resourceNum)
 {
 	pSourceVoices_[resourceNum]->Start();
 }
 
-void Audio::SetBGMVolume(int resourceNum, float volume)
+void Audio::SetAudioVolume(int resourceNum, float volume)
 {
 	pSourceVoices_[resourceNum]->SetVolume(/*std::clamp(*/volume/*, 0.0f, 1.0f)*/);
-}
-
-void Audio::LoadWave(const char* filename)
-{
-	//HRESULT result;
-	if (soundDataMap.count(filename)) {
-		// キーが存在する場合、処理を中断
-		return;
-	}
-
-	// ファイル入力streamのインスタンス
-	std::ifstream file;
-	std::string filePath = directoryPath_;
-	filePath += filename;
-	filePath += ".wav";
-	file.open(filePath, std::ios_base::binary);
-	assert(file.is_open());
-
-	// .wavデータ読み込み
-	// RIFFヘッダーの読み込み
-	RiffHeader riff;
-	file.read((char*)&riff, sizeof(riff));
-
-	// ファイルがRIFFかチェック
-	if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
-		assert(0);
-	}
-	// タイプがWAVEがチェック
-	if (strncmp(riff.type, "WAVE", 4) != 0) {
-		assert(0);
-	}
-	// Formatチャンクの読み込み
-	FormatChunk format = {};
-	// チャンクヘッダーの確認
-	file.read((char*)&format, sizeof(ChunkHeader));
-	if (strncmp(format.chunk.id, "fmt ", 4) != 0) {
-		assert(0);
-	}
-	// チャンク本体の読み込み
-	assert(format.chunk.size <= sizeof(format.fmt));
-	file.read((char*)&format.fmt, format.chunk.size);
-
-	// Dataチャンクの読み込み
-	ChunkHeader data;
-	file.read((char*)&data, sizeof(data));
-	// JUNKチャンクを検出した場合
-	if (strncmp(data.id, "JUNK", 4) == 0) {
-		// 読み取り位置をJUNKチャンクの終わりまで進める
-		file.seekg(data.size, std::ios_base::cur);
-		// 再読み込み
-		file.read((char*)&data, sizeof(data));
-	}
-	// LISTチャンクを検出した場合
-	if (strncmp(data.id, "LIST", 4) == 0) {
-		// 読み取り位置をLISTチャンクの終わりまで進める
-		file.seekg(data.size, std::ios_base::cur);
-		// 再読み込み
-		file.read((char*)&data, sizeof(data));
-	}
-	// INFOISFTチャンクを検出した場合
-	if (strncmp(data.id, "INFOISFT", 8) == 0) {
-		// 読み取り位置をINFOISFTチャンクの終わりまで進める
-		file.seekg(data.size, std::ios_base::cur);
-		// 再読み込み
-		file.read((char*)&data, sizeof(data));
-	}
-
-	if (strncmp(data.id, "data", 4) != 0) {
-		assert(0);
-	}
-
-	// Dataチャンクのデータ部 (波形のデータ) の読み込み
-	char* pBuffer = new char[data.size];
-	file.read(pBuffer, data.size);
-
-	// ファイルクローズ
-	file.close();
-
-	// SoundDataの生成
-	SoundData soundData = {};
-
-	soundData.wfex = format.fmt;
-	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
-	soundData.bufferSize = data.size;
-	soundData.playSoundLength = data.size / format.fmt.nBlockAlign;
-
-	soundDataMap[filename] = soundData;
-}
-
-void Audio::SoundUnload(const char* filename)
-{
-	SoundData* soundData = &soundDataMap[filename];
-	// バッファのメモリを解放
-	delete[] soundData->pBuffer;
-
-	soundData->pBuffer = 0;
-	soundData->bufferSize = 0;
-	soundData->wfex = {};
 }
 
 int Audio::PlayWave(const char* filename, const bool isLoop)
 {
 	HRESULT result;
 
-	SoundData& soundData = soundDataMap[filename];
+	SoundData& soundData = soundDataMap_[filename];
 
 	// 今回使うサウンドデータ
 	int sourceNum = -1;
@@ -309,8 +81,11 @@ int Audio::PlayWave(const char* filename, const bool isLoop)
 		pSourceVoices_[sourceNum]->FlushSourceBuffers();
 	}
 
+	XAUDIO2_SEND_DESCRIPTOR sendDesc = { 0, submixVoice_ };
+	XAUDIO2_VOICE_SENDS sendList = { 1, &sendDesc };
+
 	// 波形フォーマットをもとにSourceVoiceの生成
-	if (FAILED(xAudio2->CreateSourceVoice(&pSourceVoices_[sourceNum], &soundData.wfex))) {
+	if (FAILED(xAudio2_->CreateSourceVoice(&pSourceVoices_[sourceNum], &soundData.wfex, 0, XAUDIO2_DEFAULT_FREQ_RATIO, nullptr, &sendList))) {
 		Logger::Log("Failed to create source voice.\n");
 		return -1;
 	}

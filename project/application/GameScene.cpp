@@ -16,17 +16,29 @@
 #endif // DEBUG_
 
 GameScene::~GameScene() {
-	Audio::GetInstance()->StopStreaming();
+	//Audio::GetInstance()->StopStreaming();
 }
 
 void GameScene::Init() {
 	input_ = Input::GetInstance();
 
-	Audio::GetInstance()->SetPitch(pitch_);
-	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
+	audio = AudioManager::GetInstance();
+
+	audio->LoadWave("BGM_2");
+	audio->LoadWave("fanfare");
+
+	bgmId = audio->PlayWave("BGM_2", AudioManager::AudioType::kBGM);
+	seId = audio->PlayWave("fanfare", AudioManager::AudioType::kGameSE, true);
+
+	/*Audio::GetInstance()->SetPitch(pitch_);
+	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);*/
 	/*Audio::GetInstance()->LoadWave("BGM_2");
-	int num = Audio::GetInstance()->PlayWave("BGM_2");
-	Audio::GetInstance()->SetBGMVolume(num, 1.0f);*/
+	num = Audio::GetInstance()->PlayWave("BGM_2");
+	Audio::GetInstance()->SetAudioVolume(num, 1.0f);
+
+	Audio::GetInstance()->LoadWave("fanfare");
+	num2 = Audio::GetInstance()->PlayWave("fanfare", true);
+	Audio::GetInstance()->SetAudioVolume(num2, 1.0f);*/
 }
 
 #pragma region // 初期化以外
@@ -36,12 +48,25 @@ void GameScene::Update() {
 #ifdef _DEBUG
 
 	ImGui::Begin("Sound Test");
-	ImGui::DragFloat("pitch", &pitch_, 0.01f);
-	ImGui::Checkbox("isEffect", &isEffect_);
-	ImGui::Text("Space ReStartStreaming");
+	//ImGui::DragFloat("pitch", &pitch_, 0.01f);
+	ImGui::DragFloat("masterVolume", &masterVolume, 0.01f);
+	ImGui::DragFloat("volume", &volume, 0.01f);
+	ImGui::DragFloat("volume2", &volume2, 0.01f);
+	ImGui::DragFloat("BGMVolume", &BGMVolume, 0.01f);
+	ImGui::DragFloat("SEVolume", &SEVolume, 0.01f);
+	//ImGui::Checkbox("isEffect", &isEffect_);
+	//ImGui::Text("Space ReStartStreaming");
 	ImGui::End();
+	audio->SetMasterVolume(masterVolume);
+	audio->SetSubmixVolume(AudioManager::kBGM, BGMVolume);
+	audio->SetSubmixVolume(AudioManager::kGameSE, SEVolume);
+	audio->SetSoundVolume(bgmId, volume);
+	audio->SetSoundVolume(seId, volume2);
+	/*Audio::GetInstance()->SetAudioVolume(num, volume);
+	Audio::GetInstance()->SetAudioVolume(num2, volume2);
+	Audio::GetInstance()->SetSubmixVolume(submixVolume);*/
 #endif // _DEBUG
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+	/*if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
 		Audio::GetInstance()->StartStreaming("BGM_2.wav", true);
 	}
 	Audio::GetInstance()->SetPitch(pitch_);
@@ -51,7 +76,7 @@ void GameScene::Update() {
 	}
 	else {
 		Audio::GetInstance()->DisableEffect();
-	}
+	}*/
 }
 
 void GameScene::Draw() {
