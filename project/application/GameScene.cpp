@@ -9,7 +9,6 @@
 #include "ParticleClass.h"
 #include <fstream>
 #include <istream>
-#include "../engine/Audio/Audio.h"
 
 #ifdef _DEBUG
 #include "imgui.h"
@@ -24,12 +23,13 @@ void GameScene::Init() {
 
 	audio = AudioManager::GetInstance();
 
-	audio->LoadWave("BGM_2");
+	//audio->LoadWave("BGM_2");
 	audio->LoadWave("fanfare");
 
-	bgmId = audio->PlayWave("BGM_2", AudioManager::AudioType::kBGM);
-	seId = audio->PlayWave("fanfare", AudioManager::AudioType::kGameSE, true);
+	//bgmId = audio->PlayWave("BGM_2", AudioType::kBGM);
+	seId = audio->PlayWave("fanfare", AudioType::kGameSE, true);
 
+	audio->StartStreaming("BGM_2.wav", true);
 	/*Audio::GetInstance()->SetPitch(pitch_);
 	Audio::GetInstance()->StartStreaming("BGM_2.wav", true);*/
 	/*Audio::GetInstance()->LoadWave("BGM_2");
@@ -58,9 +58,9 @@ void GameScene::Update() {
 	//ImGui::Text("Space ReStartStreaming");
 	ImGui::End();
 	audio->SetMasterVolume(masterVolume);
-	audio->SetSubmixVolume(AudioManager::kBGM, BGMVolume);
-	audio->SetSubmixVolume(AudioManager::kGameSE, SEVolume);
-	audio->SetSoundVolume(bgmId, volume);
+	audio->SetSubmixVolume(kBGM, BGMVolume);
+	audio->SetSubmixVolume(kGameSE, SEVolume);
+	//audio->SetSoundVolume(bgmId, volume);
 	audio->SetSoundVolume(seId, volume2);
 	/*Audio::GetInstance()->SetAudioVolume(num, volume);
 	Audio::GetInstance()->SetAudioVolume(num2, volume2);

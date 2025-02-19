@@ -10,37 +10,14 @@
 #include <Logger.h>
 #include <xaudio2fx.h>
 
+#include "AudioData.h"
+
 // 音源の同時再生数
 static const size_t kMaxPlayWave = 50;
 
 class Audio
 {
 public: // 構造体
-	// 音声データ
-	struct SoundData {
-		WAVEFORMATEX wfex;			// 波形フォーマット
-		BYTE* pBuffer;				// バッファの先頭アドレス
-		unsigned int bufferSize;	// バッファのサイズ
-		int playSoundLength;
-	};
-
-	// チャンクヘッダー
-	struct ChunkHeader {
-		char id[4];					// チャンクごとのID
-		int32_t size;				// チャンクサイズ
-	};
-
-	// RIFFヘッダチャンク
-	struct RiffHeader {
-		ChunkHeader chunk;			// "RIFF"
-		char type[4];				// "WAVE"
-	};
-
-	// FMTチャンク
-	struct FormatChunk {
-		ChunkHeader chunk;			// "fmt"
-		WAVEFORMATEX fmt;			// 波形フォーマット
-	};
 
 public:
 	Audio(std::unordered_map<std::string, SoundData>& soundDataMap)
@@ -100,7 +77,7 @@ private:
 	// マネージャーに移す
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2_;
 	// サウンドデータ格納コンテナ
-	std::unordered_map<std::string, Audio::SoundData>& soundDataMap_;
+	std::unordered_map<std::string, SoundData>& soundDataMap_;
 	//
 
 	// submixVoice

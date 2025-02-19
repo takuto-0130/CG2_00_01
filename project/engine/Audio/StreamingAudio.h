@@ -10,37 +10,16 @@
 #include <Logger.h>
 #include <xaudio2fx.h>
 
-class Audio;
+#include "AudioData.h"
 
 class StreamingAudio
 {
-private:
-	// AudioのみがStreamingAudioにアクセスできるようにする
-	friend class Audio;
-
-	StreamingAudio(IXAudio2* xAudio2, const std::string& directoryPath) : xAudio2_(xAudio2), directoryPath_(directoryPath), id_(nextID_++) {
-	}
+public:
+	StreamingAudio(IXAudio2* xAudio2, const std::string& directoryPath) : xAudio2_(xAudio2), directoryPath_(directoryPath), id_(nextID_++) {}
 
 	~StreamingAudio();
 
 private:
-	// WAVヘッダーの定義
-	struct WAVHeader {
-		char riff[4];			// "RIFF"
-		uint32_t size;			// ファイルサイズ
-		char wave[4];			// "WAVE"
-		char fmt[4];			// "fmt "
-		uint32_t fmtSize;		// fmtチャンクのサイズ
-		uint16_t audioFormat;	// オーディオフォーマット（1はPCM）
-		uint16_t numChannels;	// チャネル数
-		uint32_t sampleRate;	// サンプルレート
-		uint32_t byteRate;		// バイトレート
-		uint16_t blockAlign;	// ブロックアライメント
-		uint16_t bitsPerSample;	// サンプルあたりのビット数
-		char data[4];			// "data"
-		uint32_t dataSize;		// データチャンクのサイズ
-	};
-
 	// 再生用コールバック
 	class StreamingVoiceCallback : public IXAudio2VoiceCallback {
 	public:
@@ -70,11 +49,15 @@ private:
 	};
 
 public:
-	void StartStreaming(const char* filename, bool isLoop = false);
+	void StartStreaming(const std::string& filename, bool isLoop = false);
 
 	void StopStreaming();
 
+
+	// ↓↓↓↓↓↓↓↓ マネージャーに未実装 ↓↓↓↓↓↓↓↓ //
 	void SetPitch(float pitch);
+
+	void SetVolume(float volume);
 
 	/**
 	 * @brief エフェクトチェーンの設定
@@ -97,18 +80,20 @@ public:
 	 */
 	void SetEffect(const XAUDIO2FX_REVERB_I3DL2_PARAMETERS parameters = {});
 
+	/**
+	 * @brief エフェクトを無効化
+	 */
 	void DisableEffect();
+	// ↑↑↑↑↑↑↑↑ マネージャーに未実装 ↑↑↑↑↑↑↑↑ //
 
 private:
 
-	void StreamAudio(const char* filename);
+	void StreamAudio(const std::string& filename);
 
 	/**
 	 * @brief エフェクトチェーンの初期化
 	 */
 	void InitEffectChain();
-
-
 
 	// ファイルからデータを読み込む関数
 	bool ReadAudioData(std::ifstream& file, std::vector<BYTE>& buffer);

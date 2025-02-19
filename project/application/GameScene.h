@@ -8,6 +8,7 @@
 #include "WorldTransform.h"
 #include <sstream>
 #include "../engine/Audio/AudioManager.h"
+#include "../engine/Audio/AudioData.h"
 
 /// <summary>
 /// ゲームシーン
@@ -52,8 +53,8 @@ private: // メンバ変数
 	float volume2 = 1.0f;
 	int num2 = -1;
 
-	AudioManager::AudioID bgmId;
-	AudioManager::AudioID seId;
+	AudioID bgmId;
+	AudioID seId;
 
 	float pitch_ = 1.0f;
 

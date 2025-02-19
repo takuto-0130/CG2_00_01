@@ -12,9 +12,9 @@ StreamingAudio::~StreamingAudio()
 	}
 }
 
-void StreamingAudio::StartStreaming(const char* filename, bool isLoop)
+void StreamingAudio::StartStreaming(const std::string& filename, bool isLoop)
 {
-	// すでにストリーミング中の場合は終了
+	// すでにストリーミング中の場合はいったん終了して再度再生
 	if (isStreaming.load()) {
 		StopStreaming();
 	}
@@ -45,6 +45,17 @@ void StreamingAudio::SetPitch(float pitch)
 	if (streamVoice)
 	{
 		streamVoice->SetFrequencyRatio(pitch);
+	}
+	else {
+		Logger::Log("UnInitialized streamVoice.");
+	}
+}
+
+void StreamingAudio::SetVolume(float volume)
+{
+	if (streamVoice)
+	{
+		streamVoice->SetVolume(volume);
 	}
 	else {
 		Logger::Log("UnInitialized streamVoice.");
@@ -88,14 +99,17 @@ void StreamingAudio::DisableEffect()
 	}
 }
 
-void StreamingAudio::StreamAudio(const char* filename)
+void StreamingAudio::StreamAudio(const std::string& filename)
 {
+#pragma region // 初期化とロード
+
 	std::string filePath = directoryPath_;
 	filePath += filename;
 
 	// WAVヘッダーの読み込み
 	WAVHeader header;
 	if (!ReadWavHeader(filePath, header)) {
+		Logger::Log(filePath.c_str());
 		Logger::Log("Error reading WAV header.\n");
 		return;
 	}
@@ -135,13 +149,14 @@ void StreamingAudio::StreamAudio(const char* filename)
 	}
 
 	InitEffectChain();
-
+#pragma endregion
 
 	// ソースボイスを開始
 	streamVoice->Start(0);
 	// バッファリング処理
 	int currentBufferIndex = 0;
 
+#pragma region // ストリーミング再生処理
 	while (isStreaming.load()) {
 		std::vector<BYTE>& currentBuffer = audioBuffers[currentBufferIndex];
 		if (!ReadAudioData(audioFile, currentBuffer)) {
@@ -188,6 +203,7 @@ void StreamingAudio::StreamAudio(const char* filename)
 		// コールバックで次のバッファの処理完了を待機
 		callback.WaitForBuffer();
 	}
+#pragma endregion
 
 	// クリーンアップ
 	audioFile.close();
