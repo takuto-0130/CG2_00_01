@@ -64,7 +64,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine;$(ProjectDir)engine\Framework;$(ProjectDir)engine\Graphics;$(ProjectDir)engine\Graphics\Sprite;$(ProjectDir)engine\Graphics\Model;$(ProjectDir)engine\Graphics\SRV;$(ProjectDir)engine\Graphics\Utility;$(ProjectDir)engine\Camera;$(ProjectDir)engine\Effect;$(ProjectDir)engine\Utility;$(ProjectDir)engine\Debug;$(ProjectDir)externals\assimp\include;$(ProjectDir)application;$(ProjectDir)externals\imgui;$(ProjectDir)externals\nlohmann;$(ProjectDir)externals;$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\nlohmann;%(AdditionalIncludeDirectories);$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine;$(ProjectDir)engine\EngineCore;$(ProjectDir)engine\Framework;$(ProjectDir)engine\Graphics;$(ProjectDir)engine\Graphics\Sprite;$(ProjectDir)engine\Graphics\Model;$(ProjectDir)engine\Graphics\SRV;$(ProjectDir)engine\Camera;$(ProjectDir)engine\Effect;$(ProjectDir)engine\Utility;$(ProjectDir)engine\Debug;$(ProjectDir)externals\assimp\include;$(ProjectDir)application;$(ProjectDir)externals\imgui;$(ProjectDir)externals\nlohmann;$(ProjectDir)externals;$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\nlohmann;%(AdditionalIncludeDirectories);$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -89,7 +89,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine;$(ProjectDir)engine\Framework;$(ProjectDir)engine\Graphics;$(ProjectDir)engine\Graphics\Sprite;$(ProjectDir)engine\Graphics\Model;$(ProjectDir)engine\Graphics\SRV;$(ProjectDir)engine\Graphics\Utility;$(ProjectDir)engine\Camera;$(ProjectDir)engine\Effect;$(ProjectDir)engine\Utility;$(ProjectDir)engine\Debug;$(ProjectDir)externals\assimp\include;$(ProjectDir)application;$(ProjectDir)externals\imgui;$(ProjectDir)externals\nlohmann;$(ProjectDir)externals;%(AdditionalIncludeDirectories);$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine;$(ProjectDir)engine\EngineCore;$(ProjectDir)engine\Framework;$(ProjectDir)engine\Graphics;$(ProjectDir)engine\Graphics\Sprite;$(ProjectDir)engine\Graphics\Model;$(ProjectDir)engine\Graphics\SRV;$(ProjectDir)engine\Camera;$(ProjectDir)engine\Effect;$(ProjectDir)engine\Utility;$(ProjectDir)engine\Debug;$(ProjectDir)externals\assimp\include;$(ProjectDir)application;$(ProjectDir)externals\imgui;$(ProjectDir)externals\nlohmann;$(ProjectDir)externals;%(AdditionalIncludeDirectories);$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,6 +107,32 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClCompile Include="application\GameScene.cpp" />
     <ClCompile Include="engine\Audio\Audio.cpp" />
+    <ClCompile Include="engine\Camera\Camera.cpp" />
+    <ClCompile Include="engine\Debug\ImGuiManager.cpp" />
+    <ClCompile Include="engine\Effect\ParticleClass.cpp" />
+    <ClCompile Include="engine\EngineCore\D3DResourceLeakChecker.cpp" />
+    <ClCompile Include="engine\EngineCore\DirectXBasis.cpp" />
+    <ClCompile Include="engine\EngineCore\Logger.cpp" />
+    <ClCompile Include="engine\EngineCore\WindowsApp.cpp" />
+    <ClCompile Include="engine\Framework\GameCore.cpp" />
+    <ClCompile Include="engine\Framework\SceneManager.cpp" />
+    <ClCompile Include="engine\Framework\TYFrameWork.cpp" />
+    <ClCompile Include="engine\Graphics\Model\Model.cpp" />
+    <ClCompile Include="engine\Graphics\Model\ModelLoader.cpp" />
+    <ClCompile Include="engine\Graphics\Model\ModelManager.cpp" />
+    <ClCompile Include="engine\Graphics\Model\Object3d.cpp" />
+    <ClCompile Include="engine\Graphics\Model\Object3dBasis.cpp" />
+    <ClCompile Include="engine\Graphics\Sprite\Sprite.cpp" />
+    <ClCompile Include="engine\Graphics\Sprite\SpriteBasis.cpp" />
+    <ClCompile Include="engine\Graphics\Sprite\TextureManager.cpp" />
+    <ClCompile Include="engine\Graphics\SRV\SrvManager.cpp" />
+    <ClCompile Include="engine\Utility\GlobalVariables.cpp" />
+    <ClCompile Include="engine\Utility\Input.cpp" />
+    <ClCompile Include="engine\Utility\mathFunc.cpp" />
+    <ClCompile Include="engine\Utility\Matrix4x4Func.cpp" />
+    <ClCompile Include="engine\Utility\operatorOverload.cpp" />
+    <ClCompile Include="engine\Utility\StringUtility.cpp" />
+    <ClCompile Include="engine\Utility\WorldTransform.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
     <ClCompile Include="externals\imgui\imgui_demo.cpp" />
     <ClCompile Include="externals\imgui\imgui_draw.cpp" />
@@ -121,7 +147,36 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\GameScene.h" />
+    <ClInclude Include="application\Object\BaseObject.h" />
     <ClInclude Include="engine\Audio\Audio.h" />
+    <ClInclude Include="engine\Camera\Camera.h" />
+    <ClInclude Include="engine\Debug\ImGuiManager.h" />
+    <ClInclude Include="engine\Effect\ParticleClass.h" />
+    <ClInclude Include="engine\EngineCore\D3DResourceLeakChecker.h" />
+    <ClInclude Include="engine\EngineCore\DirectXBasis.h" />
+    <ClInclude Include="engine\EngineCore\Logger.h" />
+    <ClInclude Include="engine\EngineCore\WindowsApp.h" />
+    <ClInclude Include="engine\Framework\AbstractSceneFactory.h" />
+    <ClInclude Include="engine\Framework\GameCore.h" />
+    <ClInclude Include="engine\Framework\SceneManager.h" />
+    <ClInclude Include="engine\Framework\TYFrameWork.h" />
+    <ClInclude Include="engine\Graphics\Model\Model.h" />
+    <ClInclude Include="engine\Graphics\Model\ModelLoader.h" />
+    <ClInclude Include="engine\Graphics\Model\ModelManager.h" />
+    <ClInclude Include="engine\Graphics\Model\Object3d.h" />
+    <ClInclude Include="engine\Graphics\Model\Object3dBasis.h" />
+    <ClInclude Include="engine\Graphics\Sprite\Sprite.h" />
+    <ClInclude Include="engine\Graphics\Sprite\SpriteBasis.h" />
+    <ClInclude Include="engine\Graphics\Sprite\TextureManager.h" />
+    <ClInclude Include="engine\Graphics\SRV\SrvManager.h" />
+    <ClInclude Include="engine\Utility\GlobalVariables.h" />
+    <ClInclude Include="engine\Utility\Input.h" />
+    <ClInclude Include="engine\Utility\mathFunc.h" />
+    <ClInclude Include="engine\Utility\Matrix4x4Func.h" />
+    <ClInclude Include="engine\Utility\operatorOverload.h" />
+    <ClInclude Include="engine\Utility\StringUtility.h" />
+    <ClInclude Include="engine\Utility\struct.h" />
+    <ClInclude Include="engine\Utility\WorldTransform.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />

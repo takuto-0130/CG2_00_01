@@ -42,10 +42,12 @@ bool ParticleClass::IsCollision(const AABB& a, const Vector3& point) {
 }
 
 
-void ParticleClass::Initialize(DirectXBasis* dxBasis, SrvManager* srvManager)
+void ParticleClass::Initialize(DirectXBasis* dxBasis, SrvManager* srvManager, Camera* camera)
 {
 	dxBasis_ = dxBasis;
 	srvManager_ = srvManager;
+
+	camera_ = camera;
 
 	// PSO関連
 	CreateRootSignature();
@@ -57,6 +59,7 @@ void ParticleClass::Initialize(DirectXBasis* dxBasis, SrvManager* srvManager)
 	// リソースの生成と値の設定
 	CreateParticleResource();
 	CreateMaterialResource();
+	CreateCameraResource();
 
 	emitter_.transform.scale = { 1,1,1 };
 	emitter_.frequency = 0.5f;
@@ -128,6 +131,7 @@ void ParticleClass::Update()
 void ParticleClass::Draw()
 {
 	auto commandList = dxBasis_->GetCommandList();
+	commandList->SetGraphicsRootConstantBufferView(3, cameraResource_->GetGPUVirtualAddress());
 	commandList->SetGraphicsRootSignature(rootSignature_.Get());
 	commandList->SetPipelineState(graphicsPipelineState_.Get());
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -150,7 +154,7 @@ void ParticleClass::CreateRootSignature()
 	descriptorRangeForInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-	descriptorRange[0].BaseShaderRegister = 0;														// 0から始まる
+	descriptorRange[0].BaseShaderRegister = 1;														// 0から始まる
 	descriptorRange[0].NumDescriptors = 1;															// 数は1つ
 	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;									// SRVを使う
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;	// Offsetを自動計算
@@ -160,7 +164,7 @@ void ParticleClass::CreateRootSignature()
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	// RootParameter作成。PixelShaderのMaterialとVertezShaderのTransform
-	D3D12_ROOT_PARAMETER rootParameters[3] = {};
+	D3D12_ROOT_PARAMETER rootParameters[4] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;			// CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;			// PixelShaderで使う
 	rootParameters[0].Descriptor.ShaderRegister = 0;							// レジスタ番号0とバインド
@@ -173,7 +177,11 @@ void ParticleClass::CreateRootSignature()
 	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;			// DescriptorTableで使う
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;						// PixelShaderで使う
 	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;					// Tableの中身の配列を指定
-	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);		// Tableで利用する数								// レジスタ番号1を使う
+	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);		// Tableで利用する数
+
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;						//カメラ
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[3].Descriptor.ShaderRegister = 1;										// レジスタ番号1を使う
 
 	descriptionRootSignature.pParameters = rootParameters;						// ルートパラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters);			// 配列の長さ
@@ -249,10 +257,10 @@ void ParticleClass::CreateRasterizerState()
 void ParticleClass::LoadShader()
 {
 	// Shaderをコンパイルする
-	vertexShaderBlob_ = dxBasis_->CompileShader(L"Particle.VS.hlsl", L"vs_6_0");
+	vertexShaderBlob_ = dxBasis_->CompileShader(L"Resources/Shaders/Particle.VS.hlsl", L"vs_6_0");
 	assert(vertexShaderBlob_ != nullptr);
 
-	pixelShaderBlob_ = dxBasis_->CompileShader(L"Particle.PS.hlsl", L"ps_6_0");
+	pixelShaderBlob_ = dxBasis_->CompileShader(L"Resources/Shaders/Particle.PS.hlsl", L"ps_6_0");
 	assert(pixelShaderBlob_ != nullptr);
 }
 
@@ -349,4 +357,14 @@ void ParticleClass::CreateMaterialResource()
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	materialData_->enableLighting = true;
 	materialData_->uvTransform = MakeIdentity4x4();
+}
+
+void ParticleClass::CreateCameraResource()
+{
+	// カメラ用のリソースを作る
+	cameraResource_ = dxBasis_->CreateBufferResource(sizeof(CameraForGPUP));
+	// 書き込むためのアドレスを取得
+	cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+	// 初期値を入れる
+	cameraData_->worldPosition = { 1.0f, 1.0f, 1.0f };
 }

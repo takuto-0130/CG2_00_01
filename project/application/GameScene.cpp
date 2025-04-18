@@ -52,6 +52,7 @@ void GameScene::Update() {
 	else {
 		Audio::GetInstance()->DisableEffect();
 	}
+	ParticleClass::GetInstance()->Update();
 }
 
 void GameScene::Draw() {
@@ -68,6 +69,8 @@ void GameScene::Draw() {
 	Object3dBasis::GetInstance()->BasisDrawSetting();
 
 #pragma endregion
+
+	ParticleClass::GetInstance()->Draw();
 
 #pragma region 前景
 	// 前景スプライト描画前

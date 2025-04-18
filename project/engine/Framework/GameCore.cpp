@@ -30,6 +30,8 @@ void GameCore::Initialize()
 	sceneFactory_ = std::make_unique<SceneFactory>();
 	sceneManager_->SetSceneFactory(sceneFactory_.get());
 	sceneManager_->ChangeScene("TITLE");
+
+	ParticleClass::GetInstance()->Initialize(directXBasis.get(), srvManager.get(), camera.get());
 }
 
 void GameCore::Finalize()

@@ -44,6 +44,11 @@ private:
 		Vector3 acceleration;
 		AABB area;
 	};
+
+	// カメラ座標
+	struct CameraForGPUP {
+		Vector3 worldPosition;
+	};
 private:
 
 	ParticleClass() = default;
@@ -60,7 +65,7 @@ public:
 		return &instance;
 	}
 	// 初期化
-	void Initialize(DirectXBasis* dxBasis, SrvManager* srvManager);
+	void Initialize(DirectXBasis* dxBasis, SrvManager* srvManager, Camera* camera);
 	// 更新
 	void Update();
 	// 描画
@@ -82,6 +87,8 @@ public:
 
 	void CreateMaterialResource();
 
+	void CreateCameraResource();
+
 	// カメラをセットする
 	void SetCamera(Camera* camera) { camera_ = camera; }
 
@@ -101,6 +108,7 @@ private:
 	uint32_t srvIndex = 0;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_;
 
 	std::list<Particle> particles;
 	std::random_device seedGene;
@@ -108,11 +116,11 @@ private:
 
 	Emitter emitter_{};
 
-	AccelerationField accel;
+	AccelerationField accel = {};
 	bool isAccel = false;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU;
-	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU;
+	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU = {};
+	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = {};
 
 	bool useBillboard = false;
 
@@ -142,7 +150,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	ParticleForGPU* instancingData_ = nullptr;
-	Material* materialData_;
+	Material* materialData_ = nullptr;
+	CameraForGPUP* cameraData_ = nullptr;
 	VertexData* vertexData_ = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
