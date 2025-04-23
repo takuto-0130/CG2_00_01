@@ -101,14 +101,16 @@ private:
 	std::list<Particle> Emit(const Emitter& emitter, std::mt19937& random);
 	bool IsCollision(const AABB& a, const Vector3& point);
 
+	constexpr UINT AlignTo256(UINT size) {
+		return (size + 255) & ~255;
+	}
+
 private:
 
 	ModelData modelData;
 
 	uint32_t srvIndex = 0;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
-	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_;
 
 	std::list<Particle> particles;
 	std::random_device seedGene;
@@ -149,6 +151,7 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_;
 	ParticleForGPU* instancingData_ = nullptr;
 	Material* materialData_ = nullptr;
 	CameraForGPUP* cameraData_ = nullptr;

@@ -27,6 +27,13 @@ void GameScene::Init() {
 	/*Audio::GetInstance()->LoadWave("BGM_2");
 	int num = Audio::GetInstance()->PlayWave("BGM_2");
 	Audio::GetInstance()->SetBGMVolume(num, 1.0f);*/
+
+	worldTransform_.Initialize();
+	ModelManager::GetInstance()->LoadModel("Resources", "cube.obj");
+
+	obj_ = std::make_unique<Object3d>();
+	obj_->Initialize();
+	obj_->SetModel("cube.obj");
 }
 
 #pragma region // 初期化以外
@@ -58,7 +65,7 @@ void GameScene::Update() {
 void GameScene::Draw() {
 #pragma region 背景
 	// 背景スプライト描画前
-	SpriteBasis::GetInstance()->BasisDrawSetting();
+	//SpriteBasis::GetInstance()->BasisDrawSetting();
 
 	// ↓背景
 
@@ -66,15 +73,15 @@ void GameScene::Draw() {
 
 #pragma region 3Dオブジェクト
 	// 3Dオブジェクト描画前
-	Object3dBasis::GetInstance()->BasisDrawSetting();
-
+	//Object3dBasis::GetInstance()->BasisDrawSetting();
+	//obj_->Draw(worldTransform_);
 #pragma endregion
 
 	ParticleClass::GetInstance()->Draw();
 
 #pragma region 前景
 	// 前景スプライト描画前
-	SpriteBasis::GetInstance()->BasisDrawSetting();
+	//SpriteBasis::GetInstance()->BasisDrawSetting();
 	/// ↓前景
 #pragma endregion
 }

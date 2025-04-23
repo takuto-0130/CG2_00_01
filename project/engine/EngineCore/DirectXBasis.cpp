@@ -259,15 +259,16 @@ void DirectXBasis::CommandListAndFence()
 	hr = commandList_->Close();
 	assert(SUCCEEDED(hr));
 
-	// コマンドリストの実行
-	ComPtr <ID3D12CommandList> commandLists[] = { commandList_ };
-	commandQueue_->ExecuteCommandLists(1, commandLists->GetAddressOf());
+	// ✅ 正しいコマンドリスト配列
+	ID3D12CommandList* commandLists[] = { commandList_.Get() };
+	commandQueue_->ExecuteCommandLists(1, commandLists); // ← これでOK！
+
 	swapChain_->Present(1, 0);
 
 	// Fenceの値を更新
 	fenceValue_++;
-	// コマンドの実行完了を待つ
 	commandQueue_->Signal(fence_.Get(), fenceValue_);
+
 	if (fence_->GetCompletedValue() != fenceValue_) {
 		HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 		fence_->SetEventOnCompletion(fenceValue_, fenceEvent);

@@ -23,8 +23,8 @@ uint32_t SrvManager::Allocate()
 void SrvManager::BeginDraw()
 {
 	// SRV用のデスクリプタヒープを指定する
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { descriptorHeap_ };
-	dxBasis_->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
+	ID3D12DescriptorHeap* heaps[] = { descriptorHeap_.Get() };
+	dxBasis_->GetCommandList()->SetDescriptorHeaps(1, heaps);
 }
 
 bool SrvManager::CanAllocate() const
@@ -63,6 +63,11 @@ void SrvManager::CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResou
 
 void SrvManager::CreateSRVforStructuredBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride)
 {
+	if (!pResource) {
+		Logger::Log("❌ CreateSRVforStructuredBuffer: pResource is nullptr!");
+		assert(false); // デバッグ時は止めよう
+		return;
+	}
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	// 構造化バッファ用のSRV設定
 	srvDesc.Format = DXGI_FORMAT_UNKNOWN; // 構造化バッファの場合、フォーマットは不明（UNKNOWN）

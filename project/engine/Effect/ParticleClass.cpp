@@ -49,6 +49,8 @@ void ParticleClass::Initialize(DirectXBasis* dxBasis, SrvManager* srvManager, Ca
 
 	camera_ = camera;
 
+	assert(camera_);
+
 	// PSO関連
 	CreateRootSignature();
 	inputLayoutDesc_ = CreateInputElementDesc();
@@ -110,6 +112,12 @@ void ParticleClass::Update()
 		(*partiIterator).transform.rotate = transform.rotate;
 		(*partiIterator).transform.translate += (*partiIterator).velocity * kDeltaTime;
 		(*partiIterator).currentTime += kDeltaTime; // 経過時間を足す
+		/*for (uint32_t i = 0; i < 1; ++i) {
+			instancingData_[i].WVP = MakeIdentity4x4();
+			instancingData_[i].World = MakeIdentity4x4();
+			instancingData_[i].color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		}
+		numInstance = 1;*/
 		if (numInstance < kNumMaxInstance)
 		{
 			Matrix4x4 worldMatrixP = MakeAffineMatrix((*partiIterator).transform.scale, (*partiIterator).transform.rotate, (*partiIterator).transform.translate);
@@ -122,26 +130,68 @@ void ParticleClass::Update()
 			instancingData_[numInstance].color = (*partiIterator).color;
 			float alpha = 1.0f - ((*partiIterator).currentTime / (*partiIterator).lifeTime);
 			instancingData_[numInstance].color.w = alpha;
+			ImGui::Begin("parti");
+			ImGui::DragFloat4("partipos", &instancingData_[numInstance].World.m[3][0]);
+			ImGui::End();
 			++numInstance; // 生きてるパーティクルをカウント
 		}
 		++partiIterator;
 	}
+#ifdef _DEBUG
+	int a = numInstance;
+	Vector3 cameraPos = camera_->GetTranslate();
+	ImGui::Begin("parti");
+	ImGui::Text("%d", a);
+	ImGui::DragFloat3("camerapos", &cameraPos.x);
+	ImGui::End();
+#endif // _DEBUG
+
 }
 
 void ParticleClass::Draw()
 {
+	/*if(numInstance > 0)
+	{
+		commandList->Reset(dxBasis_->GetCommandAllocator(), graphicsPipelineState_.Get());
+	}*/
+	srvManager_->BeginDraw();
 	auto commandList = dxBasis_->GetCommandList();
-	commandList->SetGraphicsRootConstantBufferView(3, cameraResource_->GetGPUVirtualAddress());
+
+	// === ✅ 各リソースが null かチェック！ ===
+	assert(commandList); // 念のため
+	assert(materialResource_);
+	assert(cameraResource_);
+	assert(instancingResource_);
+	assert(vertexResource);
+
+	Logger::Log(std::format("Draw(): numInstance = {}", numInstance));
+
+	// RootSignature / PSO
 	commandList->SetGraphicsRootSignature(rootSignature_.Get());
 	commandList->SetPipelineState(graphicsPipelineState_.Get());
+
+	// 頂点情報
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
 
-	commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+	// Root Param 3: Camera
+	commandList->SetGraphicsRootConstantBufferView(3, cameraResource_->GetGPUVirtualAddress());
 
+	// Root Param 0: Material
+	commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+	// Root Param 1: StructuredBuffer (パーティクル情報)
 	srvManager_->SetGraphicsRootDescriptorTable(1, srvIndex);
-	srvManager_->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath));
+
+	// Root Param 2: テクスチャ
+	uint32_t texIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
+	Logger::Log(std::format("テクスチャ Index: {}", texIndex));
+	srvManager_->SetGraphicsRootDescriptorTable(2, texIndex);
+
+	// === ✅ 最後に描画前にログ出し ===
+	Logger::Log("→ DrawInstanced 呼び出し直前！");
 	commandList->DrawInstanced(UINT(modelData.vertices.size()), numInstance, 0, 0);
+	Logger::Log("→ DrawInstanced 呼び出し完了！");
+
 }
 
 void ParticleClass::CreateRootSignature()
@@ -248,7 +298,7 @@ void ParticleClass::CreateBlendState()
 
 void ParticleClass::CreateRasterizerState()
 {
-	// 裏面(時計回り)を表示しない
+	// 裏面(時計回り)を表示
 	rasterizerDesc_.CullMode = D3D12_CULL_MODE_NONE;
 	// 三角形の中を塗りつぶす
 	rasterizerDesc_.FillMode = D3D12_FILL_MODE_SOLID;
@@ -308,6 +358,7 @@ void ParticleClass::CreateParticleResource()
 {
 	// インスタンス用のTransformationMatrixリソースを作る
 	instancingResource_ = dxBasis_->CreateBufferResource(sizeof(ParticleForGPU) * kNumMaxInstance);
+
 	// 書き込むためのアドレスを取得
 	instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&instancingData_));
 	// 単位行列を書き込んでおく
@@ -342,13 +393,13 @@ void ParticleClass::CreateParticleResource()
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));		// 書き込むためのアドレスを取得
 	std::memcpy(vertexData_, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 
-	srvManager_->CreateSRVforStructuredBuffer(srvIndex, instancingResource.Get(), kNumMaxInstance, sizeof(ParticleForGPU));
+	srvManager_->CreateSRVforStructuredBuffer(srvIndex, instancingResource_.Get(), kNumMaxInstance, sizeof(ParticleForGPU));
 }
 
 void ParticleClass::CreateMaterialResource()
 {
 	// マテリアル用のリソースを作る。
-	materialResource_ = dxBasis_->CreateBufferResource(sizeof(Material));
+	materialResource_ = dxBasis_->CreateBufferResource(AlignTo256(sizeof(Material)));
 	// マテリアルにデータを書き込む
 	materialData_ = nullptr;
 	// 書き込むためのアドレスを取得
@@ -361,10 +412,25 @@ void ParticleClass::CreateMaterialResource()
 
 void ParticleClass::CreateCameraResource()
 {
-	// カメラ用のリソースを作る
-	cameraResource_ = dxBasis_->CreateBufferResource(sizeof(CameraForGPUP));
-	// 書き込むためのアドレスを取得
-	cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
-	// 初期値を入れる
+	//// カメラ用のリソースを作る
+	//cameraResource_ = dxBasis_->CreateBufferResource(sizeof(CameraForGPUP));
+	//// 書き込むためのアドレスを取得
+	//cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+	//// 初期値を入れる
+	//cameraData_->worldPosition = { 1.0f, 1.0f, 1.0f };
+	//AlignTo256(sizeof(CameraForGPUP))
+	cameraResource_ = dxBasis_->CreateBufferResource(AlignTo256(sizeof(CameraForGPUP)));
+
+	if (!cameraResource_) {
+		Logger::Log("❌ CreateBufferResource() for cameraResource_ failed!");
+		assert(false);
+	}
+
+	HRESULT hr = cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+	if (FAILED(hr)) {
+		//Logger::Log("❌ cameraResource_->Map() failed with HRESULT = 0x{:08X}", hr);
+		assert(false);
+	}
+
 	cameraData_->worldPosition = { 1.0f, 1.0f, 1.0f };
 }

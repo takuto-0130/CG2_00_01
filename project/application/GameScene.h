@@ -53,6 +53,11 @@ private: // メンバ変数
 	bool isEffect_ = false;
 #endif // _DEBUG
 
+	// 3Dオブジェクト
+	std::unique_ptr<Object3d> obj_;
+
+	// ワールド行列
+	WorldTransform worldTransform_;
 
 };
 
