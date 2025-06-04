@@ -104,6 +104,7 @@ void GameScene::Update() {
 	RailCustom();
 
 	if (input_->TriggerKey(DIK_RETURN)) {
+		score_ = 0;
 		enemys_.remove_if([](Enemy* enemy) {
 			if (!enemy->IsDead()) {
 				delete enemy;
@@ -222,22 +223,22 @@ void GameScene::PopEnemy()
 			return false;
 			});
 		Enemy* enemy1 = new Enemy();
-		enemy1->Initialize(enemyModel_.get(), { 21, 7, 35 });
+		enemy1->Initialize(enemyModel_.get(), { 21, 5, 35 });
 		enemy1->UpdateTransform();
 		enemys_.push_back(enemy1);
 
 		Enemy* enemy2 = new Enemy();
-		enemy2->Initialize(enemyModel_.get(), { 22, 6, 35 });
+		enemy2->Initialize(enemyModel_.get(), { 22, 4, 35 });
 		enemy2->UpdateTransform();
 		enemys_.push_back(enemy2);
 
 		Enemy* enemy3 = new Enemy();
-		enemy3->Initialize(enemyModel_.get(), { 20, 7, 35 });
+		enemy3->Initialize(enemyModel_.get(), { 20, 2, 35 });
 		enemy3->UpdateTransform();
 		enemys_.push_back(enemy3);
 
 		Enemy* enemy4 = new Enemy();
-		enemy4->Initialize(enemyModel_.get(), { 19, 8, 35 });
+		enemy4->Initialize(enemyModel_.get(), { 19, 3, 35 });
 		enemy4->UpdateTransform();
 		enemys_.push_back(enemy4);
 	}
@@ -252,22 +253,22 @@ void GameScene::PopEnemy()
 			return false;
 			});
 		Enemy* enemy1 = new Enemy();
-		enemy1->Initialize(enemyModel_.get(), { 25, 0,  37 });
+		enemy1->Initialize(enemyModel_.get(), { 25, 0,  47 });
 		enemy1->UpdateTransform();
 		enemys_.push_back(enemy1);
 
 		Enemy* enemy2 = new Enemy();
-		enemy2->Initialize(enemyModel_.get(), { 27, 2,  38});
+		enemy2->Initialize(enemyModel_.get(), { 27, 2,  48});
 		enemy2->UpdateTransform();
 		enemys_.push_back(enemy2);
 
 		Enemy* enemy3 = new Enemy();
-		enemy3->Initialize(enemyModel_.get(), { 28, 1,  40 });
+		enemy3->Initialize(enemyModel_.get(), { 28, 1,  50 });
 		enemy3->UpdateTransform();
 		enemys_.push_back(enemy3);
 
 		Enemy* enemy4 = new Enemy();
-		enemy4->Initialize(enemyModel_.get(), { 26, 1.6f,  37 });
+		enemy4->Initialize(enemyModel_.get(), { 26, 1.6f,  47 });
 		enemy4->UpdateTransform();
 		enemys_.push_back(enemy4);
 	}
@@ -454,11 +455,11 @@ void GameScene::Collision()
 		pos = TransformM(pos, matVPV);
 		Vector2 mouse = input_->GetMousePosition();
 #ifdef _DEBUG
-		char a[2];
+		/*char a[2];
 		_itoa_s(i, a, 10);
 		ImGui::Begin("enemy");
 		ImGui::InputFloat3(a, &pos.x);
-		ImGui::End();
+		ImGui::End();*/
 #endif // _DEBUG
 
 		if (Length(Vector2{ pos.x, pos.y } - Vector2{ mouse.x, mouse.y }) <= 50.0f && !enemy->IsDead()) {
